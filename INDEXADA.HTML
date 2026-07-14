@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PapaParse para procesar CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
 
@@ -15,7 +17,7 @@
         <!-- Cabecera -->
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
-            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora y calcula costes mediante PVPC o tarifas manuales por tramos.</p>
+            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora y analiza consumos y costes de forma gráfica.</p>
         </header>
 
         <!-- Panel de Configuración General -->
@@ -39,60 +41,67 @@
         </div>
 
         <!-- Configuración Específica de Tarifa Regulada (PVPC) -->
-        <div id="pvpcConfig" class="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-blue-500">
+        <div id="pvpcConfig" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <h3 class="text-md font-bold text-blue-700 mb-3">Configuración de Conexión PVPC</h3>
             <div class="max-w-md">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Token de ESIOS (REE)</label>
                 <input type="password" id="tokenInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Introduce tu token">
-                <p class="text-xs text-gray-500 mt-1">Solicítalo de forma gratuita en <a href="mailto:consultasesios@ree.es" class="text-blue-500 underline">consultasesios@ree.es</a></p>
+                <p class="text-xs text-gray-500 mt-1">Solicítalo gratis en <a href="mailto:consultasesios@ree.es" class="text-blue-500 underline">consultasesios@ree.es</a></p>
             </div>
         </div>
 
         <!-- Configuración Específica de Tarifa Manual -->
-        <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-green-500">
+        <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
             <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                 <!-- Tramo Punta -->
                 <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA (Caro)</span>
+                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
                     <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
                     <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (0-23):</label>
-                    <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs" placeholder="Ej: 10,11,12,13">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                    <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
                 </div>
 
                 <!-- Tramo Llano -->
                 <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO (Medio)</span>
+                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
                     <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
                     <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (0-23):</label>
-                    <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs" placeholder="Ej: 8,9,14,15">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                    <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
                 </div>
 
                 <!-- Tramo Valle -->
                 <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE (Económico)</span>
+                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
                     <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
                     <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (0-23):</label>
-                    <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs" placeholder="Ej: 0,1,2,3">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                    <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs">
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t">
                 <div>
-                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mt-2">
                         <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
-                        <span>Fines de semana completos (Sábados y Domingos) a precio VALLE</span>
+                        <span>Fines de semana completos a precio VALLE</span>
                     </label>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fechas festivas adicionales (Formato YYYY-MM-DD, separadas por comas):</label>
-                    <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="2024-01-01,2024-01-06,2024-05-01,2024-08-15,2024-10-12,2024-11-01,2024-12-06,2024-12-08,2024-12-25" placeholder="Ej: 2024-01-01,2024-12-25">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fechas festivas adicionales (YYYY-MM-DD separadas por comas):</label>
+                    <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="2024-01-01,2024-01-06,2024-05-01,2024-08-15,2024-10-12,2024-11-01,2024-12-06,2024-12-08,2024-12-25">
                 </div>
             </div>
+        </div>
+
+        <!-- Botón Recalcular centralizado -->
+        <div class="flex justify-center mb-8">
+            <button id="recalculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Recalcular Datos
+            </button>
         </div>
 
         <!-- Mensajes de Estado -->
@@ -109,6 +118,22 @@
                 <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
                     <h3 class="text-gray-500 text-sm font-semibold uppercase">Coste Total Estimado</h3>
                     <p id="totalCost" class="text-3xl font-bold text-gray-900 mt-2">0.00 €</p>
+                </div>
+            </div>
+
+            <!-- Gráficas del Análisis -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Acumulado por Día de la Semana</h3>
+                    <div class="relative h-80">
+                        <canvas id="chartDayOfWeek"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
+                    <div class="relative h-80">
+                        <canvas id="chartDaily"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -133,7 +158,7 @@
 
             <!-- Tabla de Detalles -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-6 border-b flex justify-between items-center">
+                <div class="p-6 border-b">
                     <h3 class="text-lg font-semibold">Detalle de las horas que superan el umbral</h3>
                 </div>
                 <div class="overflow-x-auto max-h-96">
@@ -157,8 +182,10 @@
     </div>
 
     <script>
-        // Variables globales para la persistencia de datos
+        // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
+        window.chartInstance1 = null;
+        window.chartInstance2 = null;
 
         // Elementos del DOM
         const rateMode = document.getElementById('rateMode');
@@ -170,6 +197,7 @@
         const csvInput = document.getElementById('csvInput');
         const statusMessage = document.getElementById('statusMessage');
         const resultsSection = document.getElementById('resultsSection');
+        const recalculateBtn = document.getElementById('recalculateBtn');
         
         const totalKwhEl = document.getElementById('totalKwh');
         const totalCostEl = document.getElementById('totalCost');
@@ -178,7 +206,7 @@
         const filteredCostEl = document.getElementById('filteredCost');
         const tableBody = document.getElementById('tableBody');
 
-        // Alternar visualización según modo seleccionado
+        // Alternar visualización de los paneles de configuración
         rateMode.addEventListener('change', () => {
             if (rateMode.value === 'pvpc') {
                 pvpcConfig.classList.remove('hidden');
@@ -187,23 +215,17 @@
                 pvpcConfig.classList.add('hidden');
                 manualConfig.classList.remove('hidden');
             }
-            // Reprocesar si ya hay un CSV cargado
-            triggerReprocess();
         });
 
-        // Escuchar cambios en los inputs de tarifa manual para actualizar al instante
-        const manualInputs = ['pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle', 'weekendValle', 'holidaysInput', 'thresholdInput'];
-        manualInputs.forEach(id => {
-            document.getElementById(id).addEventListener('input', triggerReprocess);
-        });
-
+        // Configuración de eventos de archivo
         csvInput.addEventListener('change', handleFile);
-
-        function triggerReprocess() {
+        recalculateBtn.addEventListener('click', () => {
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
+            } else {
+                showStatus("Por favor, sube un archivo CSV antes de recalcular.", "error");
             }
-        }
+        });
 
         function showStatus(text, type = 'info') {
             statusMessage.textContent = text;
@@ -217,44 +239,41 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            showStatus("Leyendo archivo CSV...", "info");
+            showStatus("Archivo cargado. Haz clic en 'Recalcular Datos' para iniciar el análisis.", "info");
 
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
                     window.rawCsvData = results.data;
-                    processData(results.data);
                 },
                 error: function(err) {
-                    showStatus("Error al leer el archivo CSV: " + err.message, "error");
+                    showStatus("Error al estructurar el archivo CSV: " + err.message, "error");
                 }
             });
         }
 
-        // Función unificada de procesamiento de datos
         async function processData(parsedRows) {
             const mode = rateMode.value;
             const token = tokenInput.value.trim();
 
             if (mode === 'pvpc' && !token) {
-                showStatus("Para la tarifa regulada, por favor introduce tu Token de ESIOS en la configuración.", "error");
+                showStatus("Para calcular con la tarifa regulada, es obligatorio introducir el Token de ESIOS.", "error");
                 return;
             }
 
             try {
-                // Identificar columnas del CSV de forma flexible
                 const firstRow = parsedRows[0];
                 const colFecha = Object.keys(firstRow).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
                 const colHora = Object.keys(firstRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
                 const colConsumo = Object.keys(firstRow).find(k => k.toLowerCase().includes('consum') || k.toLowerCase().includes('val') || k.toLowerCase().includes('activa'));
 
                 if (!colFecha || !colHora || !colConsumo) {
-                    showStatus("Formato incompatible. No se han identificado las columnas de Fecha, Hora o Consumo.", "error");
+                    showStatus("Columnas no identificadas. Asegúrese de que el CSV contenga campos de Fecha, Hora y Consumo.", "error");
                     return;
                 }
 
-                // Normalizar datos del CSV
+                // Estructurar datos
                 const cleanData = parsedRows.map(row => {
                     let rawDate = row[colFecha];
                     let parts = rawDate.split(/[-/]/);
@@ -283,15 +302,14 @@
                 let processedData = [];
 
                 if (mode === 'pvpc') {
-                    // Modo API ESIOS
                     const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
                     const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
                     const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
 
-                    showStatus(`Consultando precios PVPC de ESIOS (${fechaInicio} a ${fechaFin})...`, "info");
+                    showStatus(`Conectando con la API de ESIOS...`, "info");
                     const preciosMap = await fetchPreciosESIOS(fechaInicio, fechaFin, token);
 
-                    if (!preciosMap) return; // Error de conexión o token mostrado dentro del fetch
+                    if (!preciosMap) return;
 
                     processedData = cleanData.map(item => {
                         const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
@@ -304,29 +322,23 @@
                     });
 
                 } else {
-                    // Modo Tarifa Manual
-                    showStatus("Aplicando tarifas manuales configuradas...", "info");
+                    showStatus("Ejecutando cálculos con la tarifa manual configurada...", "info");
                     
-                    // Cargar parámetros manuales
                     const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
                     const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
-                    
                     const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
                     const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
-
                     const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
                     const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
-
                     const useWeekendValle = document.getElementById('weekendValle').checked;
                     const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
 
                     processedData = cleanData.map(item => {
-                        let precio = priceValle; // Default
+                        let precio = priceValle; 
                         
-                        // Determinar si es fin de semana
                         const dateParts = item.fechaStr.split('-');
                         const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                        const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
+                        const dayOfWeek = dateObj.getDay(); 
                         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                         const isHoliday = holidays.includes(item.fechaStr);
 
@@ -350,16 +362,15 @@
                     });
                 }
 
-                showStatus("Datos procesados con éxito", "success");
-                renderResults(processedData);
+                showStatus("Procesamiento finalizado.", "success");
+                renderResultsAndCharts(processedData);
 
             } catch (err) {
-                showStatus("Error al procesar el archivo: " + err.message, "error");
+                showStatus("Error al procesar: " + err.message, "error");
                 console.error(err);
             }
         }
 
-        // Consultar la API de ESIOS con gestión de CORS
         async function fetchPreciosESIOS(inicio, fin, token) {
             const url = `https://api.esios.ree.es/indicators/1013?start_date=${inicio}T00:00:00&end_date=${fin}T23:59:59`;
             const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
@@ -375,7 +386,7 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Estado de respuesta HTTP: ${response.status}`);
+                    throw new Error(`Servidor de ESIOS devolvió el estado: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -384,23 +395,22 @@
                 const preciosMap = {};
                 values.forEach(v => {
                     const dateObj = new Date(v.datetime);
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); // Formato YYYY-MM-DD
+                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
                     const localHour = dateObj.getHours();
 
                     const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0; // Pasar de €/MWh a €/kWh
+                    preciosMap[key] = v.value / 1000.0; 
                 });
 
                 return preciosMap;
 
             } catch (err) {
-                showStatus("Error al obtener los precios PVPC. Verifica la clave API o intenta utilizar el modo manual: " + err.message, "error");
+                showStatus("Fallo en la comunicación con ESIOS. Verifique su token o pruebe la Tarifa Manual: " + err.message, "error");
                 return null;
             }
         }
 
-        // Renderizar los resultados en pantalla
-        function renderResults(data) {
+        function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
 
             let totalKwh = 0;
@@ -412,10 +422,38 @@
             tableBody.innerHTML = "";
             let tableRowsHtml = "";
 
+            // Variables para acumulación de gráficos
+            const dayOfWeekStats = {
+                1: { label: 'Lunes', kwh: 0, cost: 0 },
+                2: { label: 'Martes', kwh: 0, cost: 0 },
+                3: { label: 'Miércoles', kwh: 0, cost: 0 },
+                4: { label: 'Jueves', kwh: 0, cost: 0 },
+                5: { label: 'Viernes', kwh: 0, cost: 0 },
+                6: { label: 'Sábado', kwh: 0, cost: 0 },
+                0: { label: 'Domingo', kwh: 0, cost: 0 }
+            };
+
+            const dailyStats = {}; // { 'YYYY-MM-DD': { kwh: 0, cost: 0 } }
+
             data.forEach(item => {
                 totalKwh += item.consumo;
                 totalCost += item.coste;
 
+                // 1. Acumulaciones para Gráfica por Día de la Semana
+                const dateParts = item.fechaStr.split('-');
+                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dayOfWeek = dateObj.getDay(); 
+                dayOfWeekStats[dayOfWeek].kwh += item.consumo;
+                dayOfWeekStats[dayOfWeek].cost += item.coste;
+
+                // 2. Acumulaciones para Gráfica Diaria Cronológica
+                if (!dailyStats[item.fechaStr]) {
+                    dailyStats[item.fechaStr] = { kwh: 0, cost: 0 };
+                }
+                dailyStats[item.fechaStr].kwh += item.consumo;
+                dailyStats[item.fechaStr].cost += item.coste;
+
+                // Filtro para la tabla
                 if (item.consumo > threshold) {
                     filteredKwh += item.consumo;
                     filteredCost += item.coste;
@@ -433,7 +471,7 @@
                 }
             });
 
-            // Asignar los valores a los elementos gráficos
+            // Actualizar Métricas de Texto
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             totalCostEl.textContent = `${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
             
@@ -441,9 +479,130 @@
             filteredKwhEl.textContent = `${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             filteredCostEl.textContent = `${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
 
-            tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro del CSV supera el umbral seleccionado.</td></tr>`;
+            tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
             
+            // Renderizar gráficos
+            renderDayOfWeekChart(dayOfWeekStats);
+            renderDailyChart(dailyStats);
+
             resultsSection.classList.remove('hidden');
+        }
+
+        // Gráfico 1: Día de la semana
+        function renderDayOfWeekChart(stats) {
+            const order = [1, 2, 3, 4, 5, 6, 0]; // Lunes a Domingo
+            const labels = order.map(i => stats[i].label);
+            const kwhData = order.map(i => stats[i].kwh);
+            const costData = order.map(i => stats[i].cost);
+
+            if (window.chartInstance1) {
+                window.chartInstance1.destroy();
+            }
+
+            const ctx = document.getElementById('chartDayOfWeek').getContext('2d');
+            window.chartInstance1 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo (kWh)',
+                            data: kwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Importe (€)',
+                            data: costData,
+                            type: 'line',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico 2: Evolución diaria cronológica
+        function renderDailyChart(stats) {
+            const sortedDates = Object.keys(stats).sort();
+            const kwhData = sortedDates.map(d => stats[d].kwh);
+            const costData = sortedDates.map(d => stats[d].cost);
+
+            if (window.chartInstance2) {
+                window.chartInstance2.destroy();
+            }
+
+            const ctx = document.getElementById('chartDaily').getContext('2d');
+            window.chartInstance2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [
+                        {
+                            label: 'Consumo (kWh)',
+                            data: kwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Importe (€)',
+                            data: costData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
         }
     </script>
 </body>
