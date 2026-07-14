@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analizador de Consumo Eléctrico PVPC</title>
+    <title>Analizador de Consumo Eléctrico</title>
     <!-- Tailwind CSS para diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PapaParse para procesar CSV -->
@@ -14,16 +14,18 @@
     <div class="container mx-auto px-4 py-8 max-w-5xl">
         <!-- Cabecera -->
         <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico PVPC</h1>
-            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora y calcula los costes reales con la tarifa regulada de España.</p>
+            <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
+            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora y calcula costes mediante PVPC o tarifas manuales por tramos.</p>
         </header>
 
-        <!-- Panel de Configuración -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Panel de Configuración General -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">1. Token de ESIOS (REE)</label>
-                <input type="password" id="tokenInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Introduce tu token">
-                <p class="text-xs text-gray-500 mt-1">Solicítalo gratis en <a href="mailto:consultasesios@ree.es" class="text-blue-500 underline">consultasesios@ree.es</a></p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">1. Tipo de Tarifa</label>
+                <select id="rateMode" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="pvpc">PVPC (API Oficial - Requiere Token)</option>
+                    <option value="manual">Manual por Tramos (Sin Token)</option>
+                </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">2. Umbral de Consumo (kWh)</label>
@@ -33,6 +35,63 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">3. Archivo CSV Distribuidora</label>
                 <input type="file" id="csvInput" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            </div>
+        </div>
+
+        <!-- Configuración Específica de Tarifa Regulada (PVPC) -->
+        <div id="pvpcConfig" class="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-blue-500">
+            <h3 class="text-md font-bold text-blue-700 mb-3">Configuración de Conexión PVPC</h3>
+            <div class="max-w-md">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Token de ESIOS (REE)</label>
+                <input type="password" id="tokenInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Introduce tu token">
+                <p class="text-xs text-gray-500 mt-1">Solicítalo de forma gratuita en <a href="mailto:consultasesios@ree.es" class="text-blue-500 underline">consultasesios@ree.es</a></p>
+            </div>
+        </div>
+
+        <!-- Configuración Específica de Tarifa Manual -->
+        <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-green-500">
+            <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <!-- Tramo Punta -->
+                <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA (Caro)</span>
+                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                    <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (0-23):</label>
+                    <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs" placeholder="Ej: 10,11,12,13">
+                </div>
+
+                <!-- Tramo Llano -->
+                <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO (Medio)</span>
+                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                    <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (0-23):</label>
+                    <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs" placeholder="Ej: 8,9,14,15">
+                </div>
+
+                <!-- Tramo Valle -->
+                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE (Económico)</span>
+                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                    <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (0-23):</label>
+                    <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs" placeholder="Ej: 0,1,2,3">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t">
+                <div>
+                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                        <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
+                        <span>Fines de semana completos (Sábados y Domingos) a precio VALLE</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fechas festivas adicionales (Formato YYYY-MM-DD, separadas por comas):</label>
+                    <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="2024-01-01,2024-01-06,2024-05-01,2024-08-15,2024-10-12,2024-11-01,2024-12-06,2024-12-08,2024-12-25" placeholder="Ej: 2024-01-01,2024-12-25">
+                </div>
             </div>
         </div>
 
@@ -48,7 +107,7 @@
                     <p id="totalKwh" class="text-3xl font-bold text-gray-900 mt-2">0.00 kWh</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
-                    <h3 class="text-gray-500 text-sm font-semibold uppercase">Coste Total Estimado (PVPC)</h3>
+                    <h3 class="text-gray-500 text-sm font-semibold uppercase">Coste Total Estimado</h3>
                     <p id="totalCost" class="text-3xl font-bold text-gray-900 mt-2">0.00 €</p>
                 </div>
             </div>
@@ -59,7 +118,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <span class="text-gray-600 text-sm block">Horas afectadas:</span>
-                        <span id="filteredHours" class="text-2xl font-bold text-yellow-900">0 h</span>
+                        <span id="filteredHours" class="text-2xl font-bold text-yellow-900 font-mono">0 h</span>
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm block">Subtotal Consumo:</span>
@@ -74,7 +133,7 @@
 
             <!-- Tabla de Detalles -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-6 border-b">
+                <div class="p-6 border-b flex justify-between items-center">
                     <h3 class="text-lg font-semibold">Detalle de las horas que superan el umbral</h3>
                 </div>
                 <div class="overflow-x-auto max-h-96">
@@ -84,7 +143,7 @@
                                 <th class="p-4 border-b">Fecha</th>
                                 <th class="p-4 border-b">Hora</th>
                                 <th class="p-4 border-b text-right">Consumo (kWh)</th>
-                                <th class="p-4 border-b text-right">Precio PVPC (€/kWh)</th>
+                                <th class="p-4 border-b text-right">Precio Aplicado (€/kWh)</th>
                                 <th class="p-4 border-b text-right">Coste (€)</th>
                             </tr>
                         </thead>
@@ -98,7 +157,14 @@
     </div>
 
     <script>
+        // Variables globales para la persistencia de datos
+        window.rawCsvData = null;
+
         // Elementos del DOM
+        const rateMode = document.getElementById('rateMode');
+        const pvpcConfig = document.getElementById('pvpcConfig');
+        const manualConfig = document.getElementById('manualConfig');
+        
         const tokenInput = document.getElementById('tokenInput');
         const thresholdInput = document.getElementById('thresholdInput');
         const csvInput = document.getElementById('csvInput');
@@ -112,15 +178,33 @@
         const filteredCostEl = document.getElementById('filteredCost');
         const tableBody = document.getElementById('tableBody');
 
-        // Escuchar cambios en el input de archivo
-        csvInput.addEventListener('change', handleFile);
-        thresholdInput.addEventListener('input', () => {
-            if (window.currentData) {
-                processAndDisplay(window.currentData);
+        // Alternar visualización según modo seleccionado
+        rateMode.addEventListener('change', () => {
+            if (rateMode.value === 'pvpc') {
+                pvpcConfig.classList.remove('hidden');
+                manualConfig.classList.add('hidden');
+            } else {
+                pvpcConfig.classList.add('hidden');
+                manualConfig.classList.remove('hidden');
             }
+            // Reprocesar si ya hay un CSV cargado
+            triggerReprocess();
         });
 
-        // Mostrar mensajes de estado
+        // Escuchar cambios en los inputs de tarifa manual para actualizar al instante
+        const manualInputs = ['pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle', 'weekendValle', 'holidaysInput', 'thresholdInput'];
+        manualInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', triggerReprocess);
+        });
+
+        csvInput.addEventListener('change', handleFile);
+
+        function triggerReprocess() {
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        }
+
         function showStatus(text, type = 'info') {
             statusMessage.textContent = text;
             statusMessage.className = `p-4 rounded-lg mb-8 text-center block ${
@@ -129,17 +213,8 @@
             }`;
         }
 
-        // Manejar la lectura del archivo
         function handleFile(e) {
             const file = e.target.files[0];
-            const token = tokenInput.value.trim();
-
-            if (!token) {
-                showStatus("Por favor, introduce tu Token de ESIOS antes de subir el archivo.", "error");
-                csvInput.value = "";
-                return;
-            }
-
             if (!file) return;
 
             showStatus("Leyendo archivo CSV...", "info");
@@ -147,8 +222,9 @@
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
-                complete: async function(results) {
-                    await processCSVData(results.data, token);
+                complete: function(results) {
+                    window.rawCsvData = results.data;
+                    processData(results.data);
                 },
                 error: function(err) {
                     showStatus("Error al leer el archivo CSV: " + err.message, "error");
@@ -156,28 +232,34 @@
             });
         }
 
-        // Procesar los datos y consultar la API de ESIOS
-        async function processCSVData(parsedRows, token) {
+        // Función unificada de procesamiento de datos
+        async function processData(parsedRows) {
+            const mode = rateMode.value;
+            const token = tokenInput.value.trim();
+
+            if (mode === 'pvpc' && !token) {
+                showStatus("Para la tarifa regulada, por favor introduce tu Token de ESIOS en la configuración.", "error");
+                return;
+            }
+
             try {
-                // Intentar detectar columnas automáticamente
+                // Identificar columnas del CSV de forma flexible
                 const firstRow = parsedRows[0];
                 const colFecha = Object.keys(firstRow).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
                 const colHora = Object.keys(firstRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
                 const colConsumo = Object.keys(firstRow).find(k => k.toLowerCase().includes('consum') || k.toLowerCase().includes('val') || k.toLowerCase().includes('activa'));
 
                 if (!colFecha || !colHora || !colConsumo) {
-                    showStatus("No se han podido identificar las columnas de Fecha, Hora o Consumo. Verifique el formato del CSV.", "error");
+                    showStatus("Formato incompatible. No se han identificado las columnas de Fecha, Hora o Consumo.", "error");
                     return;
                 }
 
                 // Normalizar datos del CSV
                 const cleanData = parsedRows.map(row => {
                     let rawDate = row[colFecha];
-                    // Convertir formato DD/MM/YYYY a YYYY-MM-DD
                     let parts = rawDate.split(/[-/]/);
                     let formattedDate = rawDate;
                     if (parts.length === 3) {
-                        // Asumimos DD/MM/YYYY
                         if (parts[2].length === 4) {
                             formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                         } else if (parts[0].length === 4) {
@@ -186,7 +268,6 @@
                     }
 
                     let hora = parseInt(row[colHora], 10);
-                    // Ajustar formato de horas 1-24 a 0-23
                     if (hora === 24) hora = 0; 
                     else if (isNaN(hora)) hora = 0;
 
@@ -199,43 +280,88 @@
                     };
                 });
 
-                // Obtener rango de fechas
-                const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
-                const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
-                const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
+                let processedData = [];
 
-                showStatus(`Consultando precios PVPC desde ${fechaInicio} hasta ${fechaFin}...`, "info");
+                if (mode === 'pvpc') {
+                    // Modo API ESIOS
+                    const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
+                    const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
+                    const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
 
-                const preciosMap = await fetchPreciosESIOS(fechaInicio, fechaFin, token);
+                    showStatus(`Consultando precios PVPC de ESIOS (${fechaInicio} a ${fechaFin})...`, "info");
+                    const preciosMap = await fetchPreciosESIOS(fechaInicio, fechaFin, token);
 
-                if (!preciosMap) return;
+                    if (!preciosMap) return; // Error de conexión o token mostrado dentro del fetch
 
-                // Combinar datos
-                const finalData = cleanData.map(item => {
-                    const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
-                    const precio = preciosMap[key] || 0; // en €/kWh
-                    return {
-                        ...item,
-                        precio: precio,
-                        coste: item.consumo * precio
-                    };
-                });
+                    processedData = cleanData.map(item => {
+                        const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
+                        const precio = preciosMap[key] || 0;
+                        return {
+                            ...item,
+                            precio: precio,
+                            coste: item.consumo * precio
+                        };
+                    });
 
-                window.currentData = finalData;
-                showStatus("Datos procesados correctamente", "success");
-                processAndDisplay(finalData);
+                } else {
+                    // Modo Tarifa Manual
+                    showStatus("Aplicando tarifas manuales configuradas...", "info");
+                    
+                    // Cargar parámetros manuales
+                    const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+                    const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                    
+                    const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+                    const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+
+                    const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+                    const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
+
+                    const useWeekendValle = document.getElementById('weekendValle').checked;
+                    const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
+
+                    processedData = cleanData.map(item => {
+                        let precio = priceValle; // Default
+                        
+                        // Determinar si es fin de semana
+                        const dateParts = item.fechaStr.split('-');
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
+                        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                        const isHoliday = holidays.includes(item.fechaStr);
+
+                        if ((isWeekend && useWeekendValle) || isHoliday) {
+                            precio = priceValle;
+                        } else {
+                            if (hoursPunta.includes(item.hora)) {
+                                precio = pricePunta;
+                            } else if (hoursLlano.includes(item.hora)) {
+                                precio = priceLlano;
+                            } else {
+                                precio = priceValle;
+                            }
+                        }
+
+                        return {
+                            ...item,
+                            precio: precio,
+                            coste: item.consumo * precio
+                        };
+                    });
+                }
+
+                showStatus("Datos procesados con éxito", "success");
+                renderResults(processedData);
 
             } catch (err) {
-                showStatus("Error en el procesamiento: " + err.message, "error");
+                showStatus("Error al procesar el archivo: " + err.message, "error");
                 console.error(err);
             }
         }
 
-        // Llamar a la API de ESIOS con manejo de CORS
+        // Consultar la API de ESIOS con gestión de CORS
         async function fetchPreciosESIOS(inicio, fin, token) {
             const url = `https://api.esios.ree.es/indicators/1013?start_date=${inicio}T00:00:00&end_date=${fin}T23:59:59`;
-            
-            // Usamos un proxy público de CORS en caso de que el navegador bloquee la petición directa.
             const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
 
             try {
@@ -249,36 +375,32 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Código de respuesta de la API: ${response.status}`);
+                    throw new Error(`Estado de respuesta HTTP: ${response.status}`);
                 }
 
                 const data = await response.json();
                 const values = data.indicator.values;
                 
-                // Mapear los valores a un objeto de búsqueda rápida
                 const preciosMap = {};
                 values.forEach(v => {
-                    // Convertir datetime ISO a huso horario de Madrid
                     const dateObj = new Date(v.datetime);
-                    // Formatear fecha local
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); // YYYY-MM-DD
+                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); // Formato YYYY-MM-DD
                     const localHour = dateObj.getHours();
 
                     const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    // Convertir de €/MWh a €/kWh
-                    preciosMap[key] = v.value / 1000.0;
+                    preciosMap[key] = v.value / 1000.0; // Pasar de €/MWh a €/kWh
                 });
 
                 return preciosMap;
 
             } catch (err) {
-                showStatus("Error al obtener precios de ESIOS. Verifique su Token o conexión de red: " + err.message, "error");
+                showStatus("Error al obtener los precios PVPC. Verifica la clave API o intenta utilizar el modo manual: " + err.message, "error");
                 return null;
             }
         }
 
-        // Calcular y mostrar resultados según el filtro
-        function processAndDisplay(data) {
+        // Renderizar los resultados en pantalla
+        function renderResults(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
 
             let totalKwh = 0;
@@ -311,7 +433,7 @@
                 }
             });
 
-            // Asignar métricas
+            // Asignar los valores a los elementos gráficos
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             totalCostEl.textContent = `${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
             
@@ -319,7 +441,7 @@
             filteredKwhEl.textContent = `${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             filteredCostEl.textContent = `${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
 
-            tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+            tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro del CSV supera el umbral seleccionado.</td></tr>`;
             
             resultsSection.classList.remove('hidden');
         }
