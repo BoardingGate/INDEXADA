@@ -172,6 +172,17 @@
 
             <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
             <div class="space-y-6 mb-8">
+
+                <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
+                        <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
+                        <p class="text-xs text-gray-500">Muestra los kWh totales e importes diarios de manera estructurada por mes.</p>
+                    </div>
+                    <div id="calendarGridContainer" class="space-y-8">
+                        <!-- Se generarán dinámicamente aquí los meses -->
+                    </div>
+                </div>
+
                 <!-- 1. Evolución Cronológica Diaria -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
@@ -309,6 +320,7 @@
         const avgPriceKwhTextEl = document.getElementById('avgPriceKwhText');
         const maxPeakHourlyTextEl = document.getElementById('maxPeakHourlyText');
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
+        const calendarGridContainer = document.getElementById('calendarGridContainer');
 
         // Configuración de eventos de archivo
         csvInput.addEventListener('change', handleFile);
@@ -697,6 +709,78 @@
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+
+            // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
+            const monthsMap = {};
+            sortedDates.forEach(dateStr => {
+                const yyyymm = dateStr.substring(0, 7); // Extrae "YYYY-MM"
+                if (!monthsMap[yyyymm]) {
+                    monthsMap[yyyymm] = [];
+                }
+                monthsMap[yyyymm].push(dateStr);
+            });
+
+            let calendarHtml = "";
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+            Object.keys(monthsMap).sort().forEach(yyyymm => {
+                const [year, monthNum] = yyyymm.split('-').map(Number);
+                const firstDayDate = new Date(year, monthNum - 1, 1);
+                
+                // Determinar el offset del primer día (Lunes = 0, Domingo = 6)
+                let firstDayOfWeek = firstDayDate.getDay();
+                const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+                let monthHtml = `
+                    <div class="border rounded-xl p-4 bg-gray-50 shadow-sm">
+                        <h4 class="text-sm font-bold text-blue-800 mb-3 text-center uppercase tracking-wide">
+                            ${monthNames[monthNum - 1]} ${year}
+                        </h4>
+                        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-500 mb-2 border-b pb-1">
+                            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-2">
+                `;
+
+                // Renderizar celdas vacías (offset del mes)
+                for (let i = 0; i < offset; i++) {
+                    monthHtml += `<div class="bg-gray-100/40 rounded-lg border border-dashed border-gray-200 min-h-[64px]"></div>`;
+                }
+
+                // Generar los días del mes
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayStr = String(day).padStart(2, '0');
+                    const dateKey = `${yyyymm}-${dayStr}`;
+                    const dayData = dailyStats[dateKey];
+
+                    if (dayData) {
+                        monthHtml += `
+                            <div class="bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-400 transition-colors min-h-[68px]">
+                                <span class="text-xs font-bold text-gray-400 leading-none">${day}</span>
+                                <div class="text-right mt-1.5">
+                                    <p class="text-[10px] font-bold text-blue-600 leading-tight">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal text-gray-400">kWh</span></p>
+                                    <p class="text-[9px] font-bold text-green-600 leading-tight mt-0.5">${dayData.cost.toFixed(2)} €</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        monthHtml += `
+                            <div class="bg-white/50 border border-gray-100 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-35">
+                                <span class="text-xs font-medium text-gray-300 leading-none">${day}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                monthHtml += `
+                        </div>
+                    </div>
+                `;
+                calendarHtml += monthHtml;
+            });
+
+            calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs">No hay lecturas disponibles para construir el calendario.</p>`;
             
             // Renderizar todos los gráficos
             renderDailyChart(dailyStats);
