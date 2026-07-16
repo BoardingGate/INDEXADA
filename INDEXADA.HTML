@@ -329,7 +329,7 @@
                 }
 
                 // Estructurar datos
-                const cleanData = parsedRows.map(row => {
+                let cleanData = parsedRows.map(row => {
                     let rawDate = row[colFecha];
                     let parts = rawDate.split(/[-/]/);
                     let formattedDate = rawDate;
