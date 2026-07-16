@@ -633,10 +633,18 @@ async function fetchPreciosESIOS(inicio, fin, token) {
         }
 
         // Gráfico 1: Evolución cronológica diaria con detección dinámica de carga
+// Gráfico 2: Evolución cronológica diaria con detección dinámica de carga
         function renderDailyChart(stats) {
             const sortedDates = Object.keys(stats).sort();
             const kwhData = sortedDates.map(d => stats[d].kwh);
             const costData = sortedDates.map(d => stats[d].cost);
+
+            // Calcular medias globales del período diario
+            const numDays = sortedDates.length || 1;
+            const totalKwh = kwhData.reduce((a, b) => a + b, 0);
+            const totalCost = costData.reduce((a, b) => a + b, 0);
+            const avgDailyKwh = totalKwh / numDays;
+            const avgDailyCost = totalCost / numDays;
 
             const dailyThreshold = parseFloat(dailyEvThresholdInput.value) || 9999;
 
@@ -680,6 +688,30 @@ async function fetchPreciosESIOS(inicio, fin, token) {
                             borderColor: 'rgba(16, 185, 129, 1)',
                             borderWidth: 2,
                             fill: true,
+                            yAxisID: 'y1'
+                        },
+                        // Línea horizontal de Media de Consumo Diario
+                        {
+                            label: 'Consumo Diario Medio (kWh)',
+                            data: Array(sortedDates.length).fill(avgDailyKwh),
+                            type: 'line',
+                            borderColor: 'rgba(59, 130, 246, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        // Línea horizontal de Media de Importe Diario
+                        {
+                            label: 'Importe Diario Medio (€)',
+                            data: Array(sortedDates.length).fill(avgDailyCost),
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
                             yAxisID: 'y1'
                         }
                     ]
@@ -766,12 +798,21 @@ async function fetchPreciosESIOS(inicio, fin, token) {
         }
 
         // Gráfico 3: Perfil horario medio y acumulado (24 horas)
+// Gráfico 3: Perfil horario medio y acumulado (24 horas)
         function renderHourlyChart(stats) {
             const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
             const totalKwhData = stats.map(s => s.totalKwh);
             const totalCostData = stats.map(s => s.totalCost);
             const avgKwhData = stats.map(s => s.count > 0 ? (s.totalKwh / s.count) : 0);
             const avgPriceData = stats.map(s => s.count > 0 ? (s.totalPrice / s.count) : 0);
+
+            // Calcular medias globales horarias y precio de todo el periodo
+            const totalKwh = stats.reduce((sum, s) => sum + s.totalKwh, 0);
+            const totalCost = stats.reduce((sum, s) => sum + s.totalCost, 0);
+            const totalCount = stats.reduce((sum, s) => sum + s.count, 0);
+
+            const avgHourlyKwh = totalCount > 0 ? (totalKwh / totalCount) : 0;
+            const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
             if (window.chartInstance3) {
                 window.chartInstance3.destroy();
@@ -790,7 +831,7 @@ async function fetchPreciosESIOS(inicio, fin, token) {
                             borderColor: 'rgba(59, 130, 246, 0.7)',
                             borderWidth: 1,
                             yAxisID: 'y',
-                            order: 4
+                            order: 6
                         },
                         {
                             label: 'Consumo Medio (kWh)',
@@ -800,7 +841,7 @@ async function fetchPreciosESIOS(inicio, fin, token) {
                             borderWidth: 2,
                             fill: false,
                             yAxisID: 'y',
-                            order: 3
+                            order: 4
                         },
                         {
                             label: 'Importe Acumulado (€)',
@@ -810,7 +851,7 @@ async function fetchPreciosESIOS(inicio, fin, token) {
                             borderWidth: 2,
                             fill: false,
                             yAxisID: 'y1',
-                            order: 2
+                            order: 3
                         },
                         {
                             label: 'Precio Medio (€/kWh)',
@@ -821,6 +862,32 @@ async function fetchPreciosESIOS(inicio, fin, token) {
                             fill: false,
                             yAxisID: 'y2',
                             order: 1
+                        },
+                        // Línea horizontal de Media Global de Consumo Horario
+                        {
+                            label: 'Media Consumo Horario (kWh)',
+                            data: Array(24).fill(avgHourlyKwh),
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y',
+                            order: 5
+                        },
+                        // Línea horizontal de Media Global del Precio del Periodo
+                        {
+                            label: 'Precio Medio Periodo (€/kWh)',
+                            data: Array(24).fill(avgPeriodPrice),
+                            type: 'line',
+                            borderColor: 'rgba(245, 158, 11, 0.6)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 2
                         }
                     ]
                 },
