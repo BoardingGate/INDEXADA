@@ -173,7 +173,6 @@
             <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
             <div class="space-y-6 mb-8">
 
-                <!-- PANEL: Patrón de Consumo (Tramos de Facturación) -->
                 <!-- PANEL: Patrón de Consumo (Doble Clasificación) -->
                 <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
@@ -248,7 +247,7 @@
                                     </div>
                                 </div>
                                 <!-- P3 Bajo -->
-                                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col justify-between">
+                                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex flex-col justify-between">
                                     <span class="font-bold text-emerald-800 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
                                     <div class="mt-1 flex items-baseline justify-between">
                                         <span id="p3KwhPriceText" class="text-lg font-black text-gray-900">0.00 kWh</span>
@@ -260,8 +259,7 @@
                     </div>
                 </div>
 
-
-                <!-- PANEL NUEVO: Calendario Mensual Dinámico -->
+                <!-- PANEL: Consumo Diario por Calendario -->
                 <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
                         <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
@@ -273,7 +271,7 @@
                     <!-- Instrucciones de selección al pie del calendario -->
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
                         <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
-                        <p><strong>Mecánica de selección libre:</strong> Por defecto, todos los días con lecturas se incluyen en el cálculo. Haz clic sobre cualquier casilla para <strong>desactivar o activar</strong> días sueltos a voluntad (los días excluidos se verán semitransparentes y sus valores se restarán del total). Para volver a activar todos los días a la vez, haz clic en el botón superior <strong>"Limpiar Filtros"</strong>.</p>
+                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros"</strong>.</p>
                     </div>
                 </div>
 
@@ -453,7 +451,7 @@
             });
         }
 
-async function processData(parsedRows) {
+        async function processData(parsedRows) {
             const mode = rateMode.value;
 
             try {
@@ -614,7 +612,8 @@ async function processData(parsedRows) {
             }
         }
 
-          async function fetchPreciosPVPC(inicio, fin) {
+        // Función definitiva para obtener los precios oficiales de Red Eléctrica
+        async function fetchPreciosPVPC(inicio, fin) {
             const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
 
             try {
@@ -663,13 +662,6 @@ async function processData(parsedRows) {
             let filteredCost = 0;
             let filteredHoursCount = 0;
 
-            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   // Por franja horaria
-            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; // Por nivel de coste real
-
-            let p1Kwh = 0;
-            let p2Kwh = 0;
-            let p3Kwh = 0;
-
             // Variables para picos de potencia
             let maxPeakHourly = 0;
             let maxPeakP1 = 0;
@@ -678,6 +670,10 @@ async function processData(parsedRows) {
             let countP1 = 0;
             let totalKwhP2 = 0;
             let countP2 = 0;
+
+            // ACUMULADORES PARA EL DOBLE PATRÓN:
+            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   // Por franja horaria
+            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; // Por nivel de coste real
 
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
@@ -718,7 +714,7 @@ async function processData(parsedRows) {
                 dayOfWeekStats[dayOfWeek].cost += item.coste;
 
                 // Determinar periodo de potencia de facturación en España (P1 Punta/Llano o P2 Valle)
-               const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                 const isHoliday = holidaysList.includes(item.fechaStr);
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
@@ -749,9 +745,21 @@ async function processData(parsedRows) {
                     p3KwhPrice += item.consumo;
                 } else {
                     p2KwhPrice += item.consumo;
-                }                
+                }
 
-
+                // Evaluar picos máximos de consumo (su equivalente en potencia kW media de esa hora)
+                if (item.consumo > maxPeakHourly) {
+                    maxPeakHourly = item.consumo;
+                }
+                if (isP1) {
+                    if (item.consumo > maxPeakP1) maxPeakP1 = item.consumo;
+                    totalKwhP1 += item.consumo;
+                    countP1++;
+                } else {
+                    if (item.consumo > maxPeakP2) maxPeakP2 = item.consumo;
+                    totalKwhP2 += item.consumo;
+                    countP2++;
+                }
 
                 // 2. Acumulaciones para Gráfica Diaria Cronológica
                 if (!dailyStats[item.fechaStr]) {
@@ -857,7 +865,6 @@ async function processData(parsedRows) {
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            
             // Calcular porcentajes para clasificación horaria
             const p1PctTime = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
             const p2PctTime = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
@@ -888,22 +895,6 @@ async function processData(parsedRows) {
             document.getElementById('p3PctPriceText').textContent = `${p3PctPrice.toFixed(1)}%`;
 
             // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
-
-// Calcular promedios e inyectar datos del Patrón de Consumo
-            const p1Pct = totalKwh > 0 ? (p1Kwh / totalKwh) * 100 : 0;
-            const p2Pct = totalKwh > 0 ? (p2Kwh / totalKwh) * 100 : 0;
-            const p3Pct = totalKwh > 0 ? (p3Kwh / totalKwh) * 100 : 0;
-
-            document.getElementById('p1KwhText').textContent = `${p1Kwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            document.getElementById('p1PctText').textContent = `${p1Pct.toFixed(1)}% del total`;
-
-            document.getElementById('p2KwhText').textContent = `${p2Kwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            document.getElementById('p2PctText').textContent = `${p2Pct.toFixed(1)}% del total`;
-
-            document.getElementById('p3KwhText').textContent = `${p3Kwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            document.getElementById('p3PctText').textContent = `${p3Pct.toFixed(1)}% del total`;
-
-// --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
             const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
             const startVal = filterStartDate.value;
             const endVal = filterEndDate.value;
@@ -1013,7 +1004,7 @@ async function processData(parsedRows) {
 
             calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs font-semibold">No hay lecturas disponibles para construir el calendario.</p>`;
 
-// Renderizar todos los gráficos
+            // Renderizar todos los gráficos
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
             renderHourlyChart(hourlyStats);
@@ -1129,8 +1120,7 @@ async function processData(parsedRows) {
             });
         }
 
-        // Gráfico 2: Día de la semana
-// Gráfico 2: Promedio y Acumulado diario por día de la semana
+        // Gráfico 2: Promedio y Acumulado diario por día de la semana
         function renderDayOfWeekChart(stats, counts) {
             const canvas = document.getElementById('chartDayOfWeek');
             if (!canvas) {
@@ -1390,8 +1380,8 @@ async function processData(parsedRows) {
                 filterStartHour: document.getElementById('filterStartHour').value,
                 filterEndHour: document.getElementById('filterEndHour').value,
                 calendarSelectedDates: Array.from(window.calendarSelectedDates),
-                if (config.pvpcHighThreshold !== undefined) document.getElementById('pvpcHighThreshold').value = config.pvpcHighThreshold;
-                if (config.pvpcLowThreshold !== undefined) document.getElementById('pvpcLowThreshold').value = config.pvpcLowThreshold;
+                pvpcHighThreshold: document.getElementById('pvpcHighThreshold').value,
+                pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -1420,6 +1410,8 @@ async function processData(parsedRows) {
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+                if (config.pvpcHighThreshold !== undefined) document.getElementById('pvpcHighThreshold').value = config.pvpcHighThreshold;
+                if (config.pvpcLowThreshold !== undefined) document.getElementById('pvpcLowThreshold').value = config.pvpcLowThreshold;
                 if (config.calendarSelectedDates !== undefined) {
                     window.calendarSelectedDates = new Set(config.calendarSelectedDates);
                 } else {
@@ -1432,6 +1424,7 @@ async function processData(parsedRows) {
             }
         }
 
+        // Mostrar u ocultar paneles de tarifa según selección
         // Mostrar u ocultar paneles de tarifa según selección
         function toggleRatePanels() {
             const mode = document.getElementById('rateMode').value;
@@ -1473,9 +1466,8 @@ async function processData(parsedRows) {
             'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
             'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
             'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour',
-            'pvpcHighThreshold', 'pvpcLowThreshold' // AÑADIDOS AQUÍ
+            'pvpcHighThreshold', 'pvpcLowThreshold'
         ];
-
         inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1486,16 +1478,21 @@ async function processData(parsedRows) {
 
         loadConfig();
 
-        // Función interactiva de selección de rango por calendario
+        // Función interactiva para conmutar días individuales (selección discreta no continua)
         window.handleCalendarDayClick = function(dateStr) {
             if (!window.calendarSelectedDates) {
                 window.calendarSelectedDates = new Set();
             }
 
+            // Al usar la selección directa por casillas, limpiamos los campos superiores de rango
+            // para que no haya confusiones de diseño en el panel de filtros
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
 
-             const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
+            // Si es la primera vez que se interactúa y el conjunto está vacío,
+            // asumimos que el usuario quiere empezar desactivando el día en el que hace clic.
+            // Para ello, primero activamos todos los días disponibles menos el pulsado.
+            const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
             if (!hasCustomCalendar && window.allAvailableDays) {
                 Object.keys(window.allAvailableDays).forEach(key => {
                     if (key !== dateStr) {
@@ -1503,7 +1500,8 @@ async function processData(parsedRows) {
                     }
                 });
             } else {
-                  if (window.calendarSelectedDates.has(dateStr)) {
+                // Si ya había una selección personalizada previa, simplemente conmutamos el día pulsado
+                if (window.calendarSelectedDates.has(dateStr)) {
                     window.calendarSelectedDates.delete(dateStr);
                 } else {
                     window.calendarSelectedDates.add(dateStr);
@@ -1512,11 +1510,11 @@ async function processData(parsedRows) {
             
             saveConfig(); // Persistir la sesión en el almacenamiento local
 
-             if (window.rawCsvData) {
+            // Lanzar recálculo automático si el archivo CSV ya está cargado
+            if (window.rawCsvData) {
                 processData(window.rawCsvData);
             }
         };
-
 
     </script>
 </body>
