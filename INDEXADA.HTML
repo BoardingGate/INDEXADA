@@ -447,11 +447,11 @@
         }
 
         async function fetchPreciosESIOS(inicio, fin, token) {
+            // Realizar la petición directamente a ESIOS (sin proxies intermedios)
             const url = `https://api.esios.ree.es/indicators/1013?start_date=${inicio}T00:00:00&end_date=${fin}T23:59:59`;
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
 
             try {
-                const response = await fetch(proxyUrl, {
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json; application/vnd.esios-api-v1+json',
@@ -474,13 +474,13 @@
                     const localHour = dateObj.getHours();
 
                     const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0; 
+                    preciosMap[key] = v.value / 1000.0; // Conversión de €/MWh a €/kWh
                 });
 
                 return preciosMap;
 
             } catch (err) {
-                showStatus("Fallo en la comunicación con ESIOS. Verifique su token o pruebe la Tarifa Manual: " + err.message, "error");
+                showStatus("Fallo en la comunicación directa con ESIOS. Verifique su token o pruebe la Tarifa Manual: " + err.message, "error");
                 return null;
             }
         }
