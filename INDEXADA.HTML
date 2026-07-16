@@ -538,6 +538,10 @@
             let maxPeakHourly = 0;
             let maxPeakP1 = 0;
             let maxPeakP2 = 0;
+            let totalKwhP1 = 0;
+            let countP1 = 0;
+            let totalKwhP2 = 0;
+            let countP2 = 0;
 
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
@@ -584,13 +588,17 @@
                 const isP1 = !isP2;
 
                 // Evaluar picos máximos de consumo (su equivalente en potencia kW media de esa hora)
-                if (item.consumo > maxPeakHourly) {
+                           if (item.consumo > maxPeakHourly) {
                     maxPeakHourly = item.consumo;
                 }
                 if (isP1) {
                     if (item.consumo > maxPeakP1) maxPeakP1 = item.consumo;
+                    totalKwhP1 += item.consumo;
+                    countP1++;
                 } else {
                     if (item.consumo > maxPeakP2) maxPeakP2 = item.consumo;
+                    totalKwhP2 += item.consumo;
+                    countP2++;
                 }
 
                 // 2. Acumulaciones para Gráfica Diaria Cronológica
@@ -647,9 +655,25 @@
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
-            // Actualizar Métricas de Potencias Máximas
+           // Calcular promedios de potencia
+            const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
+            const avgPowerP2 = countP2 > 0 ? (totalKwhP2 / countP2) : 0;
+
+            // Actualizar Métricas de Potencias Máximas y Medias
             maxPeakHourlyTextEl.textContent = `${maxPeakHourly.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            requiredPowerTextEl.innerHTML = `P1: <span class="font-bold">${maxPeakP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>P2: <span class="font-bold">${maxPeakP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>`;
+            
+            requiredPowerTextEl.innerHTML = `
+                <div class="leading-tight">
+                    <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Máximos</span>
+                    P1: <span class="font-bold text-gray-900">${maxPeakP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>
+                    P2: <span class="font-bold text-gray-900">${maxPeakP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>
+                </div>
+                <div class="mt-1.5 pt-1.5 border-t border-gray-100 leading-tight">
+                    <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Medias</span>
+                    P1: <span class="font-bold text-gray-900">${avgPowerP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>
+                    P2: <span class="font-bold text-gray-900">${avgPowerP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>
+                </div>
+            `;
 
             // Calcular porcentajes sobre el total
             const pctKwh = totalKwh > 0 ? (filteredKwh / totalKwh) * 100 : 0;
