@@ -198,7 +198,7 @@
 
                 <!-- 2. Acumulado por Día de la Semana -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Acumulado por Día de la Semana</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Consumo e Importe Medio por Día de la Semana</h3>
                     <div class="relative h-80">
                         <canvas id="chartDayOfWeek"></canvas>
                     </div>
@@ -660,6 +660,13 @@
 
             // Calcular métricas adicionales para las nuevas tarjetas
             const sortedDates = Object.keys(dailyStats).sort();
+            const dayOfWeekCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
+            sortedDates.forEach(dateStr => {
+                const dateParts = dateStr.split('-');
+                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+                dayOfWeekCount[dayOfWeek]++;
+            });
             const numDays = sortedDates.length || 1;
             const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
@@ -826,6 +833,7 @@
 
 // Renderizar todos los gráficos
             renderDailyChart(dailyStats);
+            renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
             renderDayOfWeekChart(dayOfWeekStats);
             renderHourlyChart(hourlyStats);
 
@@ -941,7 +949,8 @@
         }
 
         // Gráfico 2: Día de la semana
-        function renderDayOfWeekChart(stats) {
+// Gráfico 2: Promedio diario por día de la semana
+        function renderDayOfWeekChart(stats, counts) {
             const canvas = document.getElementById('chartDayOfWeek');
             if (!canvas) {
                 console.warn("No se encontró el lienzo 'chartDayOfWeek'. Saltando renderizado.");
@@ -950,8 +959,16 @@
 
             const order = [1, 2, 3, 4, 5, 6, 0]; // Lunes a Domingo
             const labels = order.map(i => stats[i].label);
-            const kwhData = order.map(i => stats[i].kwh);
-            const costData = order.map(i => stats[i].cost);
+            
+            // Dividir el consumo e importe total de cada día de la semana por su número de ocurrencias reales
+            const kwhData = order.map(i => {
+                const count = counts[i] || 1;
+                return stats[i].kwh / count;
+            });
+            const costData = order.map(i => {
+                const count = counts[i] || 1;
+                return stats[i].cost / count;
+            });
 
             if (window.chartInstance1) {
                 window.chartInstance1.destroy();
@@ -964,7 +981,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Consumo (kWh)',
+                            label: 'Consumo Medio (kWh)',
                             data: kwhData,
                             backgroundColor: 'rgba(59, 130, 246, 0.7)',
                             borderColor: 'rgba(59, 130, 246, 1)',
@@ -972,7 +989,7 @@
                             yAxisID: 'y'
                         },
                         {
-                            label: 'Importe (€)',
+                            label: 'Importe Medio (€)',
                             data: costData,
                             type: 'line',
                             backgroundColor: 'rgba(16, 185, 129, 0.2)',
@@ -991,14 +1008,14 @@
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: { display: true, text: 'Consumo (kWh)' }
+                            title: { display: true, text: 'Consumo Medio Diario (kWh)' }
                         },
                         y1: {
                             type: 'linear',
                             display: true,
                             position: 'right',
                             grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Importe (€)' }
+                            title: { display: true, text: 'Importe Medio Diario (€)' }
                         }
                     }
                 }
