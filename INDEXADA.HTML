@@ -269,8 +269,18 @@
         const filterEndDate = document.getElementById('filterEndDate');
         const filterStartHour = document.getElementById('filterStartHour');
         const filterEndHour = document.getElementById('filterEndHour');
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-        
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
+            e.preventDefault(); 
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterStartHour').value = '';
+            document.getElementById('filterEndHour').value = '';
+            
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        });
+
         const totalKwhEl = document.getElementById('totalKwh');
         const totalCostEl = document.getElementById('totalCost');
         const filteredHoursEl = document.getElementById('filteredHours');
