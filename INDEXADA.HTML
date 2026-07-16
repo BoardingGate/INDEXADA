@@ -834,7 +834,6 @@
 // Renderizar todos los gráficos
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
-            renderDayOfWeekChart(dayOfWeekStats);
             renderHourlyChart(hourlyStats);
 
             resultsSection.classList.remove('hidden');
@@ -949,7 +948,6 @@
         }
 
         // Gráfico 2: Día de la semana
-// Gráfico 2: Promedio diario por día de la semana
         function renderDayOfWeekChart(stats, counts) {
             const canvas = document.getElementById('chartDayOfWeek');
             if (!canvas) {
@@ -957,18 +955,20 @@
                 return;
             }
 
+            const safeCounts = counts || {};
+
             const order = [1, 2, 3, 4, 5, 6, 0]; // Lunes a Domingo
             const labels = order.map(i => stats[i].label);
             
             // Dividir el consumo e importe total de cada día de la semana por su número de ocurrencias reales
             const kwhData = order.map(i => {
-                const count = counts[i] || 1;
+                const count = safeCounts[i] || 1; // Usa safeCounts en lugar de counts
                 return stats[i].kwh / count;
             });
             const costData = order.map(i => {
-                const count = counts[i] || 1;
+                const count = safeCounts[i] || 1; // Usa safeCounts en lugar de counts
                 return stats[i].cost / count;
-            });
+            });    
 
             if (window.chartInstance1) {
                 window.chartInstance1.destroy();
