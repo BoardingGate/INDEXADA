@@ -128,21 +128,25 @@
                 </div>
             </div>
 
-            <!-- Gráficas del Análisis -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Acumulado por Día de la Semana</h3>
-                    <div class="relative h-80">
-                        <canvas id="chartDayOfWeek"></canvas>
-                    </div>
-                </div>
+            <!-- Gráficas del Análisis (Distribución Apilada para evitar compresión) -->
+            <div class="space-y-6 mb-8">
+                <!-- 1. Evolución Cronológica Diaria (Superior / Ancho completo) -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
                     <div class="relative h-80">
                         <canvas id="chartDaily"></canvas>
                     </div>
                 </div>
+
+                <!-- 2. Acumulado por Día de la Semana (Inferior / Ancho completo) -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Acumulado por Día de la Semana</h3>
+                    <div class="relative h-80">
+                        <canvas id="chartDayOfWeek"></canvas>
+                    </div>
+                </div>
             </div>
+
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
                 <div class="relative h-96">
