@@ -184,7 +184,7 @@
                     <!-- Instrucciones de selección al pie del calendario -->
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
                         <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
-                        <p><strong>Mecánica de filtrado:</strong> Haz clic sobre cualquier día para fijar la <strong>Fecha de Inicio</strong> (se marcará con un anillo azul grueso). Haz clic en otro día posterior para fijar la <strong>Fecha de Fin</strong>. Los filtros superiores se actualizarán y los datos se recalcularán automáticamente.</p>
+                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros"</strong>.</p>
                     </div>
                 </div>
 
@@ -291,6 +291,7 @@
         window.chartInstance1 = null;
         window.chartInstance2 = null;
         window.chartInstance3 = null;
+        window.calendarSelectedDates = new Set();
 
         const STORAGE_KEY = 'analizador_consumo_config';
 
@@ -416,9 +417,31 @@
                 const startHourVal = filterStartHour.value !== "" ? parseInt(filterStartHour.value, 10) : null;
                 const endHourVal = filterEndHour.value !== "" ? parseInt(filterEndHour.value, 10) : null;
 
+                const startDateVal = filterStartDate.value;
+                const endDateVal = filterEndDate.value;
+                const startHourVal = filterStartHour.value !== "" ? parseInt(filterStartHour.value, 10) : null;
+                const endHourVal = filterEndHour.value !== "" ? parseInt(filterEndHour.value, 10) : null;
+
+                // --- CONSTRUCCIÓN DEL MAPA GLOBAL DE DÍAS DISPONIBLES (Antes de filtrar) ---
+                window.allAvailableDays = {};
+                cleanData.forEach(item => {
+                    if (!window.allAvailableDays[item.fechaStr]) {
+                        window.allAvailableDays[item.fechaStr] = { kwh: 0, cost: 0 };
+                    }
+                    window.allAvailableDays[item.fechaStr].kwh += item.consumo;
+                    window.allAvailableDays[item.fechaStr].cost += item.coste;
+                });
+
                 cleanData = cleanData.filter(item => {
-                    if (startDateVal && item.fechaStr < startDateVal) return false;
-                    if (endDateVal && item.fechaStr > endDateVal) return false;
+                    const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
+                    
+                    if (hasCustomCalendar) {
+                        if (!window.calendarSelectedDates.has(item.fechaStr)) return false;
+                    } else {
+                        if (startDateVal && item.fechaStr < startDateVal) return false;
+                        if (endDateVal && item.fechaStr > endDateVal) return false;
+                    }
+                    
                     if (startHourVal !== null && item.hora < startHourVal) return false;
                     if (endHourVal !== null && item.hora > endHourVal) return false;
                     return true;
@@ -723,13 +746,13 @@
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
 // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
-// --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
             const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
             const startVal = filterStartDate.value;
             const endVal = filterEndDate.value;
+            const calendarSource = window.allAvailableDays || dailyStats;
 
             const monthsMap = {};
-            sortedDates.forEach(dateStr => {
+            Object.keys(calendarSource).forEach(dateStr => {
                 const yyyymm = dateStr.substring(0, 7); // Extrae "YYYY-MM"
                 if (!monthsMap[yyyymm]) {
                     monthsMap[yyyymm] = [];
@@ -744,7 +767,6 @@
                 const [year, monthNum] = yyyymm.split('-').map(Number);
                 const firstDayDate = new Date(year, monthNum - 1, 1);
                 
-                // Determinar el offset del primer día (Lunes = 0, Domingo = 6)
                 let firstDayOfWeek = firstDayDate.getDay();
                 const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
                 const daysInMonth = new Date(year, monthNum, 0).getDate();
@@ -760,7 +782,7 @@
                         <div class="grid grid-cols-7 gap-2">
                 `;
 
-                // Renderizar celdas vacías de los días previos (offset)
+                // Renderizar celdas vacías (offset)
                 for (let i = 0; i < offset; i++) {
                     monthHtml += `<div class="bg-gray-200/40 rounded-lg border border-dashed border-gray-300 min-h-[68px]"></div>`;
                 }
@@ -769,21 +791,24 @@
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dayStr = String(day).padStart(2, '0');
                     const dateKey = `${yyyymm}-${dayStr}`;
-                    const dayData = dailyStats[dateKey];
+                    const dayData = calendarSource[dateKey];
 
-                    // Evaluar estados de selección de rango
-                    const isSelectedStart = (dateKey === startVal);
-                    const isSelectedEnd = (dateKey === endVal);
-                    const isWithinRange = (startVal && endVal && dateKey >= startVal && dateKey <= endVal);
-
-                    let selectHighlightClass = "";
-                    if (isSelectedStart) {
-                        selectHighlightClass = "ring-4 ring-blue-600 ring-offset-1 z-10 scale-[1.01]";
-                    } else if (isSelectedEnd) {
-                        selectHighlightClass = "ring-4 ring-blue-500 ring-offset-1 z-10 scale-[1.01]";
-                    } else if (isWithinRange) {
-                        selectHighlightClass = "ring-2 ring-blue-300 ring-offset-0";
+                    const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
+                    
+                    // Comprobar si el día debe mostrarse activo/seleccionado
+                    let isSelected = false;
+                    if (hasCustomCalendar) {
+                        isSelected = window.calendarSelectedDates.has(dateKey);
+                    } else if (startVal || endVal) {
+                        isSelected = (startVal && dateKey === startVal) || (endVal && dateKey === endVal) || (startVal && endVal && dateKey >= startVal && dateKey <= endVal);
+                    } else {
+                        isSelected = true; // Si no hay ningún filtro de fecha, todo está activo por defecto
                     }
+
+                    // Clase de realce de selección activa frente a inactiva (atenuada)
+                    const selectHighlightClass = isSelected 
+                        ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
+                        : "opacity-35 hover:opacity-75 transition-opacity";
 
                     if (dayData) {
                         const isEvChargingDay = dayData.kwh >= dailyEvThreshold;
@@ -803,7 +828,7 @@
                         }
 
                         monthHtml += `
-                            <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral diario superado: posible carga de coche eléctrico' : 'Hacer clic para filtrar por este día'}">
+                            <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
                                 <span class="${dayLabelClass}">${day}</span>
                                 <div class="text-right mt-1.5">
                                     <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
@@ -812,10 +837,9 @@
                             </div>
                         `;
                     } else {
-                        // Incluso si el día no tiene registros en el periodo actual, permitimos hacer clic para facilitar re-selecciones
-                        let emptyCellClass = "bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40 cursor-pointer hover:bg-gray-300 hover:opacity-80 transition-all " + selectHighlightClass;
+                        // Celdas para días fuera del rango original del archivo CSV
                         monthHtml += `
-                            <div class="${emptyCellClass}" onclick="handleCalendarDayClick('${dateKey}')" title="Hacer clic para definir como fecha límite">
+                            <div class="bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
                                 <span class="text-xs font-semibold text-gray-400 leading-none">${day}</span>
                             </div>
                         `;
@@ -1206,7 +1230,8 @@
                 filterStartDate: document.getElementById('filterStartDate').value,
                 filterEndDate: document.getElementById('filterEndDate').value,
                 filterStartHour: document.getElementById('filterStartHour').value,
-                filterEndHour: document.getElementById('filterEndHour').value
+                filterEndHour: document.getElementById('filterEndHour').value,
+                calendarSelectedDates: Array.from(window.calendarSelectedDates)
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -1235,6 +1260,11 @@
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+                if (config.calendarSelectedDates !== undefined) {
+                    window.calendarSelectedDates = new Set(config.calendarSelectedDates);
+                } else {
+                    window.calendarSelectedDates = new Set();
+                }
 
                 toggleRatePanels();
             } catch (e) {
@@ -1265,6 +1295,11 @@
             document.getElementById('filterEndDate').value = '';
             document.getElementById('filterStartHour').value = '';
             document.getElementById('filterEndHour').value = '';
+            
+            // Limpiar también el conjunto de días del calendario
+            if (window.calendarSelectedDates) {
+                window.calendarSelectedDates.clear();
+            }
             
             saveConfig(); // Guardar el vaciado en localStorage
 
