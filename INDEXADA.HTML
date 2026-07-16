@@ -618,10 +618,21 @@
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
+            const pctKwh = totalKwh > 0 ? (filteredKwh / totalKwh) * 100 : 0;
+            const pctCost = totalCost > 0 ? (filteredCost / totalCost) * 100 : 0;
+
+
             filteredHoursEl.textContent = `${filteredHoursCount} h`;
-            filteredKwhEl.textContent = `${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            filteredCostEl.textContent = `${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
-             const avgFilteredKwh = filteredHoursCount > 0 ? (filteredKwh / filteredHoursCount) : 0;
+            filteredKwhEl.innerHTML = `
+                ${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh 
+                <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctKwh.toFixed(1)}%)</span>
+            `;
+            
+            filteredCostEl.innerHTML = `
+                ${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € 
+                <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctCost.toFixed(1)}%)</span>
+            `;
+            const avgFilteredKwh = filteredHoursCount > 0 ? (filteredKwh / filteredHoursCount) : 0;
             const avgFilteredPrice = filteredKwh > 0 ? (filteredCost / filteredKwh) : 0;
             filteredAvgKwhEl.textContent = `${avgFilteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
