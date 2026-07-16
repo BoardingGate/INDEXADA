@@ -1,3 +1,17 @@
+Para evitar cualquier error de integración o inconsistencia en las variables,
+aquí tiene el código completo de la aplicación con todas las funciones
+incorporadas y corregidas:
+
+1.  El campo del token es visible (type="text").
+2.  Se ha añadido de forma nativa el botón de "Limpiar Filtros" en el panel
+    correspondiente.
+3.  Se implementó el almacenamiento y recuperación en localStorage (incluyendo
+    el token).
+4.  La lógica de fechas y filtros se ha unificado para corregir la discrepancia
+    de datos en los gráficos.
+
+Sustituya todo el contenido de su archivo por el siguiente:
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,8 +26,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
-
-    
 
     <div class="container mx-auto px-4 py-8 max-w-5xl">
         <!-- Cabecera -->
@@ -41,7 +53,6 @@
                 <input type="number" id="subtractInput" step="0.05" value="0.20" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <p class="text-xs text-gray-500 mt-1">Consumo de la casa a deducir en esas horas.</p>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">4. Carga Diaria si kWh &ge;</label>
                 <input type="number" id="dailyEvThresholdInput" step="1.0" value="15.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -51,10 +62,9 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">5. Archivo CSV Distribuidora</label>
                 <input type="file" id="csvInput" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
-        </div>       
+        </div>
 
-  
-        <!-- Panel de Filtros Temporales con Botón Limpiar -->
+        <!-- Panel de Filtros Temporales -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-md font-bold text-purple-700">Filtros de Período (Opcional)</h3>
@@ -80,15 +90,16 @@
                     <input type="number" id="filterEndHour" min="0" max="23" placeholder="Ej: 23" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                 </div>
             </div>
-        </div>        
+        </div>
 
         <!-- Configuración Específica de Tarifa Regulada (PVPC) -->
         <div id="pvpcConfig" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <h3 class="text-md font-bold text-blue-700 mb-3">Configuración de Conexión PVPC</h3>
             <div class="max-w-md">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Token de ESIOS (REE)</label>
-                <input type="password" id="tokenInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Introduce tu token">
-                <p class="text-xs text-gray-500 mt-1">Solicítalo gratis en <a href="mailto:consultasios@ree.es" class="text-blue-500 underline">consultasesios@ree.es</a></p>
+                <!-- Modificado a type="text" para que el token sea visible -->
+                <input type="text" id="tokenInput" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Introduce tu token">
+                <p class="text-xs text-gray-500 mt-1">Solicítalo gratis en <a href="mailto:consultasesios@ree.es" class="text-blue-500 underline">consultasesios@ree.es</a></p>
             </div>
         </div>
 
@@ -163,9 +174,9 @@
                 </div>
             </div>
 
-            <!-- Gráficas del Análisis (Distribución Apilada para evitar compresión) -->
+            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
             <div class="space-y-6 mb-8">
-                <!-- 1. Evolución Cronológica Diaria (Superior / Ancho completo) -->
+                <!-- 1. Evolución Cronológica Diaria (Superior) -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
                     <div class="relative h-80">
@@ -173,22 +184,22 @@
                     </div>
                 </div>
 
-                <!-- 2. Acumulado por Día de la Semana (Inferior / Ancho completo) -->
+                <!-- 2. Acumulado por Día de la Semana -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Acumulado por Día de la Semana</h3>
                     <div class="relative h-80">
                         <canvas id="chartDayOfWeek"></canvas>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
-                <div class="relative h-96">
-                    <canvas id="chartHourly"></canvas>
+                <!-- 3. Perfil Horario de 24 horas -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
+                    <div class="relative h-96">
+                        <canvas id="chartHourly"></canvas>
+                    </div>
                 </div>
             </div>
-
 
             <!-- Métricas Filtradas -->
             <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
@@ -199,11 +210,11 @@
                         <span id="filteredHours" class="text-2xl font-bold text-yellow-900 font-mono">0 h</span>
                     </div>
                     <div>
-                        <span class="text-gray-600 text-sm block">Subtotal Consumo:</span>
+                        <span class="text-gray-600 text-sm block">Subtotal Consumo (Vehículo):</span>
                         <span id="filteredKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
                     </div>
                     <div>
-                        <span class="text-gray-600 text-sm block">Subtotal Coste:</span>
+                        <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
                         <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
                     </div>
                 </div>
@@ -220,9 +231,9 @@
                             <tr class="bg-gray-100 text-gray-700 text-sm uppercase">
                                 <th class="p-4 border-b">Fecha</th>
                                 <th class="p-4 border-b">Hora</th>
-                                <th class="p-4 border-b text-right">Consumo (kWh)</th>
+                                <th class="p-4 border-b text-right">Consumo Neto Vehículo (kWh)</th>
                                 <th class="p-4 border-b text-right">Precio Aplicado (€/kWh)</th>
-                                <th class="p-4 border-b text-right">Coste (€)</th>
+                                <th class="p-4 border-b text-right">Coste Vehículo (€)</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="text-sm divide-y">
@@ -241,6 +252,8 @@
         window.chartInstance2 = null;
         window.chartInstance3 = null;
 
+        const STORAGE_KEY = 'analizador_consumo_config';
+
         // Elementos del DOM
         const rateMode = document.getElementById('rateMode');
         const pvpcConfig = document.getElementById('pvpcConfig');
@@ -249,66 +262,23 @@
         const tokenInput = document.getElementById('tokenInput');
         const thresholdInput = document.getElementById('thresholdInput');
         const subtractInput = document.getElementById('subtractInput');
-        const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');        
+        const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');
         const csvInput = document.getElementById('csvInput');
         const statusMessage = document.getElementById('statusMessage');
         const resultsSection = document.getElementById('resultsSection');
         const recalculateBtn = document.getElementById('recalculateBtn');
 
-         clearFiltersBtn.addEventListener('click', () => {
-            filterStartDate.value = '';
-            filterEndDate.value = '';
-            filterStartHour.value = '';
-            filterEndHour.value = '';
-            if (window.rawCsvData) {
-                processData(window.rawCsvData);
-            }
-        });
-
         const filterStartDate = document.getElementById('filterStartDate');
         const filterEndDate = document.getElementById('filterEndDate');
         const filterStartHour = document.getElementById('filterStartHour');
         const filterEndHour = document.getElementById('filterEndHour');
-       document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
-            e.preventDefault(); 
-            document.getElementById('filterStartDate').value = '';
-            document.getElementById('filterEndDate').value = '';
-            document.getElementById('filterStartHour').value = '';
-            document.getElementById('filterEndHour').value = '';
-            
-            saveConfig(); // <- Esta línea es fundamental para vaciar los datos guardados en el navegador
-
-            if (window.rawCsvData) {
-                processData(window.rawCsvData);
-            }
-        });
-
-        // Guardado automático al escribir o interactuar en los campos
-        const inputsToWatch = [
-            'thresholdInput', 'subtractInput', 'dailyEvThresholdInput', 'tokenInput',
-            'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
-            'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour'
-        ];
-        inputsToWatch.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', saveConfig);
-                el.addEventListener('change', saveConfig);
-            }
-        });
-
+        
         const totalKwhEl = document.getElementById('totalKwh');
         const totalCostEl = document.getElementById('totalCost');
         const filteredHoursEl = document.getElementById('filteredHours');
         const filteredKwhEl = document.getElementById('filteredKwh');
         const filteredCostEl = document.getElementById('filteredCost');
         const tableBody = document.getElementById('tableBody');
-
-        // Alternar visualización de los paneles de configuración
-       document.getElementById('rateMode').addEventListener('change', () => {
-            toggleRatePanels();
-            saveConfig();
-        });
 
         // Configuración de eventos de archivo
         csvInput.addEventListener('change', handleFile);
@@ -366,7 +336,12 @@
                     return;
                 }
 
-                // Estructurar datos
+                // Estructurar datos con sanitización rigurosa de fechas y horas
+                let cleanData = parsedRows.map(row => {
+                    let rawDate = row[colFecha];
+                    if (!rawDate) return null;
+
+                    // Limpiar posibles horas acopladas a la columna de fechas
                     rawDate = rawDate.trim().split(' ')[0];
 
                     let parts = rawDate.split(/[-/]/);
@@ -380,20 +355,21 @@
                     }
 
                     let hora = parseInt(row[colHora], 10);
-                    if (isNaN(hora)) return null; // Ignorar líneas sin hora válida (por ejemplo, cabeceras redundantes)
+                    if (isNaN(hora)) return null;
                     if (hora === 24) hora = 0; 
 
                     let consumoRaw = row[colConsumo] ? String(row[colConsumo]).replace(',', '.') : '0';
                     let consumo = parseFloat(consumoRaw);
-                    if (isNaN(consumo)) return null; // Evitar el ingreso de textos informativos o totales globales del final del CSV
+                    if (isNaN(consumo)) return null;
 
                     return {
                         fechaStr: formattedDate,
                         hora: hora,
                         consumo: consumo
                     };
-                }).filter(item => item !== null); 
+                }).filter(item => item !== null);
 
+                // Aplicar filtros temporales si están definidos
                 const startDateVal = filterStartDate.value;
                 const endDateVal = filterEndDate.value;
                 const startHourVal = filterStartHour.value !== "" ? parseInt(filterStartHour.value, 10) : null;
@@ -536,15 +512,7 @@
             tableBody.innerHTML = "";
             let tableRowsHtml = "";
 
-            const hourlyStats = Array.from({ length: 24 }, (_, i) => ({
-                hour: i,
-                totalKwh: 0,
-                totalCost: 0,
-                totalPrice: 0,
-                count: 0
-            }));
-
-            // Variables para acumulación de gráficos
+            // Inicializar acumulaciones de gráficos
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
                 2: { label: 'Martes', kwh: 0, cost: 0 },
@@ -555,29 +523,21 @@
                 0: { label: 'Domingo', kwh: 0, cost: 0 }
             };
 
-            const dailyStats = {}; // { 'YYYY-MM-DD': { kwh: 0, cost: 0 } }
+            const dailyStats = {}; 
+
+            const hourlyStats = Array.from({ length: 24 }, (_, i) => ({
+                hour: i,
+                totalKwh: 0,
+                totalCost: 0,
+                totalPrice: 0,
+                count: 0
+            }));
 
             data.forEach(item => {
                 totalKwh += item.consumo;
                 totalCost += item.coste;
 
-                // 2. Acumulaciones para Gráfica Diaria Cronológica
-                if (!dailyStats[item.fechaStr]) {
-                    dailyStats[item.fechaStr] = { kwh: 0, cost: 0 };
-                }
-                dailyStats[item.fechaStr].kwh += item.consumo;
-                dailyStats[item.fechaStr].cost += item.coste;
-
-                // NUEVO: Acumulaciones para Gráfica de 24 horas
-                const h = item.hora;
-                if (h >= 0 && h < 24) {
-                    hourlyStats[h].totalKwh += item.consumo;
-                    hourlyStats[h].totalCost += item.coste;
-                    hourlyStats[h].totalPrice += item.precio;
-                    hourlyStats[h].count += 1;
-                }
-
-                // 1. Acumulaciones para Gráfica por Día de la Semana
+                // 1. Acumulaciones por Día de la Semana
                 const dateParts = item.fechaStr.split('-');
                 const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const dayOfWeek = dateObj.getDay(); 
@@ -591,9 +551,17 @@
                 dailyStats[item.fechaStr].kwh += item.consumo;
                 dailyStats[item.fechaStr].cost += item.coste;
 
-            // Filtro para la tabla y métricas del Vehículo con deducción de vivienda
+                // 3. Acumulación por Perfil Horario de 24 horas
+                const h = item.hora;
+                if (h >= 0 && h < 24) {
+                    hourlyStats[h].totalKwh += item.consumo;
+                    hourlyStats[h].totalCost += item.coste;
+                    hourlyStats[h].totalPrice += item.precio;
+                    hourlyStats[h].count += 1;
+                }
+
+                // Filtro para la tabla y métricas corregidas del vehículo
                 if (item.consumo > threshold) {
-                  
                     const adjustedKwh = Math.max(0, item.consumo - subtractVal);
                     const adjustedCost = adjustedKwh * item.precio;
 
@@ -616,7 +584,7 @@
                 }
             });
 
-            // Actualizar Métricas de Texto
+            // Actualizar Métricas de Texto en pantalla
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             totalCostEl.textContent = `${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
             
@@ -626,15 +594,89 @@
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
             
-            // Renderizar gráficos
-            renderDayOfWeekChart(dayOfWeekStats);
+            // Renderizar todos los gráficos
             renderDailyChart(dailyStats);
-            renderHourlyChart(hourlyStats); 
+            renderDayOfWeekChart(dayOfWeekStats);
+            renderHourlyChart(hourlyStats);
 
             resultsSection.classList.remove('hidden');
         }
 
-        // Gráfico 1: Día de la semana
+        // Gráfico 1: Evolución cronológica diaria con detección dinámica de carga
+        function renderDailyChart(stats) {
+            const sortedDates = Object.keys(stats).sort();
+            const kwhData = sortedDates.map(d => stats[d].kwh);
+            const costData = sortedDates.map(d => stats[d].cost);
+
+            const dailyThreshold = parseFloat(dailyEvThresholdInput.value) || 9999;
+
+            const pointBackgroundColors = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)'
+            );
+            const pointBorderColors = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 'rgba(153, 27, 27, 1)' : 'rgba(59, 130, 246, 1)'
+            );
+            const pointRadii = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 6 : 3
+            );
+
+            if (window.chartInstance2) {
+                window.chartInstance2.destroy();
+            }
+
+            const ctx = document.getElementById('chartDaily').getContext('2d');
+            window.chartInstance2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [
+                        {
+                            label: 'Consumo (kWh)',
+                            data: kwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y',
+                            pointBackgroundColor: pointBackgroundColors,
+                            pointBorderColor: pointBorderColors,
+                            pointRadius: pointRadii,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Importe (€)',
+                            data: costData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico 2: Día de la semana
         function renderDayOfWeekChart(stats) {
             const order = [1, 2, 3, 4, 5, 6, 0]; // Lunes a Domingo
             const labels = order.map(i => stats[i].label);
@@ -693,85 +735,7 @@
             });
         }
 
-        // Gráfico 2: Evolución diaria cronológica
-// Gráfico 2: Evolución diaria cronológica con detección de carga
-        function renderDailyChart(stats) {
-            const sortedDates = Object.keys(stats).sort();
-            const kwhData = sortedDates.map(d => stats[d].kwh);
-            const costData = sortedDates.map(d => stats[d].cost);
-
-            // Obtener umbral diario para identificar carga del coche
-            const dailyThreshold = parseFloat(dailyEvThresholdInput.value) || 9999;
-
-            // Generar colores y tamaños dinámicos para los puntos del consumo
-            const pointBackgroundColors = sortedDates.map(d => 
-                stats[d].kwh >= dailyThreshold ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)'
-            );
-            const pointBorderColors = sortedDates.map(d => 
-                stats[d].kwh >= dailyThreshold ? 'rgba(153, 27, 27, 1)' : 'rgba(59, 130, 246, 1)'
-            );
-            const pointRadii = sortedDates.map(d => 
-                stats[d].kwh >= dailyThreshold ? 6 : 3
-            );
-
-            if (window.chartInstance2) {
-                window.chartInstance2.destroy();
-            }
-
-            const ctx = document.getElementById('chartDaily').getContext('2d');
-            window.chartInstance2 = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: sortedDates,
-                    datasets: [
-                        {
-                            label: 'Consumo (kWh)',
-                            data: kwhData,
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 2,
-                            fill: true,
-                            yAxisID: 'y',
-                            // Configuración dinámica aplicada aquí:
-                            pointBackgroundColor: pointBackgroundColors,
-                            pointBorderColor: pointBorderColors,
-                            pointRadius: pointRadii,
-                            pointHoverRadius: 8
-                        },
-                        {
-                            label: 'Importe (€)',
-                            data: costData,
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 2,
-                            fill: true,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'Consumo (kWh)' }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Importe (€)' }
-                        }
-                    }
-                }
-            });
-        }
-
-    // Nueva función para el perfil de 24 horas
+        // Gráfico 3: Perfil horario medio y acumulado (24 horas)
         function renderHourlyChart(stats) {
             const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
             const totalKwhData = stats.map(s => s.totalKwh);
@@ -868,10 +832,9 @@
             });
         }
 
-   // Clave única de almacenamiento
-        const STORAGE_KEY = 'analizador_consumo_config';
-
-        // Función para guardar toda la configuración en localStorage
+        // --- SISTEMA DE PERSISTENCIA (localStorage) ---
+        
+        // Guardar la configuración actual en el navegador
         function saveConfig() {
             const config = {
                 rateMode: document.getElementById('rateMode').value,
@@ -895,11 +858,11 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
 
-        // Función para cargar los valores guardados al abrir la aplicación
+        // Cargar los datos al iniciar la página
         function loadConfig() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) {
-                toggleRatePanels(); // Asegurar estado visual por defecto
+                toggleRatePanels();
                 return;
             }
             try {
@@ -924,11 +887,11 @@
 
                 toggleRatePanels();
             } catch (e) {
-                console.error("Error al cargar la configuración", e);
+                console.error("Error al restaurar la sesión guardada:", e);
             }
         }
 
-        // Función para alternar paneles visualmente según la tarifa seleccionada
+        // Mostrar u ocultar paneles de tarifa según selección
         function toggleRatePanels() {
             const mode = document.getElementById('rateMode').value;
             if (mode === 'pvpc') {
@@ -940,9 +903,43 @@
             }
         }
 
-        // Cargar configuración en el inicio de la ejecución
-        loadConfig();
+        // Listeners para guardar configuración en tiempo real
+        document.getElementById('rateMode').addEventListener('change', () => {
+            toggleRatePanels();
+            saveConfig();
+        });
 
+        // Evento auto-contenido para limpiar filtros de fecha y hora
+        document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
+            e.preventDefault(); 
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterStartHour').value = '';
+            document.getElementById('filterEndHour').value = '';
+            
+            saveConfig(); // Guardar el vaciado en localStorage
+
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        });
+
+        // Registrar observadores en todos los inputs para autoguardado rápido
+        const inputsToWatch = [
+            'thresholdInput', 'subtractInput', 'dailyEvThresholdInput', 'tokenInput',
+            'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
+            'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour'
+        ];
+        inputsToWatch.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', saveConfig);
+                el.addEventListener('change', saveConfig);
+            }
+        });
+
+        // Inicializar carga de configuración guardada al arrancar
+        loadConfig();
     </script>
 </body>
 </html>
