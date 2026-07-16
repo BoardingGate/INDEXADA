@@ -173,6 +173,35 @@
             <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
             <div class="space-y-6 mb-8">
 
+                <!-- PANEL: Patrón de Consumo (Tramos de Facturación) -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
+                        <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Tramos Oficiales)</h3>
+                        <p class="text-xs text-gray-500">Distribución del consumo según los períodos tarifarios oficiales en España.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- P1 Punta -->
+                        <div class="p-4 bg-red-50 rounded-xl border border-red-200 shadow-sm">
+                            <span class="font-extrabold text-red-800 text-xs block uppercase tracking-wider">Período P1 (Punta)</span>
+                            <p id="p1KwhText" class="text-2xl font-bold text-gray-900 mt-2">0.00 kWh</p>
+                            <p id="p1PctText" class="text-xs text-red-600 font-semibold mt-1">0.0% del total</p>
+                        </div>
+                        <!-- P2 Llano -->
+                        <div class="p-4 bg-yellow-50 rounded-xl border border-yellow-200 shadow-sm">
+                            <span class="font-extrabold text-yellow-800 text-xs block uppercase tracking-wider">Período P2 (Llano)</span>
+                            <p id="p2KwhText" class="text-2xl font-bold text-gray-900 mt-2">0.00 kWh</p>
+                            <p id="p2PctText" class="text-xs text-yellow-600 font-semibold mt-1">0.0% del total</p>
+                        </div>
+                        <!-- P3 Valle -->
+                        <div class="p-4 bg-green-50 rounded-xl border border-green-200 shadow-sm">
+                            <span class="font-extrabold text-green-800 text-xs block uppercase tracking-wider">Período P3 (Valle)</span>
+                            <p id="p3KwhText" class="text-2xl font-bold text-gray-900 mt-2">0.00 kWh</p>
+                            <p id="p3PctText" class="text-xs text-green-600 font-semibold mt-1">0.0% del total</p>
+                        </div>
+                    </div>
+                </div>
+
+
                 <!-- PANEL NUEVO: Calendario Mensual Dinámico -->
                 <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
@@ -575,6 +604,10 @@ async function processData(parsedRows) {
             let filteredCost = 0;
             let filteredHoursCount = 0;
 
+            let p1Kwh = 0;
+            let p2Kwh = 0;
+            let p3Kwh = 0;
+
             // Variables para picos de potencia
             let maxPeakHourly = 0;
             let maxPeakP1 = 0;
@@ -628,18 +661,20 @@ async function processData(parsedRows) {
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // Evaluar picos máximos de consumo (su equivalente en potencia kW media de esa hora)
-                           if (item.consumo > maxPeakHourly) {
-                    maxPeakHourly = item.consumo;
-                }
-                if (isP1) {
-                    if (item.consumo > maxPeakP1) maxPeakP1 = item.consumo;
-                    totalKwhP1 += item.consumo;
-                    countP1++;
+                // CLASIFICACIÓN DE TRAMOS DE FACTURACIÓN DE ENERGÍA (P1, P2, P3)
+                if (isWeekend || isHoliday) {
+                    p3Kwh += item.consumo; // Fines de semana y festivos son siempre Valle (P3)
                 } else {
-                    if (item.consumo > maxPeakP2) maxPeakP2 = item.consumo;
-                    totalKwhP2 += item.consumo;
-                    countP2++;
+                    const p1Hours = [10, 11, 12, 13, 18, 19, 20, 21];
+                    const p2Hours = [8, 9, 14, 15, 16, 17, 22, 23];
+                    
+                    if (p1Hours.includes(item.hora)) {
+                        p1Kwh += item.consumo;
+                    } else if (p2Hours.includes(item.hora)) {
+                        p2Kwh += item.consumo;
+                    } else {
+                        p3Kwh += item.consumo; // Noches entre semana de 00:00 a 08:00
+                    }
                 }
 
                 // 2. Acumulaciones para Gráfica Diaria Cronológica
@@ -745,6 +780,20 @@ async function processData(parsedRows) {
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+
+// Calcular promedios e inyectar datos del Patrón de Consumo
+            const p1Pct = totalKwh > 0 ? (p1Kwh / totalKwh) * 100 : 0;
+            const p2Pct = totalKwh > 0 ? (p2Kwh / totalKwh) * 100 : 0;
+            const p3Pct = totalKwh > 0 ? (p3Kwh / totalKwh) * 100 : 0;
+
+            document.getElementById('p1KwhText').textContent = `${p1Kwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            document.getElementById('p1PctText').textContent = `${p1Pct.toFixed(1)}% del total`;
+
+            document.getElementById('p2KwhText').textContent = `${p2Kwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            document.getElementById('p2PctText').textContent = `${p2Pct.toFixed(1)}% del total`;
+
+            document.getElementById('p3KwhText').textContent = `${p3Kwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            document.getElementById('p3PctText').textContent = `${p3Pct.toFixed(1)}% del total`;
 
 // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
             const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
