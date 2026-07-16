@@ -447,24 +447,21 @@
         }
 
 async function fetchPreciosESIOS(inicio, fin, token) {
-            // Llamada directa oficial sin intermediarios para evitar el bloqueo 403 de Cloudflare
-            const url = `https://api.esios.ree.es/indicators/1013?start_date=${inicio}T00:00:00&end_date=${fin}T23:59:59`;
+            const urlEsios = `https://api.esios.ree.es/indicators/1013?start_date=${inicio}T00:00:00&end_date=${fin}T23:59:59`;
 
             try {
-                const response = await fetch(url, {
+                // 1. Intentar llamada oficial con Token a ESIOS
+                const response = await fetch(urlEsios, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/vnd.esios-api-v1+json',
                         'Content-Type': 'application/json',
-                        'Authorization': `Token token="${token}"` // Formato oficial requerido por REE
+                        'Authorization': `Token token="${token}"`
                     }
                 });
 
                 if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error("Acceso denegado (403). Esto suele significar que el token introducido no es válido o que aún no ha sido activado por Red Eléctrica (suele tardar de 24 a 48h desde su emisión).");
-                    }
-                    throw new Error(`Código de estado del servidor: ${response.status}`);
+                    throw new Error(`Código de estado: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -477,13 +474,57 @@ async function fetchPreciosESIOS(inicio, fin, token) {
                     const localHour = dateObj.getHours();
 
                     const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0; // Conversión de €/MWh a €/kWh
+                    preciosMap[key] = v.value / 1000.0; 
                 });
 
                 return preciosMap;
 
             } catch (err) {
-                showStatus("Error de conexión directa con ESIOS: " + err.message, "error");
+                // 2. Transición automática si falla por bloqueo CORS local (file:///) o Token inactivo
+                console.warn("La llamada a ESIOS falló o fue bloqueada por el navegador. Recurriendo a la API Pública de Datos Abiertos de Red Eléctrica...");
+                showStatus("Redireccionando consulta a la API pública de Red Eléctrica (sin restricciones CORS)...", "info");
+                
+                return await fetchPreciosPublicosREE(inicio, fin);
+            }
+        }
+
+        // Nueva función auxiliar para consultar el PVPC de manera pública y libre de CORS
+        async function fetchPreciosPublicosREE(inicio, fin) {
+            // URL oficial de Datos Abiertos de REE (Soporta CORS nativo desde archivos locales sin Token)
+            const urlPublica = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
+
+            try {
+                const response = await fetch(urlPublica);
+                if (!response.ok) {
+                    throw new Error(`El servidor de datos abiertos respondió con código: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Buscar la serie correspondiente al PVPC (€/MWh) dentro del JSON
+                const pvpcSeries = data.included.find(series => 
+                    series.type.toLowerCase().includes('pvpc') || 
+                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                );
+
+                if (!pvpcSeries) {
+                    throw new Error("No se encontró el indicador de precios PVPC en la respuesta pública.");
+                }
+
+                const preciosMap = {};
+                pvpcSeries.attributes.values.forEach(v => {
+                    const dateObj = new Date(v.datetime);
+                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
+                    const localHour = dateObj.getHours();
+
+                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
+                    preciosMap[key] = v.value / 1000.0; // Conversión de €/MWh a €/kWh
+                });
+
+                return preciosMap;
+
+            } catch (error) {
+                showStatus("No se pudo obtener el precio PVPC de ninguna de las fuentes oficiales de Red Eléctrica: " + error.message, "error");
                 return null;
             }
         }
