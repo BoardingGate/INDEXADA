@@ -1410,9 +1410,17 @@
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
-                if (config.pvpcHighThreshold !== undefined) document.getElementById('pvpcHighThreshold').value = config.pvpcHighThreshold;
-                if (config.pvpcLowThreshold !== undefined) document.getElementById('pvpcLowThreshold').value = config.pvpcLowThreshold;
-                if (config.calendarSelectedDates !== undefined) {
+                
+                if (config.pvpcHighThreshold !== undefined) {
+                    const elHigh = document.getElementById('pvpcHighThreshold');
+                    if (elHigh) elHigh.value = config.pvpcHighThreshold;
+                }
+                if (config.pvpcLowThreshold !== undefined) {
+                    const elLow = document.getElementById('pvpcLowThreshold');
+                    if (elLow) elLow.value = config.pvpcLowThreshold;
+                }
+                
+                if (config.calendarSelectedDates !== undefined && Array.isArray(config.calendarSelectedDates)) {
                     window.calendarSelectedDates = new Set(config.calendarSelectedDates);
                 } else {
                     window.calendarSelectedDates = new Set();
@@ -1424,7 +1432,6 @@
             }
         }
 
-        // Mostrar u ocultar paneles de tarifa según selección
         // Mostrar u ocultar paneles de tarifa según selección
         function toggleRatePanels() {
             const mode = document.getElementById('rateMode').value;
