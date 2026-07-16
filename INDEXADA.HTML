@@ -185,7 +185,7 @@
                     <!-- Instrucciones de selección al pie del calendario -->
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
                         <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
-                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros"</strong>.</p>
+                        <p><strong>Mecánica de selección libre:</strong> Por defecto, todos los días con lecturas se incluyen en el cálculo. Haz clic sobre cualquier casilla para <strong>desactivar o activar</strong> días sueltos a voluntad (los días excluidos se verán semitransparentes y sus valores se restarán del total). Para volver a activar todos los días a la vez, haz clic en el botón superior <strong>"Limpiar Filtros"</strong>.</p>
                     </div>
                 </div>
 
@@ -1322,33 +1322,35 @@
 
         // Función interactiva de selección de rango por calendario
         window.handleCalendarDayClick = function(dateStr) {
-            const startInput = document.getElementById('filterStartDate');
-            const endInput = document.getElementById('filterEndDate');
-            
-            const startVal = startInput.value;
-            const endVal = endInput.value;
+            if (!window.calendarSelectedDates) {
+                window.calendarSelectedDates = new Set();
+            }
 
-            if (!startVal || (startVal && endVal)) {
-                // Primer clic: define fecha de inicio y limpia fin
-                startInput.value = dateStr;
-                endInput.value = "";
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+
+             const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
+            if (!hasCustomCalendar && window.allAvailableDays) {
+                Object.keys(window.allAvailableDays).forEach(key => {
+                    if (key !== dateStr) {
+                        window.calendarSelectedDates.add(key);
+                    }
+                });
             } else {
-                // Segundo clic: define fin o reajusta el inicio si se selecciona una fecha previa
-                if (dateStr < startVal) {
-                    startInput.value = dateStr;
-                    endInput.value = "";
+                  if (window.calendarSelectedDates.has(dateStr)) {
+                    window.calendarSelectedDates.delete(dateStr);
                 } else {
-                    endInput.value = dateStr;
+                    window.calendarSelectedDates.add(dateStr);
                 }
             }
             
-            saveConfig(); // Guardar el nuevo estado de los inputs
-            
-            // Recalcular automáticamente si existen datos cargados
-            if (window.rawCsvData) {
+            saveConfig(); // Persistir la sesión en el almacenamiento local
+
+             if (window.rawCsvData) {
                 processData(window.rawCsvData);
             }
         };
+
 
     </script>
 </body>
