@@ -446,24 +446,25 @@
             }
         }
 
-      async function fetchPreciosESIOS(inicio, fin, token) {
+async function fetchPreciosESIOS(inicio, fin, token) {
+            // Llamada directa oficial sin intermediarios para evitar el bloqueo 403 de Cloudflare
             const url = `https://api.esios.ree.es/indicators/1013?start_date=${inicio}T00:00:00&end_date=${fin}T23:59:59`;
-            
-            // Usar corsproxy.io que es un proxy transparente compatible con cabeceras de autorización para entornos locales (file:///)
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
             try {
-                const response = await fetch(proxyUrl, {
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/json; application/vnd.esios-api-v1+json',
+                        'Accept': 'application/vnd.esios-api-v1+json',
                         'Content-Type': 'application/json',
-                        'Authorization': `Token token="${token}"`
+                        'Authorization': `Token token="${token}"` // Formato oficial requerido por REE
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error(`El servidor respondió con código de estado: ${response.status}`);
+                    if (response.status === 403) {
+                        throw new Error("Acceso denegado (403). Esto suele significar que el token introducido no es válido o que aún no ha sido activado por Red Eléctrica (suele tardar de 24 a 48h desde su emisión).");
+                    }
+                    throw new Error(`Código de estado del servidor: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -482,7 +483,7 @@
                 return preciosMap;
 
             } catch (err) {
-                showStatus("Error en la conexión con ESIOS. Verifique la validez de su token o pruebe con la Tarifa Manual: " + err.message, "error");
+                showStatus("Error de conexión directa con ESIOS: " + err.message, "error");
                 return null;
             }
         }
