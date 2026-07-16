@@ -173,6 +173,7 @@
             <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
             <div class="space-y-6 mb-8">
 
+                <!-- PANEL NUEVO: Calendario Mensual Dinámico -->
                 <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
                         <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
@@ -412,7 +413,7 @@
                 }).filter(item => item !== null);
 
                 // Aplicar filtros temporales si están definidos
-               const startDateVal = filterStartDate.value;
+                const startDateVal = filterStartDate.value;
                 const endDateVal = filterEndDate.value;
                 const startHourVal = filterStartHour.value !== "" ? parseInt(filterStartHour.value, 10) : null;
                 const endHourVal = filterEndHour.value !== "" ? parseInt(filterEndHour.value, 10) : null;
