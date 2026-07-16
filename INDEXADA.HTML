@@ -269,15 +269,31 @@
         const filterEndDate = document.getElementById('filterEndDate');
         const filterStartHour = document.getElementById('filterStartHour');
         const filterEndHour = document.getElementById('filterEndHour');
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
+       document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
             e.preventDefault(); 
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
             document.getElementById('filterStartHour').value = '';
             document.getElementById('filterEndHour').value = '';
             
+            saveConfig(); // <- Esta línea es fundamental para vaciar los datos guardados en el navegador
+
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
+            }
+        });
+
+        // Guardado automático al escribir o interactuar en los campos
+        const inputsToWatch = [
+            'thresholdInput', 'subtractInput', 'dailyEvThresholdInput', 'tokenInput',
+            'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
+            'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour'
+        ];
+        inputsToWatch.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', saveConfig);
+                el.addEventListener('change', saveConfig);
             }
         });
 
@@ -289,14 +305,9 @@
         const tableBody = document.getElementById('tableBody');
 
         // Alternar visualización de los paneles de configuración
-        rateMode.addEventListener('change', () => {
-            if (rateMode.value === 'pvpc') {
-                pvpcConfig.classList.remove('hidden');
-                manualConfig.classList.add('hidden');
-            } else {
-                pvpcConfig.classList.add('hidden');
-                manualConfig.classList.remove('hidden');
-            }
+       document.getElementById('rateMode').addEventListener('change', () => {
+            toggleRatePanels();
+            saveConfig();
         });
 
         // Configuración de eventos de archivo
@@ -856,6 +867,81 @@
                 }
             });
         }
+
+   // Clave única de almacenamiento
+        const STORAGE_KEY = 'analizador_consumo_config';
+
+        // Función para guardar toda la configuración en localStorage
+        function saveConfig() {
+            const config = {
+                rateMode: document.getElementById('rateMode').value,
+                thresholdInput: document.getElementById('thresholdInput').value,
+                subtractInput: document.getElementById('subtractInput').value,
+                dailyEvThresholdInput: document.getElementById('dailyEvThresholdInput').value,
+                tokenInput: document.getElementById('tokenInput').value,
+                pricePunta: document.getElementById('pricePunta').value,
+                hoursPunta: document.getElementById('hoursPunta').value,
+                priceLlano: document.getElementById('priceLlano').value,
+                hoursLlano: document.getElementById('hoursLlano').value,
+                priceValle: document.getElementById('priceValle').value,
+                hoursValle: document.getElementById('hoursValle').value,
+                weekendValle: document.getElementById('weekendValle').checked,
+                holidaysInput: document.getElementById('holidaysInput').value,
+                filterStartDate: document.getElementById('filterStartDate').value,
+                filterEndDate: document.getElementById('filterEndDate').value,
+                filterStartHour: document.getElementById('filterStartHour').value,
+                filterEndHour: document.getElementById('filterEndHour').value
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+        }
+
+        // Función para cargar los valores guardados al abrir la aplicación
+        function loadConfig() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) {
+                toggleRatePanels(); // Asegurar estado visual por defecto
+                return;
+            }
+            try {
+                const config = JSON.parse(saved);
+                if (config.rateMode !== undefined) document.getElementById('rateMode').value = config.rateMode;
+                if (config.thresholdInput !== undefined) document.getElementById('thresholdInput').value = config.thresholdInput;
+                if (config.subtractInput !== undefined) document.getElementById('subtractInput').value = config.subtractInput;
+                if (config.dailyEvThresholdInput !== undefined) document.getElementById('dailyEvThresholdInput').value = config.dailyEvThresholdInput;
+                if (config.tokenInput !== undefined) document.getElementById('tokenInput').value = config.tokenInput;
+                if (config.pricePunta !== undefined) document.getElementById('pricePunta').value = config.pricePunta;
+                if (config.hoursPunta !== undefined) document.getElementById('hoursPunta').value = config.hoursPunta;
+                if (config.priceLlano !== undefined) document.getElementById('priceLlano').value = config.priceLlano;
+                if (config.hoursLlano !== undefined) document.getElementById('hoursLlano').value = config.hoursLlano;
+                if (config.priceValle !== undefined) document.getElementById('priceValle').value = config.priceValle;
+                if (config.hoursValle !== undefined) document.getElementById('hoursValle').value = config.hoursValle;
+                if (config.weekendValle !== undefined) document.getElementById('weekendValle').checked = config.weekendValle;
+                if (config.holidaysInput !== undefined) document.getElementById('holidaysInput').value = config.holidaysInput;
+                if (config.filterStartDate !== undefined) document.getElementById('filterStartDate').value = config.filterStartDate;
+                if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
+                if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
+                if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+
+                toggleRatePanels();
+            } catch (e) {
+                console.error("Error al cargar la configuración", e);
+            }
+        }
+
+        // Función para alternar paneles visualmente según la tarifa seleccionada
+        function toggleRatePanels() {
+            const mode = document.getElementById('rateMode').value;
+            if (mode === 'pvpc') {
+                document.getElementById('pvpcConfig').classList.remove('hidden');
+                document.getElementById('manualConfig').classList.add('hidden');
+            } else {
+                document.getElementById('pvpcConfig').classList.add('hidden');
+                document.getElementById('manualConfig').classList.remove('hidden');
+            }
+        }
+
+        // Cargar configuración en el inicio de la ejecución
+        loadConfig();
 
     </script>
 </body>
