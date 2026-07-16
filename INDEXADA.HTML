@@ -198,7 +198,7 @@
 
                 <!-- 2. Acumulado por Día de la Semana -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Consumo e Importe Medio por Día de la Semana</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
                     <div class="relative h-80">
                         <canvas id="chartDayOfWeek"></canvas>
                     </div>
@@ -948,6 +948,7 @@
         }
 
         // Gráfico 2: Día de la semana
+// Gráfico 2: Promedio y Acumulado diario por día de la semana
         function renderDayOfWeekChart(stats, counts) {
             const canvas = document.getElementById('chartDayOfWeek');
             if (!canvas) {
@@ -960,15 +961,19 @@
             const order = [1, 2, 3, 4, 5, 6, 0]; // Lunes a Domingo
             const labels = order.map(i => stats[i].label);
             
-            // Dividir el consumo e importe total de cada día de la semana por su número de ocurrencias reales
-            const kwhData = order.map(i => {
-                const count = safeCounts[i] || 1; // Usa safeCounts en lugar de counts
+            // 1. Cálculos para datos de Medias Diarias
+            const kwhDataMedia = order.map(i => {
+                const count = safeCounts[i] || 1;
                 return stats[i].kwh / count;
             });
-            const costData = order.map(i => {
-                const count = safeCounts[i] || 1; // Usa safeCounts en lugar de counts
+            const costDataMedia = order.map(i => {
+                const count = safeCounts[i] || 1;
                 return stats[i].cost / count;
-            });    
+            });
+
+            // 2. Lecturas para datos de Acumulados Totales
+            const kwhDataAcumulado = order.map(i => stats[i].kwh);
+            const costDataAcumulado = order.map(i => stats[i].cost);
 
             if (window.chartInstance1) {
                 window.chartInstance1.destroy();
@@ -982,40 +987,67 @@
                     datasets: [
                         {
                             label: 'Consumo Medio (kWh)',
-                            data: kwhData,
+                            data: kwhDataMedia,
                             backgroundColor: 'rgba(59, 130, 246, 0.7)',
                             borderColor: 'rgba(59, 130, 246, 1)',
                             borderWidth: 1,
-                            yAxisID: 'y'
+                            yAxisID: 'y',
+                            hidden: false // ACTIVO POR DEFECTO
                         },
                         {
                             label: 'Importe Medio (€)',
-                            data: costData,
+                            data: costDataMedia,
                             type: 'line',
                             backgroundColor: 'rgba(16, 185, 129, 0.2)',
                             borderColor: 'rgba(16, 185, 129, 1)',
                             borderWidth: 3,
                             fill: false,
-                            yAxisID: 'y1'
+                            yAxisID: 'y1',
+                            hidden: false // ACTIVO POR DEFECTO
+                        },
+                        {
+                            label: 'Consumo Acumulado (kWh)',
+                            data: kwhDataAcumulado,
+                            backgroundColor: 'rgba(147, 51, 234, 0.35)', // Púrpura para distinguir
+                            borderColor: 'rgba(147, 51, 234, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            hidden: true // DESACTIVADO POR DEFECTO
+                        },
+                        {
+                            label: 'Importe Acumulado (€)',
+                            data: costDataAcumulado,
+                            type: 'line',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)', // Naranja para distinguir
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5], // Línea discontinua
+                            fill: false,
+                            yAxisID: 'y1',
+                            hidden: true // DESACTIVADO POR DEFECTO
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     scales: {
                         y: {
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: { display: true, text: 'Consumo Medio Diario (kWh)' }
+                            title: { display: true, text: 'Consumo (kWh)' }
                         },
                         y1: {
                             type: 'linear',
                             display: true,
                             position: 'right',
                             grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Importe Medio Diario (€)' }
+                            title: { display: true, text: 'Importe (€)' }
                         }
                     }
                 }
