@@ -21,7 +21,7 @@
         </header>
 
         <!-- Panel de Configuración General -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">1. Tipo de Tarifa</label>
                 <select id="rateMode" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -34,11 +34,18 @@
                 <input type="number" id="thresholdInput" step="0.1" value="1.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <p class="text-xs text-gray-500 mt-1">Filtrar horas que superen este valor.</p>
             </div>
+          
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">3. Archivo CSV Distribuidora</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">3. Restar por Vivienda (kWh)</label>
+                <input type="number" id="subtractInput" step="0.05" value="0.20" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Consumo estimado de la casa a deducir de la carga.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">4. Archivo CSV Distribuidora</label>
                 <input type="file" id="csvInput" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
             </div>
         </div>
+       
 
         <!-- Configuración Específica de Tarifa Regulada (PVPC) -->
         <div id="pvpcConfig" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
@@ -202,6 +209,7 @@
         
         const tokenInput = document.getElementById('tokenInput');
         const thresholdInput = document.getElementById('thresholdInput');
+         const subtractInput = document.getElementById('subtractInput');
         const csvInput = document.getElementById('csvInput');
         const statusMessage = document.getElementById('statusMessage');
         const resultsSection = document.getElementById('resultsSection');
@@ -420,6 +428,7 @@
 
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
+            const subtractVal = parseFloat(subtractInput.value) || 0;
 
             let totalKwh = 0;
             let totalCost = 0;
@@ -485,19 +494,26 @@
                 dailyStats[item.fechaStr].kwh += item.consumo;
                 dailyStats[item.fechaStr].cost += item.coste;
 
-                // Filtro para la tabla
+            // Filtro para la tabla y métricas del Vehículo con deducción de vivienda
                 if (item.consumo > threshold) {
-                    filteredKwh += item.consumo;
-                    filteredCost += item.coste;
+                  
+                    const adjustedKwh = Math.max(0, item.consumo - subtractVal);
+                    const adjustedCost = adjustedKwh * item.precio;
+
+                    filteredKwh += adjustedKwh;
+                    filteredCost += adjustedCost;
                     filteredHoursCount++;
 
                     tableRowsHtml += `
                         <tr class="hover:bg-gray-50">
                             <td class="p-4 border-b">${item.fechaStr}</td>
                             <td class="p-4 border-b">${String(item.hora).padStart(2, '0')}:00</td>
-                            <td class="p-4 border-b text-right font-mono">${item.consumo.toFixed(3)}</td>
+                            <td class="p-4 border-b text-right font-mono">
+                                ${adjustedKwh.toFixed(3)} 
+                                <span class="text-xs text-gray-400 block" title="Original: ${item.consumo.toFixed(3)} kWh">(-${subtractVal.toFixed(2)})</span>
+                            </td>
                             <td class="p-4 border-b text-right font-mono">${item.precio.toFixed(5)}</td>
-                            <td class="p-4 border-b text-right font-mono font-semibold">${item.coste.toFixed(3)} €</td>
+                            <td class="p-4 border-b text-right font-mono font-semibold">${adjustedCost.toFixed(3)} €</td>
                         </tr>
                     `;
                 }
