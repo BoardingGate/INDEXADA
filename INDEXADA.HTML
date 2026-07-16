@@ -139,54 +139,35 @@
         <!-- Resultados -->
         <div id="resultsSection" class="hidden">
 
-<!-- Métricas Globales (Ampliado a 5 indicadores) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+<!-- Métricas Globales (Ampliado a 7 indicadores) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-blue-500">
-                    <h3 class="text-gray-500 text-xs font-semibold uppercase">Consumo Total</h3>
-                    <p id="totalKwh" class="text-xl font-bold text-gray-900 mt-2">0.00 kWh</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Total</h3>
+                    <p id="totalKwh" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-green-500">
-                    <h3 class="text-gray-500 text-xs font-semibold uppercase">Coste Total</h3>
-                    <p id="totalCost" class="text-xl font-bold text-gray-900 mt-2">0.00 €</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Coste Total</h3>
+                    <p id="totalCost" class="text-lg font-bold text-gray-900 mt-2">0.00 €</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-purple-500">
-                    <h3 class="text-gray-500 text-xs font-semibold uppercase">Nº de Días</h3>
-                    <p id="totalDays" class="text-xl font-bold text-gray-900 mt-2">0 días</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Nº de Días</h3>
+                    <p id="totalDays" class="text-lg font-bold text-gray-900 mt-2">0 días</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
-                    <h3 class="text-gray-500 text-xs font-semibold uppercase">Consumo Medio Diario</h3>
-                    <p id="avgDailyKwhText" class="text-xl font-bold text-gray-900 mt-2">0.00 kWh</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
+                    <p id="avgDailyKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-pink-500">
-                    <h3 class="text-gray-500 text-xs font-semibold uppercase">Precio Medio kWh</h3>
-                    <p id="avgPriceKwhText" class="text-xl font-bold text-gray-900 mt-2">0.00000 €</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Precio Medio kWh</h3>
+                    <p id="avgPriceKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00000 €</p>
                 </div>
-            </div>
-
-            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
-            <div class="space-y-6 mb-8">
-                <!-- 1. Evolución Cronológica Diaria (Superior) -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
-                    <div class="relative h-80">
-                        <canvas id="chartDaily"></canvas>
-                    </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-red-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Pico Máx. Horario</h3>
+                    <p id="maxPeakHourlyText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
                 </div>
-
-                <!-- 2. Acumulado por Día de la Semana -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Acumulado por Día de la Semana</h3>
-                    <div class="relative h-80">
-                        <canvas id="chartDayOfWeek"></canvas>
-                    </div>
-                </div>
-
-                <!-- 3. Perfil Horario de 24 horas -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
-                    <div class="relative h-96">
-                        <canvas id="chartHourly"></canvas>
-                    </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-indigo-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Potencia P1 / P2</h3>
+                    <p id="requiredPowerText" class="text-xs font-semibold text-gray-950 mt-2">P1: 0.00 kW<br>P2: 0.00 kW</p>
                 </div>
             </div>
 
@@ -302,6 +283,9 @@
         const totalDaysEl = document.getElementById('totalDays');
         const avgDailyKwhTextEl = document.getElementById('avgDailyKwhText');
         const avgPriceKwhTextEl = document.getElementById('avgPriceKwhText');
+
+        const maxPeakHourlyTextEl = document.getElementById('maxPeakHourlyText');
+        const requiredPowerTextEl = document.getElementById('requiredPowerText');
 
         // Configuración de eventos de archivo
         csvInput.addEventListener('change', handleFile);
@@ -517,7 +501,7 @@
             }
         }
 
-        function renderResultsAndCharts(data) {
+function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
 
@@ -526,6 +510,14 @@
             let filteredKwh = 0;
             let filteredCost = 0;
             let filteredHoursCount = 0;
+
+            // Variables para picos de potencia
+            let maxPeakHourly = 0;
+            let maxPeakP1 = 0;
+            let maxPeakP2 = 0;
+
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
 
             tableBody.innerHTML = "";
             let tableRowsHtml = "";
@@ -561,6 +553,22 @@
                 const dayOfWeek = dateObj.getDay(); 
                 dayOfWeekStats[dayOfWeek].kwh += item.consumo;
                 dayOfWeekStats[dayOfWeek].cost += item.coste;
+
+                // Determinar periodo de potencia de facturación en España (P1 Punta/Llano o P2 Valle)
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHoliday = holidaysList.includes(item.fechaStr);
+                const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
+                const isP1 = !isP2;
+
+                // Evaluar picos máximos de consumo (su equivalente en potencia kW media de esa hora)
+                if (item.consumo > maxPeakHourly) {
+                    maxPeakHourly = item.consumo;
+                }
+                if (isP1) {
+                    if (item.consumo > maxPeakP1) maxPeakP1 = item.consumo;
+                } else {
+                    if (item.consumo > maxPeakP2) maxPeakP2 = item.consumo;
+                }
 
                 // 2. Acumulaciones para Gráfica Diaria Cronológica
                 if (!dailyStats[item.fechaStr]) {
@@ -602,8 +610,7 @@
                 }
             });
 
-            // Actualizar Métricas de Texto en pantalla
-        // Calcular métricas adicionales para las nuevas tarjetas
+            // Calcular métricas adicionales para las nuevas tarjetas
             const sortedDates = Object.keys(dailyStats).sort();
             const numDays = sortedDates.length || 1;
             const avgDailyKwh = totalKwh / numDays;
@@ -613,16 +620,20 @@
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             totalCostEl.textContent = `${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
             
-            // Rellenar las nuevas tarjetas agregadas
             totalDaysEl.textContent = `${numDays} días`;
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
+            // Actualizar Métricas de Potencias Máximas
+            maxPeakHourlyTextEl.textContent = `${maxPeakHourly.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            requiredPowerTextEl.innerHTML = `P1: <span class="font-bold">${maxPeakP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>P2: <span class="font-bold">${maxPeakP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>`;
+
+            // Calcular porcentajes sobre el total
             const pctKwh = totalKwh > 0 ? (filteredKwh / totalKwh) * 100 : 0;
             const pctCost = totalCost > 0 ? (filteredCost / totalCost) * 100 : 0;
 
-
             filteredHoursEl.textContent = `${filteredHoursCount} h`;
+            
             filteredKwhEl.innerHTML = `
                 ${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh 
                 <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctKwh.toFixed(1)}%)</span>
@@ -632,6 +643,7 @@
                 ${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € 
                 <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctCost.toFixed(1)}%)</span>
             `;
+
             const avgFilteredKwh = filteredHoursCount > 0 ? (filteredKwh / filteredHoursCount) : 0;
             const avgFilteredPrice = filteredKwh > 0 ? (filteredCost / filteredKwh) : 0;
             filteredAvgKwhEl.textContent = `${avgFilteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
@@ -647,8 +659,7 @@
             resultsSection.classList.remove('hidden');
         }
 
-        // Gráfico 1: Evolución cronológica diaria con detección dinámica de carga
-// Gráfico 2: Evolución cronológica diaria con detección dinámica de carga
+      // Gráfico 2: Evolución cronológica diaria con detección dinámica de carga
         function renderDailyChart(stats) {
             const sortedDates = Object.keys(stats).sort();
             const kwhData = sortedDates.map(d => stats[d].kwh);
