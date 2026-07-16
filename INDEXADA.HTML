@@ -136,6 +136,13 @@
                     </div>
                 </div>
             </div>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
+                <div class="relative h-96">
+                    <canvas id="chartHourly"></canvas>
+                </div>
+            </div>
+
 
             <!-- Métricas Filtradas -->
             <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
@@ -186,6 +193,7 @@
         window.rawCsvData = null;
         window.chartInstance1 = null;
         window.chartInstance2 = null;
+        window.chartInstance3 = null;
 
         // Elementos del DOM
         const rateMode = document.getElementById('rateMode');
@@ -422,6 +430,14 @@
             tableBody.innerHTML = "";
             let tableRowsHtml = "";
 
+            const hourlyStats = Array.from({ length: 24 }, (_, i) => ({
+                hour: i,
+                totalKwh: 0,
+                totalCost: 0,
+                totalPrice: 0,
+                count: 0
+            }));
+
             // Variables para acumulación de gráficos
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
@@ -438,6 +454,22 @@
             data.forEach(item => {
                 totalKwh += item.consumo;
                 totalCost += item.coste;
+
+                // 2. Acumulaciones para Gráfica Diaria Cronológica
+                if (!dailyStats[item.fechaStr]) {
+                    dailyStats[item.fechaStr] = { kwh: 0, cost: 0 };
+                }
+                dailyStats[item.fechaStr].kwh += item.consumo;
+                dailyStats[item.fechaStr].cost += item.coste;
+
+                // NUEVO: Acumulaciones para Gráfica de 24 horas
+                const h = item.hora;
+                if (h >= 0 && h < 24) {
+                    hourlyStats[h].totalKwh += item.consumo;
+                    hourlyStats[h].totalCost += item.coste;
+                    hourlyStats[h].totalPrice += item.precio;
+                    hourlyStats[h].count += 1;
+                }
 
                 // 1. Acumulaciones para Gráfica por Día de la Semana
                 const dateParts = item.fechaStr.split('-');
@@ -484,6 +516,7 @@
             // Renderizar gráficos
             renderDayOfWeekChart(dayOfWeekStats);
             renderDailyChart(dailyStats);
+            renderHourlyChart(hourlyStats); 
 
             resultsSection.classList.remove('hidden');
         }
@@ -604,6 +637,104 @@
                 }
             });
         }
+
+    // Nueva función para el perfil de 24 horas
+        function renderHourlyChart(stats) {
+            const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
+            const totalKwhData = stats.map(s => s.totalKwh);
+            const totalCostData = stats.map(s => s.totalCost);
+            const avgKwhData = stats.map(s => s.count > 0 ? (s.totalKwh / s.count) : 0);
+            const avgPriceData = stats.map(s => s.count > 0 ? (s.totalPrice / s.count) : 0);
+
+            if (window.chartInstance3) {
+                window.chartInstance3.destroy();
+            }
+
+            const ctx = document.getElementById('chartHourly').getContext('2d');
+            window.chartInstance3 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo Acumulado (kWh)',
+                            data: totalKwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                            borderColor: 'rgba(59, 130, 246, 0.7)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            order: 4
+                        },
+                        {
+                            label: 'Consumo Medio (kWh)',
+                            data: avgKwhData,
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y',
+                            order: 3
+                        },
+                        {
+                            label: 'Importe Acumulado (€)',
+                            data: totalCostData,
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 0.8)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            order: 2
+                        },
+                        {
+                            label: 'Precio Medio (€/kWh)',
+                            data: avgPriceData,
+                            type: 'line',
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Importe Acumulado (€)' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y2: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Precio Medio (€/kWh)' },
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(3) + ' €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
     </script>
 </body>
 </html>
