@@ -117,9 +117,15 @@
                         <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
-                <button id="datadisDirectBtn" type="button" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                    ⬇️ Descargar y analizar directamente
-                </button>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                        ⬇️ Descargar y analizar directamente
+                    </button>
+                    <!-- Botón para guardar CSV localmente -->
+                    <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                        💾 Guardar como archivo CSV
+                    </button>
+                </div>
                 <p id="datadisDirectStatus" class="text-xs mt-2"></p>
             </div>
         </div>
@@ -586,6 +592,7 @@
     <script>
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
+        window.lastDatadisCsv = null; // Almacena el último CSV generado de Datadis
         window.chartInstance1 = null;
         window.chartInstance2 = null;
         window.chartInstance3 = null;
@@ -681,6 +688,7 @@
 
         async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
+            const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
@@ -695,6 +703,8 @@
 
             statusEl.textContent = '⏳ Conectando con Datadis...';
             statusEl.className = 'text-xs mt-2 text-gray-600';
+            exportBtn.classList.add('hidden');
+            window.lastDatadisCsv = null;
 
             try {
                 const resp = await fetch(DATADIS_PROXY_URL, {
@@ -722,6 +732,9 @@
                     csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
                 });
 
+                // Guardar para posibilitar la exportación del archivo
+                window.lastDatadisCsv = csv;
+
                 Papa.parse(csv, {
                     header: true,
                     skipEmptyLines: true,
@@ -742,6 +755,8 @@
 
                         statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas del CUPS ${data.cups}.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
+                        exportBtn.classList.remove('hidden'); // Mostrar botón de descarga del CSV
+                        
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
                         fileNameSpan.textContent = `Datadis API (CUPS ${data.cups})`;
@@ -758,6 +773,26 @@
         }
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
+
+        // Exportar el archivo CSV descargado para guardarlo localmente
+        document.getElementById('datadisExportBtn').addEventListener('click', () => {
+            if (!window.lastDatadisCsv) return;
+            
+            const cupsVal = document.getElementById('datadisCups').value.trim() || 'cups_detectado';
+            const startVal = document.getElementById('datadisStart').value || 'fecha';
+            const endVal = document.getElementById('datadisEnd').value || 'fecha';
+            const fileName = `consumo_datadis_${cupsVal}_${startVal}_a_${endVal}.csv`;
+
+            const blob = new Blob([window.lastDatadisCsv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const tempLink = document.createElement('a');
+            tempLink.href = url;
+            tempLink.setAttribute('download', fileName);
+            tempLink.style.visibility = 'hidden';
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+        });
 
         // Por defecto, proponer los últimos 30 días si no hay guardados
         (function initDatadisDefaultDates() {
