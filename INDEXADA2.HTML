@@ -1,3 +1,31 @@
+El error The operation is insecure (una excepción SecurityError del navegador)
+se produce habitualmente por políticas de seguridad estrictas del propio
+navegador en el lado del cliente. Esto ocurre cuando un script intenta acceder a
+elementos de almacenamiento (sessionStorage, localStorage o document.cookie)
+bajo ciertas condiciones restrictivas, como por ejemplo:
+
+1.  Estar dentro de un iframe (marco) de otro origen: El portal privado de
+    Datadis a menudo carga ciertos elementos o procesos de autenticación dentro
+    de subdominios o iframes gestionados por terceros. Si el navegador detecta
+    un intento de lectura de almacenamiento cruzado entre marcos, interrumpe el
+    script inmediatamente por seguridad con ese mensaje de error.
+2.  Restricciones de cookies/almacenamiento de terceros: Configuraciones
+    estrictas en el navegador (como el bloqueo de cookies de terceros o el modo
+    de navegación privada estricto) impiden que los scripts lean las propiedades
+    de almacenamiento global.
+
+Solución aplicada en el código corregido:
+
+Se ha reestructurado el script del marcador encapsulando cada intento de acceso
+a almacenamiento (sessionStorage, localStorage y cookies) de manera individual
+dentro de bloques try...catch. De este modo, si el navegador bloquea la lectura
+de una propiedad de seguridad concreta (provocando el SecurityError), el script
+no se interrumpe; simplemente omite ese origen bloqueado y continúa buscando el
+token de acceso en los demás almacenes o en los marcos (frames) del mismo
+origen.
+
+Aquí tienes el código completo corregido listo para su uso:
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -83,15 +111,15 @@
                     <li>
                         Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador (si no la visualizas, pulsa <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Ctrl+Mayús+B</kbd> o <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Cmd+Shift+B</kbd> en Mac):
                         <div class="my-2">
-                            <!-- Código JavaScript Bookmarklet optimizado con rangos de fecha y detección robusta -->
-                            <a href="javascript:(async function(){try{let t='';for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}break;}}if(!t){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}break;}}}if(!t){const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),v=c.split('=')[1];if(v&&v.includes('eyJ')){t=v;break;}}}if(!t){alert('No se detectó sesión activa en Datadis. Asegúrate de estar dentro del portal privado (logueado) e intenta de nuevo.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;alert('Conectado a Datadis.\nDescargando consumos del '+fIni+' al '+fFin+' para el CUPS:\n'+c);const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas disponibles en el periodo seleccionado.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);}catch(e){alert('Error al extraer datos: '+e.message);}})();" 
+                            <!-- Código JavaScript Bookmarklet optimizado contra excepciones de seguridad SecurityError -->
+                            <a href="javascript:(async function(){try{let t='';try{for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){}if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){}}if(!t){try{const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),v=c.split('=')[1];if(v&&v.includes('eyJ')){t=v;break;}}}catch(e){}}if(!t){try{for(let f=0;f<window.frames.length;f++){try{const frameSession=window.frames[f].sessionStorage;for(let i=0;i<frameSession.length;i++){const k=frameSession.key(i),v=frameSession.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){}if(t)break;}}catch(e){}}if(!t){alert('No se pudo extraer la sesion automaticamente debido a las politicas de seguridad de tu navegador.\\n\\nAsegurate de estar en la pestaña activa del portal privado de Datadis.es (donde se ven tus consumos) y no en la pagina de inicio.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;alert('Conectado a Datadis.\\nDescargando consumos del '+fIni+' al '+fFin+' para el CUPS:\\n'+c);const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas disponibles.');return;}let csv='Fecha,Hora,Consumo (kWh)\\n';cons.forEach(x=>{csv+=`${x.date.replace(/\\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);}catch(e){alert('Error al extraer datos: '+e.message);}})();" 
                                class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-4 rounded text-xs select-none cursor-grab shadow-sm transition-colors">
                                 📥 Descargador Datadis
                             </a>
                         </div>
                     </li>
                     <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión de forma habitual.</li>
-                    <li>Una vez dentro de tu área privada de usuario, haz clic en el marcador <strong>"Descargador Datadis"</strong> de tu barra superior.</li>
+                    <li>Una vez dentro de tu área privada de usuario (donde se ven tus datos de contrato y consumo), haz clic en el marcador <strong>"Descargador Datadis"</strong> de tu barra superior.</li>
                     <li>Sigue los mensajes para definir el periodo deseado. El archivo CSV resultante se descargará automáticamente; arrástralo a la casilla **"Archivo CSV Distribuidora"** de esta aplicación.</li>
                 </ol>
             </div>
