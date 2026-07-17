@@ -44,9 +44,20 @@
                 <input type="number" id="dailyEvThresholdInput" step="1.0" value="15.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <p class="text-xs text-gray-500 mt-1">Consumo mínimo en 1 día para marcar coche cargado.</p>
             </div>
-            <div>
+            <div class="flex flex-col">
                 <label class="block text-sm font-medium text-gray-700 mb-2">5. Archivo CSV Distribuidora</label>
-                <input type="file" id="csvInput" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <!-- Zona Arrastrar y Soltar (Drag & Drop) -->
+                <div id="dropZone" class="border-2 border-dashed border-blue-300 rounded-lg p-3 text-center cursor-pointer hover:bg-blue-50 transition-colors flex flex-col justify-center items-center h-[42px] relative bg-gray-50">
+                    <input type="file" id="csvInput" accept=".csv" class="hidden">
+                    <div id="dropZonePrompt" class="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span class="font-semibold text-blue-600">Arrastra aquí tu CSV</span>
+                        <span>o haz clic</span>
+                    </div>
+                    <div id="fileSuccessText" class="hidden text-xs text-green-700 font-bold flex items-center gap-1 truncate max-w-full">
+                        <span>✅</span>
+                        <span id="fileNameSpan" class="truncate font-medium text-gray-600"></span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -214,18 +225,6 @@
                             <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
                             <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
                         </div>
-                        <!-- Ajuste de Umbrales de Precio para PVPC / Indexado -->
-                        <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-200 shadow-inner">
-                            <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
-                            <div>
-                                <label class="font-medium mr-1 text-red-700">Caro (P1) si &ge;</label>
-                                <input type="number" id="pvpcHighThreshold" step="0.005" value="0.150" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
-                            </div>
-                            <div>
-                                <label class="font-medium mr-1 text-green-700">Barato (P3) si &le;</label>
-                                <input type="number" id="pvpcLowThreshold" step="0.005" value="0.080" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
-                            </div>
-                        </div>
                     </div>
 
                     <div class="space-y-6">
@@ -279,8 +278,24 @@
                         </div>
 
                         <!-- 2. Clasificación por Coste Real (Según PVPC Indexado) -->
-                        <div>
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
+                        <div class="pt-4 border-t border-gray-100">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
+                                
+                                <!-- Ajuste de Umbrales de Precio para PVPC / Indexado -->
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                    <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
+                                    <div>
+                                        <label class="font-medium mr-1 text-red-700">Caro (P1) si &ge;</label>
+                                        <input type="number" id="pvpcHighThreshold" step="0.005" value="0.150" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
+                                    </div>
+                                    <div>
+                                        <label class="font-medium mr-1 text-green-700">Barato (P3) si &le;</label>
+                                        <input type="number" id="pvpcLowThreshold" step="0.005" value="0.080" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Alto -->
                                 <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-col justify-between shadow-xs">
@@ -487,15 +502,20 @@
         const thresholdInput = document.getElementById('thresholdInput');
         const subtractInput = document.getElementById('subtractInput');
         const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');
+        
+        // Elementos del Drag & Drop
+        const dropZone = document.getElementById('dropZone');
         const csvInput = document.getElementById('csvInput');
+        const dropZonePrompt = document.getElementById('dropZonePrompt');
+        const fileSuccessText = document.getElementById('fileSuccessText');
+        const fileNameSpan = document.getElementById('fileNameSpan');
+
         const statusMessage = document.getElementById('statusMessage');
         const resultsSection = document.getElementById('resultsSection');
         const recalculateBtn = document.getElementById('recalculateBtn');
 
         const filterStartDate = document.getElementById('filterStartDate');
         const filterEndDate = document.getElementById('filterEndDate');
-        const filterStartHour = document.getElementById('filterStartHour');
-        const filterEndHour = document.getElementById('filterEndHour');
         
         const totalKwhEl = document.getElementById('totalKwh');
         const totalCostEl = document.getElementById('totalCost');
@@ -513,27 +533,44 @@
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
 
-        // Configuración de eventos de archivo
-        csvInput.addEventListener('change', handleFile);
-        recalculateBtn.addEventListener('click', () => {
-            if (window.rawCsvData) {
-                processData(window.rawCsvData);
-            } else {
-                showStatus("Por favor, sube un archivo CSV antes de recalcular.", "error");
+        // --- GESTIÓN DE ARRASTRAR Y SOLTAR (DRAG & DROP) ---
+        dropZone.addEventListener('click', () => csvInput.click());
+
+        csvInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
             }
         });
 
-        function showStatus(text, type = 'info') {
-            statusMessage.textContent = text;
-            statusMessage.className = `p-4 rounded-lg mb-8 text-center block ${
-                type === 'error' ? 'bg-red-100 text-red-800' : 
-                type === 'success' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-            }`;
-        }
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('bg-blue-100', 'border-blue-500');
+        });
 
-        function handleFile(e) {
-            const file = e.target.files[0];
+        ['dragleave', 'dragend'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('bg-blue-100', 'border-blue-500');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-blue-100', 'border-blue-500');
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFiles(files) {
+            const file = files[0];
             if (!file) return;
+
+            // Cambiar visualmente el dropzone para confirmar carga
+            dropZonePrompt.classList.add('hidden');
+            fileSuccessText.classList.remove('hidden');
+            fileNameSpan.textContent = file.name;
+            dropZone.classList.add('border-green-400', 'bg-green-50');
+            dropZone.classList.remove('border-blue-300', 'bg-gray-50');
 
             showStatus("Archivo cargado. Procesando e interpretando lecturas...", "info");
 
@@ -672,8 +709,6 @@
                 // 4. Aplicar filtros
                 const startDateVal = filterStartDate.value;
                 const endDateVal = filterEndDate.value;
-                const startHourVal = filterStartHour.value !== "" ? parseInt(filterStartHour.value, 10) : null;
-                const endHourVal = filterEndHour.value !== "" ? parseInt(filterEndHour.value, 10) : null;
 
                 let filteredData = pricedData.filter(item => {
                     const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
@@ -685,8 +720,6 @@
                         if (endDateVal && item.fechaStr > endDateVal) return false;
                     }
                     
-                    if (startHourVal !== null && item.hora < startHourVal) return false;
-                    if (endHourVal !== null && item.hora > endHourVal) return false;
                     return true;
                 });
 
@@ -701,43 +734,6 @@
             } catch (err) {
                 showStatus("Error al procesar: " + err.message, "error");
                 console.error(err);
-            }
-        }
-
-        async function fetchPreciosPVPC(inicio, fin) {
-            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Servidor público respondió con código: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const pvpcSeries = data.included.find(series => 
-                    series.type.toLowerCase().includes('pvpc') || 
-                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                );
-
-                if (!pvpcSeries) {
-                    throw new Error("No se localizó la serie PVPC en la base de datos pública de Red Eléctrica.");
-                }
-
-                const preciosMap = {};
-                pvpcSeries.attributes.values.forEach(v => {
-                    const dateObj = new Date(v.datetime);
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
-                    const localHour = dateObj.getHours();
-
-                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0;
-                });
-
-                return preciosMap;
-
-            } catch (error) {
-                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
-                return null;
             }
         }
 
@@ -840,7 +836,7 @@
                     p3CostTime += item.costeManual; // Siempre coste manual
                 }
 
-                // 2. CLASIFICACIÓN POR COSTE REAL (SIEMPRE usando la tarifa oficial PVPC indexada)
+                // 2. CLASIFICACIÓN POR COSTE REAL (SIEMPRE usando la tarifa oficial indexada PVPC de REE)
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
@@ -1573,8 +1569,6 @@
                 holidaysInput: document.getElementById('holidaysInput').value,
                 filterStartDate: document.getElementById('filterStartDate').value,
                 filterEndDate: document.getElementById('filterEndDate').value,
-                filterStartHour: document.getElementById('filterStartHour').value,
-                filterEndHour: document.getElementById('filterEndHour').value,
                 calendarSelectedDates: Array.from(window.calendarSelectedDates),
                 pvpcHighThreshold: document.getElementById('pvpcHighThreshold').value,
                 pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value,
@@ -1611,8 +1605,6 @@
                 if (config.holidaysInput !== undefined) document.getElementById('holidaysInput').value = config.holidaysInput;
                 if (config.filterStartDate !== undefined) document.getElementById('filterStartDate').value = config.filterStartDate;
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
-                if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
-                if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
@@ -1665,8 +1657,6 @@
             e.preventDefault(); 
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
-            document.getElementById('filterStartHour').value = '';
-            document.getElementById('filterEndHour').value = '';
             
             if (window.calendarSelectedDates) {
                 window.calendarSelectedDates.clear();
@@ -1683,7 +1673,7 @@
         const inputsToWatch = [
             'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
             'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
-            'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour',
+            'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate',
             'pvpcHighThreshold', 'pvpcLowThreshold',
             'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual'
         ];
