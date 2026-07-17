@@ -90,12 +90,10 @@
             </div>
 
             <!-- Panel de Descarga Directa vía Proxy -->
-
-            <!-- Panel de Descarga Directa vía Proxy -->
             <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
                 <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
                 <p class="text-xs text-gray-600 mb-3">
-                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la API oficial a través de un proxy propio y carga los datos automáticamente. Tus credenciales solo se usan para esta petición, no se guardan en la app.
+                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la API oficial a través de un proxy propio y carga los datos automáticamente. Tus credenciales se almacenan localmente en tu navegador para facilitar futuros accesos.
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     <div>
@@ -675,8 +673,10 @@
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
         function toDatadisDate(isoDate) {
-            // Convierte YYYY-MM-DD (input date) a YYYY/MM/DD (formato Datadis)
-            return isoDate.replaceAll('-', '/');
+            // Convierte YYYY-MM-DD (input date) a YYYY/MM (formato esperado por Datadis para la API privada)
+            if (!isoDate) return '';
+            const parts = isoDate.split('-');
+            return `${parts[0]}/${parts[1]}`;
         }
 
         async function descargarDesdeDatadis() {
@@ -747,8 +747,15 @@
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
 
-        // Por defecto, proponer los últimos 30 días
+        // Por defecto, proponer los últimos 30 días si no hay guardados
         (function initDatadisDefaultDates() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    if (config.datadisStart && config.datadisEnd) return;
+                } catch(e) {}
+            }
             const toIso = (d) => d.toISOString().split('T')[0];
             const hoy = new Date();
             const hace30 = new Date();
@@ -1832,7 +1839,12 @@
                 powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
                 powerPriceP2Pvpc: document.getElementById('powerPriceP2Pvpc').value,
                 powerPriceP1Manual: document.getElementById('powerPriceP1Manual').value,
-                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value
+                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value,
+                datadisUser: document.getElementById('datadisUser').value,
+                datadisPass: document.getElementById('datadisPass').value,
+                datadisCups: document.getElementById('datadisCups').value,
+                datadisStart: document.getElementById('datadisStart').value,
+                datadisEnd: document.getElementById('datadisEnd').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -1878,6 +1890,13 @@
                 if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
                 if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
                 if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
+
+                // Carga de datos Datadis
+                if (config.datadisUser !== undefined) document.getElementById('datadisUser').value = config.datadisUser;
+                if (config.datadisPass !== undefined) document.getElementById('datadisPass').value = config.datadisPass;
+                if (config.datadisCups !== undefined) document.getElementById('datadisCups').value = config.datadisCups;
+                if (config.datadisStart !== undefined) document.getElementById('datadisStart').value = config.datadisStart;
+                if (config.datadisEnd !== undefined) document.getElementById('datadisEnd').value = config.datadisEnd;
 
                 if (config.calendarSelectedDates !== undefined && Array.isArray(config.calendarSelectedDates)) {
                     window.calendarSelectedDates = new Set(config.calendarSelectedDates);
@@ -1944,7 +1963,8 @@
             'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate',
             'filterStartHour', 'filterEndHour',
             'pvpcHighThreshold', 'pvpcLowThreshold',
-            'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual'
+            'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual',
+            'datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd'
         ];
         
         inputsToWatch.forEach(id => {
