@@ -1,3 +1,10 @@
+Lamento el inconveniente. Al reestructurar el archivo para la última entrega, se
+omitió accidentalmente el bloque que declara la función fetchPreciosPVPC que
+realiza la descarga de precios oficiales.
+
+He restaurado la función que faltaba en el script global. Aquí tiene el código
+completo y corregido:
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -734,6 +741,43 @@
             } catch (err) {
                 showStatus("Error al procesar: " + err.message, "error");
                 console.error(err);
+            }
+        }
+
+        async function fetchPreciosPVPC(inicio, fin) {
+            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Servidor público respondió con código: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const pvpcSeries = data.included.find(series => 
+                    series.type.toLowerCase().includes('pvpc') || 
+                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                );
+
+                if (!pvpcSeries) {
+                    throw new Error("No se localizó la serie PVPC en la base de datos pública de Red Eléctrica.");
+                }
+
+                const preciosMap = {};
+                pvpcSeries.attributes.values.forEach(v => {
+                    const dateObj = new Date(v.datetime);
+                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
+                    const localHour = dateObj.getHours();
+
+                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
+                    preciosMap[key] = v.value / 1000.0;
+                });
+
+                return preciosMap;
+
+            } catch (error) {
+                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
+                return null;
             }
         }
 
