@@ -231,8 +231,8 @@
                     <div class="space-y-6">
                         <!-- 1. Clasificación por Tramos Horarios -->
                         <div>
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">1. Clasificación por Horario (Peajes Acceso 2.0TD - Se calcula según el Tipo de Tarifa seleccionado arriba)</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">1. Clasificación por Horario (Peajes Acceso 2.0TD - Los precios aplicados son los introducidos en el apartado "Manual por Tramos" si se selecciona dicho Tipo de Tarifa en el selector general superior)</h4>
+                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Punta -->
                                 <div class="p-3 bg-red-50/50 rounded-xl border border-red-100 flex flex-col justify-between shadow-xs">
                                     <span class="font-bold text-red-800 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
@@ -1015,7 +1015,7 @@
             const p3PctTimeCost = totalCost > 0 ? (p3CostTime / totalCost) * 100 : 0;
 
             // Determinar precios por tramo para colocar entre corchetes
-            let p1PriceLabel = "", p2PriceLabel = "", p3PriceLabel = "";
+              let p1PriceLabel = "", p2PriceLabel = "", p3PriceLabel = "";
             if (mode === 'manual') {
                 const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
                 const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
@@ -1024,6 +1024,13 @@
                 p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
                 p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
             } else {
+                const avgP1 = p1KwhTime > 0 ? (p1CostTime / p1KwhTime) : 0;
+                const avgP2 = p2KwhTime > 0 ? (p2CostTime / p2KwhTime) : 0;
+                const avgP3 = p3KwhTime > 0 ? (p3CostTime / p3KwhTime) : 0;
+                p1PriceLabel = ` [Med PVPC: ${avgP1.toFixed(5)} €/kWh]`;
+                p2PriceLabel = ` [Med PVPC: ${avgP2.toFixed(5)} €/kWh]`;
+                p3PriceLabel = ` [Med PVPC: ${avgP3.toFixed(5)} €/kWh]`;
+            }
                 const avgP1 = p1KwhTime > 0 ? (p1CostTime / p1KwhTime) : 0;
                 const avgP2 = p2KwhTime > 0 ? (p2CostTime / p2KwhTime) : 0;
                 const avgP3 = p3KwhTime > 0 ? (p3CostTime / p3KwhTime) : 0;
