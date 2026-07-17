@@ -78,6 +78,40 @@
             </div>
         </div>
 
+        <!-- Panel de Configuración de Potencia Contratada -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
+            <div class="mb-4">
+                <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
+                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
+                    <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
+                    <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
+                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
+                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
+                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
+                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
         <!-- Configuración Específica de Tarifa Manual -->
         <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
             <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
@@ -697,6 +731,22 @@
         }
 
         function renderResultsAndCharts(data) {
+            // Obtener variables de potencia y calcular sus costes proporcionales al período de días
+            const sortedDates = Object.keys(dailyStats).sort();
+            const numDays = sortedDates.length || 1;
+
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+            const p1PricePvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+            const p2PricePvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+            const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
+            const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
+
+            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+            const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
+
+            const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
+
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
 
@@ -772,23 +822,53 @@
                 const isP1 = !isP2;
 
                 // 1. CLASIFICACIÓN POR HORARIO (Tramos oficiales peajes de acceso 2.0TD)
-                if (isWeekend || isHoliday) {
+           // 1. CLASIFICACIÓN POR HORARIO (Dinámica según Tarifa Manual o PVPC)
+                const currentMode = document.getElementById('rateMode').value;
+                let itemSlot = 'P3'; // Por defecto Valle (P3)
+
+                if (currentMode === 'manual') {
+                    // Obtener configuración manual en tiempo real
+                    const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                    const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                    const useWeekendValle = document.getElementById('weekendValle').checked;
+
+                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                        itemSlot = 'P3';
+                    } else if (hoursPunta.includes(item.hora)) {
+                        itemSlot = 'P1';
+                    } else if (hoursLlano.includes(item.hora)) {
+                        itemSlot = 'P2';
+                    } else {
+                        itemSlot = 'P3';
+                    }
+                } else {
+                    // Tramos oficiales peajes de acceso 2.0TD para PVPC
+                    if (isWeekend || isHoliday) {
+                        itemSlot = 'P3';
+                    } else {
+                        const officialP1 = [10, 11, 12, 13, 18, 19, 20, 21];
+                        const officialP2 = [8, 9, 14, 15, 16, 17, 22, 23];
+                        
+                        if (officialP1.includes(item.hora)) {
+                            itemSlot = 'P1';
+                        } else if (officialP2.includes(item.hora)) {
+                            itemSlot = 'P2';
+                        } else {
+                            itemSlot = 'P3';
+                        }
+                    }
+                }
+
+                // Acumulación en base al tramo determinado
+                if (itemSlot === 'P1') {
+                    p1KwhTime += item.consumo;
+                    p1CostTime += item.coste;
+                } else if (itemSlot === 'P2') {
+                    p2KwhTime += item.consumo;
+                    p2CostTime += item.coste;
+                } else {
                     p3KwhTime += item.consumo;
                     p3CostTime += item.coste;
-                } else {
-                    const p1Hours = [10, 11, 12, 13, 18, 19, 20, 21];
-                    const p2Hours = [8, 9, 14, 15, 16, 17, 22, 23];
-                    
-                    if (p1Hours.includes(item.hora)) {
-                        p1KwhTime += item.consumo;
-                        p1CostTime += item.coste;
-                    } else if (p2Hours.includes(item.hora)) {
-                        p2KwhTime += item.consumo;
-                        p2CostTime += item.coste;
-                    } else {
-                        p3KwhTime += item.consumo;
-                        p3CostTime += item.coste;
-                    }
                 }
 
                 // 2. CLASIFICACIÓN POR COSTE REAL (Según precio por kWh de cada registro)
@@ -875,8 +955,17 @@
 
             // Actualizar Métricas de Texto en pantalla
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            totalCostEl.textContent = `${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+             const grandTotalActive = totalCost + activePowerCost;
+            totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
+            totalCostEl.innerHTML = `
+                ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                <span class="text-[10px] text-gray-500 block font-normal mt-1 leading-tight text-left">
+                    • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
+                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                </span>
+            `;
+
             totalDaysEl.textContent = `${numDays} días`;
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
@@ -962,35 +1051,75 @@
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span>`;
 
             // Construir comparativa de desviación global
-            const diffValue = totalCostPvpc - totalCostManual;
-            const diffPct = totalCostManual > 0 ? (diffValue / totalCostManual) * 100 : 0;
+            // Cálculos comparativos detallados (Energía + Potencia)
+            const grandTotalPvpc = totalCostPvpc + totalPowerCostPvpc;
+            const grandTotalManual = totalCostManual + totalPowerCostManual;
 
-            const isPvpcCheaper = diffValue < 0;
-            const diffAbs = Math.abs(diffValue).toFixed(2);
-            const pctAbs = Math.abs(diffPct).toFixed(1);
+            // Diferenciales individuales
+            const diffEnergy = totalCostPvpc - totalCostManual;
+            const diffEnergyPct = totalCostManual > 0 ? (diffEnergy / totalCostManual) * 100 : 0;
+            const diffEnergyText = `${Math.abs(diffEnergy).toFixed(2)} € (${Math.abs(diffEnergyPct).toFixed(1)}%) ${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
 
-            let comparisonHtml = "";
-            if (isPvpcCheaper) {
-                comparisonHtml = `
-                    <div class="text-left">
-                        <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas</h5>
-                        <p class="text-xs text-gray-500 mt-1">Coste Acumulado con PVPC: <strong class="text-gray-900">${totalCostPvpc.toFixed(2)} €</strong> | Coste Acumulado Tarifa Manual: <strong class="text-gray-900">${totalCostManual.toFixed(2)} €</strong></p>
+            const diffPower = totalPowerCostPvpc - totalPowerCostManual;
+            const diffPowerPct = totalPowerCostManual > 0 ? (diffPower / totalPowerCostManual) * 100 : 0;
+            const diffPowerText = `${Math.abs(diffPower).toFixed(2)} € (${Math.abs(diffPowerPct).toFixed(1)}%) ${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffPowerClass = diffPower < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+
+            const diffTotal = grandTotalPvpc - grandTotalManual;
+            const diffTotalPct = grandTotalManual > 0 ? (diffTotal / grandTotalManual) * 100 : 0;
+            const diffTotalText = `${Math.abs(diffTotal).toFixed(2)} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700 font-bold text-sm' : 'text-rose-700 font-bold text-sm';
+
+            const isPvpcCheaper = diffTotal < 0;
+            const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
+            const bannerText = isPvpcCheaper 
+                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toFixed(2)} € en este período).`
+                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toFixed(2)} € en este período).`;
+
+            let comparisonHtml = `
+                <div class="w-full">
+                    <div class="border-b pb-2 mb-3">
+                        <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
+                        <p class="text-[11px] text-gray-500">Desglose integral separando término de consumo de energía y costes de potencia contratada.</p>
                     </div>
-                    <div class="bg-emerald-100 border border-emerald-300 px-4 py-2.5 rounded-xl text-emerald-800 font-bold text-xs text-center md:text-right shadow-inner">
-                        💡 El PVPC ha sido un <span class="text-emerald-950 font-black">${pctAbs}% más barato</span> que la Tarifa Manual (Ahorro de <span class="text-emerald-950 font-black">${diffAbs} €</span> en este periodo)
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b text-gray-400 uppercase text-[9px] tracking-wider font-semibold">
+                                    <th class="py-2">Concepto Facturado</th>
+                                    <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
+                                    <th class="py-2 text-right">Tarifa Manual (Tramos)</th>
+                                    <th class="py-2 text-right">Diferencia / Desviación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Energía (Consumo de Red)</td>
+                                    <td class="py-2.5 text-right font-mono">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono ${diffEnergyClass}">${diffEnergyText}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Potencia (Coste Fijo del Período)</td>
+                                    <td class="py-2.5 text-right font-mono">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono ${diffPowerClass}">${diffPowerText}</td>
+                                </tr>
+                                <tr class="bg-gray-50 font-bold border-t border-gray-300">
+                                    <td class="py-3 text-gray-900 uppercase">Total Facturado Estimado</td>
+                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-3 text-right font-mono ${diffTotalClass}">${diffTotalText}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                `;
-            } else {
-                comparisonHtml = `
-                    <div class="text-left">
-                        <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas</h5>
-                        <p class="text-xs text-gray-500 mt-1">Coste Acumulado con PVPC: <strong class="text-gray-900">${totalCostPvpc.toFixed(2)} €</strong> | Coste Acumulado Tarifa Manual: <strong class="text-gray-900">${totalCostManual.toFixed(2)} €</strong></p>
+                    <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
+                        ${bannerText}
                     </div>
-                    <div class="bg-rose-100 border border-rose-300 px-4 py-2.5 rounded-xl text-rose-800 font-bold text-xs text-center md:text-right shadow-inner">
-                        ⚠️ La Tarifa Manual ha sido un <span class="text-rose-950 font-black">${pctAbs}% más barata</span> que el PVPC (Ahorro de <span class="text-rose-950 font-black">${diffAbs} €</span> en este periodo)
-                    </div>
-                `;
-            }
+                </div>
+            `;
             document.getElementById('comparisonBox').innerHTML = comparisonHtml;
 
             // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
@@ -1460,7 +1589,7 @@
         }
 
         // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
-        function saveConfig() {
+function saveConfig() {
             const config = {
                 rateMode: document.getElementById('rateMode').value,
                 thresholdInput: document.getElementById('thresholdInput').value,
@@ -1480,7 +1609,14 @@
                 filterEndHour: document.getElementById('filterEndHour').value,
                 calendarSelectedDates: Array.from(window.calendarSelectedDates),
                 pvpcHighThreshold: document.getElementById('pvpcHighThreshold').value,
-                pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value
+                pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value,
+                // Nuevas variables añadidas:
+                powerP1: document.getElementById('powerP1').value,
+                powerP2: document.getElementById('powerP2').value,
+                powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
+                powerPriceP2Pvpc: document.getElementById('powerPriceP2Pvpc').value,
+                powerPriceP1Manual: document.getElementById('powerPriceP1Manual').value,
+                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -1509,6 +1645,12 @@
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+                if (config.powerP1 !== undefined) document.getElementById('powerP1').value = config.powerP1;
+                if (config.powerP2 !== undefined) document.getElementById('powerP2').value = config.powerP2;
+                if (config.powerPriceP1Pvpc !== undefined) document.getElementById('powerPriceP1Pvpc').value = config.powerPriceP1Pvpc;
+                if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
+                if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
+                if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
@@ -1572,7 +1714,9 @@
             'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
             'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
             'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour',
-            'pvpcHighThreshold', 'pvpcLowThreshold'
+            'pvpcHighThreshold', 'pvpcLowThreshold',
+            // Nuevos inputs añadidos:
+            'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual'
         ];
         inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
