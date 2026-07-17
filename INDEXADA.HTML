@@ -17,7 +17,7 @@
         <!-- Cabecera -->
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
-            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora y analiza consumos y costes de forma gráfica.</p>
+            <p class="text-gray-600 mt-2">Analiza consumos, costes de potencia y energía importando lecturas de tu distribuidora o de Datadis.</p>
         </header>
 
         <!-- Panel de Configuración General -->
@@ -61,6 +61,69 @@
             </div>
         </div>
 
+        <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
+            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
+                    </p>
+                </div>
+                <!-- Botón de Registro Oficial -->
+                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                    <span>Regístrate en Datadis.es</span>
+                    <span class="text-[10px]">↗</span>
+                </a>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
+                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">¿Qué es Datadis.es y cómo darte de alta?</h4>
+                <p class="text-xs text-gray-700 leading-relaxed mb-2">
+                    Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas (Endesa, Iberdrola, etc.) publican tus curvas de consumo horario reales, con independencia de tu comercializadora.
+                </p>
+                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
+                    <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
+                    <li>Usa tu NIF/NIE como usuario y crea una contraseña; recibirás un correo de confirmación.</li>
+                    <li>Localiza tu CUPS (código de tu punto de suministro) en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
+                </ol>
+            </div>
+
+            <!-- Panel de Descarga Directa vía Proxy -->
+            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
+                <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
+                <p class="text-xs text-gray-600 mb-3">
+                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la DATASIS y descargará los datos automáticamente
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Usuario Datadis (NIF)</label>
+                        <input type="text" id="datadisUser" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input type="password" id="datadisPass" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">CUPS (opcional)</label>
+                        <input type="text" id="datadisCups" placeholder="Autodetectar" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicio</label>
+                        <input type="date" id="datadisStart" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha fin</label>
+                        <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <button id="datadisDirectBtn" type="button" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    ⬇️ Descargar y analizar directamente
+                </button>
+                <p id="datadisDirectStatus" class="text-xs mt-2"></p>
+            </div>
+        </div>
+
         <!-- Panel de Configuración de Potencia Contratada -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
@@ -95,10 +158,10 @@
             </div>
         </div>
 
-        <!-- Panel de Filtros Temporales -->
+        <!-- Panel de Filtros Temporales y Horarios -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-md font-bold text-purple-700">Filtros de Período (Opcional)</h3>
+                <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
                 <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
                     Limpiar Filtros
                 </button>
@@ -111,6 +174,66 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Fin (YYYY-MM-DD)</label>
                     <input type="date" id="filterEndDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (Opcional)</label>
+                    <select id="filterStartHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas las horas</option>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (Opcional)</label>
+                    <select id="filterEndHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas las horas</option>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -175,7 +298,7 @@
         <!-- Resultados -->
         <div id="resultsSection" class="hidden">
 
-            <!-- Métricas Globales (Ampliado a 7 indicadores) -->
+            <!-- Métricas Globales (7 indicadores) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-blue-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Total</h3>
@@ -220,7 +343,7 @@
                     </div>
 
                     <div class="space-y-6">
-                        <!-- 1. Clasificación por Tramos Horarios (Tarifa fija manual por tramos) -->
+                        <!-- 1. Clasificación por Tramos Horarios -->
                         <div>
                             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario (Tarifa Fija por Tramos introducida por el usuario)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -269,7 +392,7 @@
                             </div>
                         </div>
 
-                        <!-- 2. Clasificación por Coste Real (Según PVPC Indexado) -->
+                        <!-- 2. Clasificación por Coste Real -->
                         <div class="pt-4 border-t border-gray-100">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
@@ -338,7 +461,7 @@
                         <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
                             <div class="text-left">
                                 <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
-                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo para comparar el coste simultáneo bajo tarifas indexadas (PVPC) y manuales.</p>
+                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo descargado de tu distribuidora o de Datadis para ver el desglose económico.</p>
                             </div>
                             <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
                                 Sin datos
@@ -426,9 +549,9 @@
                             <tr class="bg-gray-100 text-gray-700 text-sm uppercase">
                                 <th class="p-4 border-b">Fecha</th>
                                 <th class="p-4 border-b">Hora</th>
-                                <th class="p-4 border-b text-right">Consumo Neto Vehículo (kWh)</th>
+                                <th class="p-4 border-b text-right">Consumo Neto (según el umbral) (kWh)</th>
                                 <th class="p-4 border-b text-right">Precio Aplicado (€/kWh)</th>
-                                <th class="p-4 border-b text-right">Coste Vehículo (€)</th>
+                                <th class="p-4 border-b text-right">Coste (€)</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="text-sm divide-y">
@@ -461,23 +584,6 @@
     </div>
 
     <script>
-        // --- DEPURADOR ERUDA DINÁMICO (Activo solo ante fallos de ejecución) ---
-        window.addEventListener('error', function (e) {
-            if (typeof eruda === 'undefined') {
-                const script = document.createElement('script');
-                script.src = "https://cdn.jsdelivr.net/npm/eruda";
-                script.onload = function () {
-                    eruda.init();
-                    eruda.show();
-                    console.error("Error capturado: ", e.error || e.message);
-                };
-                document.body.appendChild(script);
-            } else {
-                eruda.show();
-                console.error("Error capturado: ", e.error || e.message);
-            }
-        });
-
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
         window.chartInstance1 = null;
@@ -508,6 +614,8 @@
 
         const filterStartDate = document.getElementById('filterStartDate');
         const filterEndDate = document.getElementById('filterEndDate');
+        const filterStartHour = document.getElementById('filterStartHour');
+        const filterEndHour = document.getElementById('filterEndHour');
         
         const totalKwhEl = document.getElementById('totalKwh');
         const totalCostEl = document.getElementById('totalCost');
@@ -560,6 +668,113 @@
                 type === 'success' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
             }`;
         }
+
+        // --- Descarga directa desde Datadis vía proxy propio ---
+        const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
+
+        function toDatadisDate(isoDate) {
+            // Convierte YYYY-MM-DD (input date) a YYYY/MM (formato esperado por Datadis para la API privada)
+            if (!isoDate) return '';
+            const parts = isoDate.split('-');
+            return `${parts[0]}/${parts[1]}`;
+        }
+
+        async function descargarDesdeDatadis() {
+            const statusEl = document.getElementById('datadisDirectStatus');
+            const username = document.getElementById('datadisUser').value.trim();
+            const password = document.getElementById('datadisPass').value;
+            const cups = document.getElementById('datadisCups').value.trim();
+            const startDate = document.getElementById('datadisStart').value;
+            const endDate = document.getElementById('datadisEnd').value;
+
+            if (!username || !password || !startDate || !endDate) {
+                statusEl.textContent = '⚠️ Rellena usuario, contraseña y ambas fechas.';
+                statusEl.className = 'text-xs mt-2 text-red-600';
+                return;
+            }
+
+            statusEl.textContent = '⏳ Conectando con Datadis...';
+            statusEl.className = 'text-xs mt-2 text-gray-600';
+
+            try {
+                const resp = await fetch(DATADIS_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        cups: cups || undefined,
+                        startDate: toDatadisDate(startDate),
+                        endDate: toDatadisDate(endDate),
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || data.error) {
+                    statusEl.textContent = '❌ ' + (data.error || `Error del proxy (código ${resp.status}).`);
+                    statusEl.className = 'text-xs mt-2 text-red-600';
+                    return;
+                }
+
+                let csv = 'Fecha,Hora,Consumo (kWh)\n';
+                data.consumptionData.forEach((x) => {
+                    csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
+                });
+
+                Papa.parse(csv, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        window.rawCsvData = results.data;
+
+                        // Se limpian selecciones previas del calendario para dar paso a la nueva descarga
+                        if (window.calendarSelectedDates) {
+                            window.calendarSelectedDates.clear();
+                        }
+
+                        // Se ajustan automáticamente los filtros generales del período a las fechas propuestas
+                        document.getElementById('filterStartDate').value = startDate;
+                        document.getElementById('filterEndDate').value = endDate;
+                        saveConfig();
+
+                        processData(window.rawCsvData);
+
+                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas del CUPS ${data.cups}.`;
+                        statusEl.className = 'text-xs mt-2 text-emerald-700';
+                        dropZonePrompt.classList.add('hidden');
+                        fileSuccessText.classList.remove('hidden');
+                        fileNameSpan.textContent = `Datadis API (CUPS ${data.cups})`;
+                    },
+                    error: (err) => {
+                        statusEl.textContent = '❌ Error al procesar los datos recibidos: ' + err.message;
+                        statusEl.className = 'text-xs mt-2 text-red-600';
+                    },
+                });
+            } catch (err) {
+                statusEl.textContent = '❌ Error de conexión con el proxy: ' + err.message;
+                statusEl.className = 'text-xs mt-2 text-red-600';
+            }
+        }
+
+        document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
+
+        // Por defecto, proponer los últimos 30 días si no hay guardados
+        (function initDatadisDefaultDates() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    if (config.datadisStart && config.datadisEnd) return;
+                } catch(e) {}
+            }
+            const toIso = (d) => d.toISOString().split('T')[0];
+            const hoy = new Date();
+            const hace30 = new Date();
+            hace30.setDate(hoy.getDate() - 30);
+            document.getElementById('datadisEnd').value = toIso(hoy);
+            document.getElementById('datadisStart').value = toIso(hace30);
+        })();
 
         function handleFiles(files) {
             const file = files[0];
@@ -709,6 +924,8 @@
                 // 4. Aplicar filtros
                 const startDateVal = filterStartDate.value;
                 const endDateVal = filterEndDate.value;
+                const startHourVal = filterStartHour.value;
+                const endHourVal = filterEndHour.value;
 
                 let filteredData = pricedData.filter(item => {
                     const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
@@ -718,6 +935,22 @@
                     } else {
                         if (startDateVal && item.fechaStr < startDateVal) return false;
                         if (endDateVal && item.fechaStr > endDateVal) return false;
+                    }
+
+                    // Filtrado Opcional por Rango Horario
+                    if (startHourVal !== "" && endHourVal !== "") {
+                        const startH = parseInt(startHourVal, 10);
+                        const endH = parseInt(endHourVal, 10);
+                        if (startH <= endH) {
+                            if (item.hora < startH || item.hora > endH) return false;
+                        } else {
+                            // Rango que cruza la medianoche (Ej: De 22:00 a 06:00)
+                            if (item.hora < startH && item.hora > endH) return false;
+                        }
+                    } else if (startHourVal !== "") {
+                        if (item.hora < parseInt(startHourVal, 10)) return false;
+                    } else if (endHourVal !== "") {
+                        if (item.hora > parseInt(endHourVal, 10)) return false;
                     }
                     
                     return true;
@@ -737,43 +970,69 @@
             }
         }
 
+        // --- OBTENCIÓN DE PRECIOS OFICIALES PVPC DE REE ---
         async function fetchPreciosPVPC(inicio, fin) {
-            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Servidor público respondió con código: ${response.status}`);
+            const startDate = new Date(inicio);
+            const endDate = new Date(fin);
+            
+            // Segmentación del rango de fechas en bloques de máximo 30 días para no saturar la API pública de REE (límite 31 días)
+            const chunks = [];
+            let currentStart = new Date(startDate);
+            
+            while (currentStart <= endDate) {
+                let currentEnd = new Date(currentStart);
+                currentEnd.setDate(currentEnd.getDate() + 30);
+                if (currentEnd > endDate) {
+                    currentEnd = new Date(endDate);
                 }
-
-                const data = await response.json();
-                const pvpcSeries = data.included.find(series => 
-                    series.type.toLowerCase().includes('pvpc') || 
-                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                );
-
-                if (!pvpcSeries) {
-                    throw new Error("No se localizó la serie PVPC en la base de datos pública de Red Eléctrica.");
-                }
-
-                const preciosMap = {};
-                pvpcSeries.attributes.values.forEach(v => {
-                    const dateObj = new Date(v.datetime);
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
-                    const localHour = dateObj.getHours();
-
-                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0;
+                
+                chunks.push({
+                    start: currentStart.toISOString().split('T')[0],
+                    end: currentEnd.toISOString().split('T')[0]
                 });
-
+                
+                currentStart = new Date(currentEnd);
+                currentStart.setDate(currentStart.getDate() + 1);
+            }
+            
+            const preciosMap = {};
+            
+            try {
+                // Descargas en paralelo utilizando Promise.all
+                const promises = chunks.map(async (chunk) => {
+                    const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`REE respondió con código: ${response.status} para el bloque ${chunk.start} - ${chunk.end}`);
+                    }
+                    const data = await response.json();
+                    const pvpcSeries = data.included.find(series => 
+                        series.type.toLowerCase().includes('pvpc') || 
+                        (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                    );
+                    
+                    if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
+                        pvpcSeries.attributes.values.forEach(v => {
+                            if (!v.datetime) return;
+                            // Se extrae la fecha y hora directamente del formato de texto para mitigar desajustes por husos horarios locales
+                            const datePart = v.datetime.substring(0, 10); // YYYY-MM-DD
+                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); // HH
+                            const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
+                            preciosMap[key] = v.value / 1000.0;
+                        });
+                    }
+                });
+                
+                await Promise.all(promises);
                 return preciosMap;
-
+                
             } catch (error) {
                 showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
                 return null;
             }
         }
 
+        // --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
@@ -846,7 +1105,7 @@
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // 1. CLASIFICACIÓN POR HORARIO (SIEMPRE usando la Tarifa Fija Manual del usuario para esta comparativa fija)
+                // 1. CLASIFICACIÓN POR HORARIO
                 let itemSlot = 'P3';
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
@@ -864,28 +1123,28 @@
 
                 if (itemSlot === 'P1') {
                     p1KwhTime += item.consumo;
-                    p1CostTime += item.costeManual; // Siempre coste manual
+                    p1CostTime += item.costeManual; 
                 } else if (itemSlot === 'P2') {
                     p2KwhTime += item.consumo;
-                    p2CostTime += item.costeManual; // Siempre coste manual
+                    p2CostTime += item.costeManual; 
                 } else {
                     p3KwhTime += item.consumo;
-                    p3CostTime += item.costeManual; // Siempre coste manual
+                    p3CostTime += item.costeManual; 
                 }
 
-                // 2. CLASIFICACIÓN POR COSTE REAL (SIEMPRE usando la tarifa oficial indexada PVPC de REE)
+                // 2. CLASIFICACIÓN POR COSTE REAL (PVPC)
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
                 if (item.precioPvpc >= pvpcHigh) {
                     p1KwhPrice += item.consumo;
-                    p1CostPrice += item.costePvpc; // Siempre coste PVPC
+                    p1CostPrice += item.costePvpc; 
                 } else if (item.precioPvpc <= pvpcLow) {
                     p3KwhPrice += item.consumo;
-                    p3CostPrice += item.costePvpc; // Siempre coste PVPC
+                    p3CostPrice += item.costePvpc; 
                 } else {
                     p2KwhPrice += item.consumo;
-                    p2CostPrice += item.costePvpc; // Siempre coste PVPC
+                    p2CostPrice += item.costePvpc; 
                 }
 
                 if (item.consumo > maxPeakHourly) {
@@ -1021,7 +1280,7 @@
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            // Porcentajes e Inyecciones de Bloque 1 (SIEMPRE tarifa fija manual)
+            // Porcentajes e Inyecciones de Bloque 1 (Tarifa fija manual)
             const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
             const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
             const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
@@ -1047,7 +1306,7 @@
             document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
 
-            // Porcentajes e Inyecciones de Bloque 2 (SIEMPRE tarifa oficial indexada PVPC de REE)
+            // Porcentajes e Inyecciones de Bloque 2 (Tarifa oficial indexada PVPC)
             const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
             const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
             const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
@@ -1606,16 +1865,22 @@
                 holidaysInput: document.getElementById('holidaysInput').value,
                 filterStartDate: document.getElementById('filterStartDate').value,
                 filterEndDate: document.getElementById('filterEndDate').value,
+                filterStartHour: document.getElementById('filterStartHour').value,
+                filterEndHour: document.getElementById('filterEndHour').value,
                 calendarSelectedDates: Array.from(window.calendarSelectedDates),
                 pvpcHighThreshold: document.getElementById('pvpcHighThreshold').value,
                 pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value,
-                // Persistencia de potencias contratadas y precios
                 powerP1: document.getElementById('powerP1').value,
                 powerP2: document.getElementById('powerP2').value,
                 powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
                 powerPriceP2Pvpc: document.getElementById('powerPriceP2Pvpc').value,
                 powerPriceP1Manual: document.getElementById('powerPriceP1Manual').value,
-                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value
+                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value,
+                datadisUser: document.getElementById('datadisUser').value,
+                datadisPass: document.getElementById('datadisPass').value,
+                datadisCups: document.getElementById('datadisCups').value,
+                datadisStart: document.getElementById('datadisStart').value,
+                datadisEnd: document.getElementById('datadisEnd').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -1642,6 +1907,8 @@
                 if (config.holidaysInput !== undefined) document.getElementById('holidaysInput').value = config.holidaysInput;
                 if (config.filterStartDate !== undefined) document.getElementById('filterStartDate').value = config.filterStartDate;
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
+                if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
+                if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
@@ -1659,6 +1926,13 @@
                 if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
                 if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
                 if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
+
+                // Carga de datos Datadis
+                if (config.datadisUser !== undefined) document.getElementById('datadisUser').value = config.datadisUser;
+                if (config.datadisPass !== undefined) document.getElementById('datadisPass').value = config.datadisPass;
+                if (config.datadisCups !== undefined) document.getElementById('datadisCups').value = config.datadisCups;
+                if (config.datadisStart !== undefined) document.getElementById('datadisStart').value = config.datadisStart;
+                if (config.datadisEnd !== undefined) document.getElementById('datadisEnd').value = config.datadisEnd;
 
                 if (config.calendarSelectedDates !== undefined && Array.isArray(config.calendarSelectedDates)) {
                     window.calendarSelectedDates = new Set(config.calendarSelectedDates);
@@ -1694,6 +1968,8 @@
             e.preventDefault(); 
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterStartHour').value = '';
+            document.getElementById('filterEndHour').value = '';
             
             if (window.calendarSelectedDates) {
                 window.calendarSelectedDates.clear();
@@ -1706,13 +1982,25 @@
             }
         });
 
+        // Botón Recalcular centralizado
+        document.getElementById('recalculateBtn').addEventListener('click', () => {
+            saveConfig();
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            } else {
+                showStatus("No hay datos cargados para procesar. Suba un archivo CSV utilizando las instrucciones de Datadis o arrastrando un fichero.", "error");
+            }
+        });
+
         // Observadores de cambios en los inputs para autoguardado rápido y recálculo automático instantáneo
         const inputsToWatch = [
             'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
             'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
             'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate',
+            'filterStartHour', 'filterEndHour',
             'pvpcHighThreshold', 'pvpcLowThreshold',
-            'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual'
+            'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual',
+            'datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd'
         ];
         
         inputsToWatch.forEach(id => {
