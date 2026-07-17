@@ -231,8 +231,8 @@
                     <div class="space-y-6">
                         <!-- 1. Clasificación por Tramos Horarios -->
                         <div>
-                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">1. Clasificación por Horario (Peajes Acceso 2.0TD - Los precios aplicados son los introducidos en el apartado "Manual por Tramos" si se selecciona dicho Tipo de Tarifa en el selector general superior)</h4>
-                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">1. Clasificación por Horario (Peajes Acceso 2.0TD - Los precios aplicados son los introducidos en el apartado "Manual por Tramos" si se selecciona dicho Tipo de Tarifa en el selector general superior)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Punta -->
                                 <div class="p-3 bg-red-50/50 rounded-xl border border-red-100 flex flex-col justify-between shadow-xs">
                                     <span class="font-bold text-red-800 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
@@ -290,7 +290,7 @@
                                             <span class="text-gray-500">Consumo:</span>
                                             <span id="p1KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-rose-200 pt-1 font-semibold">
+                                        <div class="flex justify-between border-t border-rose-200 pt-1 font-semibold flex-col">
                                             <span class="text-gray-500">Coste:</span>
                                             <span id="p1CostPriceText" class="text-rose-700">0.00 € (0.0%)</span>
                                         </div>
@@ -304,7 +304,7 @@
                                             <span class="text-gray-500">Consumo:</span>
                                             <span id="p2KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-amber-100 pt-1 font-semibold">
+                                        <div class="flex justify-between border-t border-amber-100 pt-1 font-semibold flex-col">
                                             <span class="text-gray-500">Coste:</span>
                                             <span id="p2CostPriceText" class="text-amber-700">0.00 € (0.0%)</span>
                                         </div>
@@ -318,7 +318,7 @@
                                             <span class="text-gray-500">Consumo:</span>
                                             <span id="p3KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-emerald-100 pt-1 font-semibold">
+                                        <div class="flex justify-between border-t border-emerald-100 pt-1 font-semibold flex-col">
                                             <span class="text-gray-500">Coste:</span>
                                             <span id="p3CostPriceText" class="text-green-700">0.00 € (0.0%)</span>
                                         </div>
@@ -1015,7 +1015,7 @@
             const p3PctTimeCost = totalCost > 0 ? (p3CostTime / totalCost) * 100 : 0;
 
             // Determinar precios por tramo para colocar entre corchetes
-              let p1PriceLabel = "", p2PriceLabel = "", p3PriceLabel = "";
+            let p1PriceLabel = "", p2PriceLabel = "", p3PriceLabel = "";
             if (mode === 'manual') {
                 const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
                 const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
@@ -1030,13 +1030,6 @@
                 p1PriceLabel = ` [Med PVPC: ${avgP1.toFixed(5)} €/kWh]`;
                 p2PriceLabel = ` [Med PVPC: ${avgP2.toFixed(5)} €/kWh]`;
                 p3PriceLabel = ` [Med PVPC: ${avgP3.toFixed(5)} €/kWh]`;
-            }
-                const avgP1 = p1KwhTime > 0 ? (p1CostTime / p1KwhTime) : 0;
-                const avgP2 = p2KwhTime > 0 ? (p2CostTime / p2KwhTime) : 0;
-                const avgP3 = p3KwhTime > 0 ? (p3CostTime / p3KwhTime) : 0;
-                p1PriceLabel = ` [Med: ${avgP1.toFixed(5)} €/kWh]`;
-                p2PriceLabel = ` [Med: ${avgP2.toFixed(5)} €/kWh]`;
-                p3PriceLabel = ` [Med: ${avgP3.toFixed(5)} €/kWh]`;
             }
 
             document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
