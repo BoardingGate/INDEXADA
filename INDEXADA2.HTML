@@ -17,7 +17,7 @@
         <!-- Cabecera -->
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
-            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora o conéctate con Datadis para analizar tus consumos y costes.</p>
+            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora o impórtalo fácilmente desde Datadis para analizar tus consumos y costes.</p>
         </header>
 
         <!-- Panel de Configuración General -->
@@ -61,13 +61,13 @@
             </div>
         </div>
 
-        <!-- Panel de Conexión Directa desde Datadis -->
+        <!-- Panel de Importación Datadis (Bookmarklet) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
-            <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="text-md font-bold text-blue-700">Importación Directa desde Datadis.es</h3>
+                    <h3 class="text-md font-bold text-blue-700">Importación rápida desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
-                        Introduce tus credenciales autorizadas de Datadis para descargar lecturas directamente a tu navegador.
+                        Descarga los consumos del último mes sin configurar servidores ni realizar procesos complejos.
                     </p>
                 </div>
                 <!-- Botón de Registro Oficial -->
@@ -76,40 +76,24 @@
                     <span class="text-[10px]">↗</span>
                 </a>
             </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Usuario / Email Datadis</label>
-                    <input type="text" id="datadisUser" placeholder="usuario@email.com" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Contraseña Datadis</label>
-                    <input type="password" id="datadisPass" placeholder="••••••••" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Código CUPS</label>
-                    <input type="text" id="datadisCups" placeholder="ES0000..." class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha de Inicio</label>
-                    <input type="date" id="datadisStart" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha de Fin</label>
-                    <input type="date" id="datadisEnd" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-            </div>
 
-            <div class="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t pt-3">
-                <div class="flex items-center">
-                    <input type="checkbox" id="rememberPass" class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
-                    <label for="rememberPass" class="ml-2 text-xs text-gray-600 font-medium">
-                        Recordar contraseña de forma local (no recomendado en dispositivos compartidos)
-                    </label>
-                </div>
-                <button id="importDatadisBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md text-sm transition-colors focus:outline-none">
-                    Cargar de Datadis
-                </button>
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
+                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">Instrucciones de descarga (Sin restricciones de CORS):</h4>
+                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-2 leading-relaxed">
+                    <li>
+                        Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador (si no la visualizas, pulsa <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Ctrl+Mayús+B</kbd> o <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Cmd+Shift+B</kbd> en Mac):
+                        <div class="my-2">
+                            <!-- Código JavaScript Bookmarklet en una sola línea -->
+                            <a href="javascript:(async function(){try{let t=sessionStorage.getItem('token')||localStorage.getItem('token');if(!t){for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k.toLowerCase().includes('token')){const v=sessionStorage.getItem(k);if(v&&v.startsWith('eyJ')){t=v;break;}}}}if(!t){alert('Por favor, inicia sesión en Datadis.es primero.');return;}const f=new Date(),i=new Date();i.setDate(f.getDate()-30);const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;const fIni=fmt(i),fFin=fmt(f);const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('No se encontraron suministros (CUPS) en tu cuenta.');return;}const c=s[0].cups;alert('Conexión con Datadis establecida.\nDescargando consumos de los últimos 30 días para el CUPS:\n'+c);const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('No hay lecturas disponibles.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);}catch(e){alert('Error al extraer datos: '+e.message);}})();" 
+                               class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-4 rounded text-xs select-none cursor-grab shadow-sm transition-colors">
+                                📥 Descargador Datadis
+                            </a>
+                        </div>
+                    </li>
+                    <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión con tu usuario y contraseña.</li>
+                    <li>Una vez dentro del panel privado, haz clic en el marcador <strong>"Descargador Datadis"</strong> que guardaste en tu barra superior.</li>
+                    <li>Se descargará automáticamente en tu ordenador un archivo CSV con las lecturas. Arrástralo a la casilla **"Archivo CSV Distribuidora"** de esta aplicación para procesarlo.</li>
+                </ol>
             </div>
         </div>
 
@@ -272,7 +256,7 @@
                     </div>
 
                     <div class="space-y-6">
-                        <!-- 1. Clasificación por Tramos Horarios (Tarifa fija manual por tramos) -->
+                        <!-- 1. Clasificación por Tramos Horarios -->
                         <div>
                             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario (Tarifa Fija por Tramos introducida por el usuario)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -321,7 +305,7 @@
                             </div>
                         </div>
 
-                        <!-- 2. Clasificación por Coste Real (Según PVPC Indexado) -->
+                        <!-- 2. Clasificación por Coste Real -->
                         <div class="pt-4 border-t border-gray-100">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
@@ -390,7 +374,7 @@
                         <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
                             <div class="text-left">
                                 <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
-                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo o conéctate con Datadis para comparar el coste simultáneo bajo tarifas indexadas (PVPC) y manuales.</p>
+                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo descargado de tu distribuidora o de Datadis para ver el desglose económico.</p>
                             </div>
                             <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
                                 Sin datos
@@ -532,7 +516,6 @@
 
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
-        window.rawDatadisCleanData = null; // Almacenamiento de lecturas crudas obtenidas de Datadis
         window.chartInstance1 = null;
         window.chartInstance2 = null;
         window.chartInstance3 = null;
@@ -618,9 +601,6 @@
             const file = files[0];
             if (!file) return;
 
-            // Despejar datos previos de Datadis ante un nuevo fichero local
-            window.rawDatadisCleanData = null;
-
             // Cambiar visualmente el dropzone para confirmar carga
             dropZonePrompt.classList.add('hidden');
             fileSuccessText.classList.remove('hidden');
@@ -691,61 +671,6 @@
 
                 if (cleanData.length === 0) {
                     showStatus("No se encontraron registros válidos en el archivo.", "error");
-                    return;
-                }
-
-                await processDirectData(cleanData);
-
-            } catch (err) {
-                showStatus("Error al procesar: " + err.message, "error");
-                console.error(err);
-            }
-        }
-
-        async function fetchPreciosPVPC(inicio, fin) {
-            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Servidor público respondió con código: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const pvpcSeries = data.included.find(series => 
-                    series.type.toLowerCase().includes('pvpc') || 
-                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                );
-
-                if (!pvpcSeries) {
-                    throw new Error("No se localizó la serie PVPC en la base de datos pública de Red Eléctrica.");
-                }
-
-                const preciosMap = {};
-                pvpcSeries.attributes.values.forEach(v => {
-                    const dateObj = new Date(v.datetime);
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
-                    const localHour = dateObj.getHours();
-
-                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0;
-                });
-
-                return preciosMap;
-
-            } catch (error) {
-                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
-                return null;
-            }
-        }
-
-        // Procesa la matriz estructurada limpia, tanto para CSV como para Datadis
-        async function processDirectData(cleanData) {
-            const mode = rateMode.value;
-
-            try {
-                if (cleanData.length === 0) {
-                    showStatus("No se encontraron registros válidos para el procesamiento.", "error");
                     return;
                 }
 
@@ -843,7 +768,7 @@
                 renderResultsAndCharts(filteredData);
 
             } catch (err) {
-                showStatus("Error al procesar los datos: " + err.message, "error");
+                showStatus("Error al procesar: " + err.message, "error");
                 console.error(err);
             }
         }
@@ -920,7 +845,7 @@
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // 1. CLASIFICACIÓN POR HORARIO
+                // 1. CLASIFICACIÓN POR HORARIO (Tarifa fija manual por tramos)
                 let itemSlot = 'P3';
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
@@ -1196,7 +1121,7 @@
                                     <td class="py-2.5 text-right font-mono ${diffEnergyClass}">${diffEnergyText}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-2.5 font-medium text-gray-700">Término de Potencia (Coste Fijo del Períoro)</td>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Potencia (Coste Fijo del Período)</td>
                                     <td class="py-2.5 text-right font-mono">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-2.5 text-right font-mono">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-2.5 text-right font-mono ${diffPowerClass}">${diffPowerText}</td>
@@ -1688,30 +1613,12 @@
                 powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
                 powerPriceP2Pvpc: document.getElementById('powerPriceP2Pvpc').value,
                 powerPriceP1Manual: document.getElementById('powerPriceP1Manual').value,
-                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value,
-                // Parámetros de Datadis
-                datadisUser: document.getElementById('datadisUser').value,
-                datadisCups: document.getElementById('datadisCups').value,
-                rememberPass: document.getElementById('rememberPass').checked,
-                datadisPass: document.getElementById('rememberPass').checked ? document.getElementById('datadisPass').value : ''
+                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
 
-        function setDefaultDatadisDates() {
-            const today = new Date();
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(today.getDate() - 30);
-
-            // Formato estándar YYYY-MM-DD para controles input type="date"
-            document.getElementById('datadisEnd').value = today.toISOString().split('T')[0];
-            document.getElementById('datadisStart').value = thirtyDaysAgo.toISOString().split('T')[0];
-        }
-
         function loadConfig() {
-            // Inicializar fechas de Datadis por defecto
-            setDefaultDatadisDates();
-
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) {
                 toggleRatePanels();
@@ -1751,14 +1658,6 @@
                 if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
                 if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
 
-                // Carga de campos de Datadis
-                if (config.datadisUser !== undefined) document.getElementById('datadisUser').value = config.datadisUser;
-                if (config.datadisCups !== undefined) document.getElementById('datadisCups').value = config.datadisCups;
-                if (config.rememberPass !== undefined) document.getElementById('rememberPass').checked = config.rememberPass;
-                if (config.rememberPass && config.datadisPass) {
-                    document.getElementById('datadisPass').value = config.datadisPass;
-                }
-
                 if (config.calendarSelectedDates !== undefined && Array.isArray(config.calendarSelectedDates)) {
                     window.calendarSelectedDates = new Set(config.calendarSelectedDates);
                 } else {
@@ -1780,125 +1679,12 @@
             }
         }
 
-        // --- IMPORTACIÓN DIRECTA DESDE LA API DE DATADIS ---
-        document.getElementById('importDatadisBtn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            saveConfig();
-
-            const user = document.getElementById('datadisUser').value.trim();
-            const pass = document.getElementById('datadisPass').value.trim();
-            const cups = document.getElementById('datadisCups').value.trim();
-            const startInput = document.getElementById('datadisStart').value;
-            const endInput = document.getElementById('datadisEnd').value;
-
-            if (!user || !pass || !cups || !startInput || !endInput) {
-                showStatus("Por favor, rellene todos los campos de conexión de Datadis.", "error");
-                return;
-            }
-
-            // Convertir fechas YYYY-MM-DD a formato YYYY/MM/DD requerido por la API de Datadis
-            const startDateFormatted = startInput.replace(/-/g, '/');
-            const endDateFormatted = endInput.replace(/-/g, '/');
-
-            showStatus("Solicitando acceso directo a la API de Datadis...", "info");
-
-            try {
-                // Obtención del token
-                const authUrl = "https://api.datadis.es/niceland/es/api/get-token";
-                const authResponse = await fetch(authUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        'username': user,
-                        'password': pass
-                    })
-                });
-
-                if (!authResponse.ok) {
-                    throw new Error(`Error en autenticación directa: Código ${authResponse.status}`);
-                }
-
-                const token = await authResponse.text();
-
-                showStatus("Autenticado correctamente. Recuperando curvas de consumo directamente de Datadis...", "info");
-
-                // Consulta directa de lecturas de consumo
-                const consumptionUrl = "https://api.datadis.es/api/v1/consumption-data?" + new URLSearchParams({
-                    cups: cups,
-                    startDate: startDateFormatted,
-                    endDate: endDateFormatted,
-                    measurementType: '0', // Energía activa
-                    pointType: '5'        // Doméstico <15kW
-                });
-
-                const dataResponse = await fetch(consumptionUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (!dataResponse.ok) {
-                    throw new Error(`Error al recuperar datos: Código ${dataResponse.status}`);
-                }
-
-                const rawData = await dataResponse.json();
-
-                if (!Array.isArray(rawData) || rawData.length === 0) {
-                    showStatus("No se localizaron registros de consumo válidos para el CUPS y rango de fechas indicado.", "error");
-                    return;
-                }
-
-                // Mapeo de la estructura JSON de Datadis a la estructura interna homogénea
-                const mappedData = rawData.map(item => {
-                    if (!item.date || !item.time || item.consumptionKwh === undefined) return null;
-
-                    // Adaptar fecha YYYY/MM/DD a YYYY-MM-DD
-                    const formattedDate = item.date.replace(/\//g, '-');
-
-                    // Adaptar hora HH:mm a entero [0-23]
-                    let hora = parseInt(item.time.split(':')[0], 10);
-                    if (isNaN(hora)) return null;
-                    if (hora === 24) hora = 0;
-
-                    return {
-                        fechaStr: formattedDate,
-                        hora: hora,
-                        consumo: parseFloat(item.consumptionKwh)
-                    };
-                }).filter(item => item !== null);
-
-                if (mappedData.length === 0) {
-                    showStatus("Los datos recibidos no cumplen con el formato de estructura esperado.", "error");
-                    return;
-                }
-
-                showStatus(`Datos obtenidos directamente de Datadis (${mappedData.length} lecturas horarias). Indexando costes...`, "info");
-                
-                // Limpiar datos de carga por archivo local CSV anterior
-                window.rawCsvData = null; 
-                window.rawDatadisCleanData = mappedData;
-
-                // Procesar e indexar costes utilizando la estructura homogénea
-                await processDirectData(mappedData);
-
-            } catch (err) {
-                showStatus(`Fallo de conexión: ${err.message}. Verifique sus credenciales o revise en la consola (F12) si su navegador ha bloqueado la petición (CORS).`, "error");
-                console.error(err);
-            }
-        });
-
         // Cambio de selector de tipo de cálculo que dispara el recálculo dinámico directo
         document.getElementById('rateMode').addEventListener('change', () => {
             toggleRatePanels();
             saveConfig();
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
-            } else if (window.rawDatadisCleanData) {
-                processDirectData(window.rawDatadisCleanData);
             }
         });
 
@@ -1915,20 +1701,6 @@
 
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
-            } else if (window.rawDatadisCleanData) {
-                processDirectData(window.rawDatadisCleanData);
-            }
-        });
-
-        // Botón Recalcular centralizado
-        document.getElementById('recalculateBtn').addEventListener('click', () => {
-            saveConfig();
-            if (window.rawCsvData) {
-                processData(window.rawCsvData);
-            } else if (window.rawDatadisCleanData) {
-                processDirectData(window.rawDatadisCleanData);
-            } else {
-                showStatus("No hay datos cargados para recalcular. Suba un archivo CSV o use la conexión con Datadis.", "error");
             }
         });
 
@@ -1948,28 +1720,14 @@
                     saveConfig();
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
-                    } else if (window.rawDatadisCleanData) {
-                        processDirectData(window.rawDatadisCleanData);
                     }
                 });
                 el.addEventListener('change', () => {
                     saveConfig();
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
-                    } else if (window.rawDatadisCleanData) {
-                        processDirectData(window.rawDatadisCleanData);
                     }
                 });
-            }
-        });
-
-        // Observadores de guardado automático para los campos de Datadis
-        const datadisFields = ['datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd', 'rememberPass'];
-        datadisFields.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', saveConfig);
-                el.addEventListener('input', saveConfig);
             }
         });
 
@@ -2002,8 +1760,6 @@
 
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
-            } else if (window.rawDatadisCleanData) {
-                processDirectData(window.rawDatadisCleanData);
             }
         };
 
