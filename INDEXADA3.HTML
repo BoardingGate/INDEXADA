@@ -719,7 +719,7 @@
 
                 let csv = 'Fecha,Hora,Consumo (kWh)\n';
                 data.consumptionData.forEach((x) => {
-                    csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKwh}\n`;
+                    csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
                 });
 
                 Papa.parse(csv, {
