@@ -970,38 +970,62 @@
             }
         }
 
-        // --- FUNCIÓN GLOBAL PARA OBTENER PRECIOS OFICIALES PVPC DE REE ---
+        // --- OBTENCIÓN DE PRECIOS OFICIALES PVPC DE REE ---
         async function fetchPreciosPVPC(inicio, fin) {
-            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Servidor público de REE respondió con código: ${response.status}`);
+            const startDate = new Date(inicio);
+            const endDate = new Date(fin);
+            
+            // Segmentación del rango de fechas en bloques de máximo 30 días para no saturar la API pública de REE (límite 31 días)
+            const chunks = [];
+            let currentStart = new Date(startDate);
+            
+            while (currentStart <= endDate) {
+                let currentEnd = new Date(currentStart);
+                currentEnd.setDate(currentEnd.getDate() + 30);
+                if (currentEnd > endDate) {
+                    currentEnd = new Date(endDate);
                 }
-
-                const data = await response.json();
-                const pvpcSeries = data.included.find(series => 
-                    series.type.toLowerCase().includes('pvpc') || 
-                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                );
-
-                if (!pvpcSeries) {
-                    throw new Error("No se localizó la serie PVPC en la base de datos de Red Eléctrica.");
-                }
-
-                const preciosMap = {};
-                pvpcSeries.attributes.values.forEach(v => {
-                    const dateObj = new Date(v.datetime);
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
-                    const localHour = dateObj.getHours();
-
-                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0;
+                
+                chunks.push({
+                    start: currentStart.toISOString().split('T')[0],
+                    end: currentEnd.toISOString().split('T')[0]
                 });
-
+                
+                currentStart = new Date(currentEnd);
+                currentStart.setDate(currentStart.getDate() + 1);
+            }
+            
+            const preciosMap = {};
+            
+            try {
+                // Descargas en paralelo utilizando Promise.all
+                const promises = chunks.map(async (chunk) => {
+                    const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`REE respondió con código: ${response.status} para el bloque ${chunk.start} - ${chunk.end}`);
+                    }
+                    const data = await response.json();
+                    const pvpcSeries = data.included.find(series => 
+                        series.type.toLowerCase().includes('pvpc') || 
+                        (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                    );
+                    
+                    if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
+                        pvpcSeries.attributes.values.forEach(v => {
+                            if (!v.datetime) return;
+                            // Se extrae la fecha y hora directamente del formato de texto para mitigar desajustes por husos horarios locales
+                            const datePart = v.datetime.substring(0, 10); // YYYY-MM-DD
+                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); // HH
+                            const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
+                            preciosMap[key] = v.value / 1000.0;
+                        });
+                    }
+                });
+                
+                await Promise.all(promises);
                 return preciosMap;
-
+                
             } catch (error) {
                 showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
                 return null;
