@@ -14,13 +14,12 @@
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
 
     <div class="container mx-auto px-4 py-8 max-w-5xl">
-
-       <!-- Cabecera -->
+        <!-- Cabecera -->
         <header class="mb-8 text-center max-w-xl mx-auto">
             <!-- Etiqueta BoardingGate con colores diferenciados y tamaño ligeramente mayor -->
-            <span class="text-[13px] font-bold tracking-wider bg-blue-50/80 px-3 py-0.5 rounded-full inline-flex items-center mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider bg-blue-50/80 px-3 py-0.5 rounded-full inline-flex items-center mb-2">
                 <span class="text-slate-900">Boarding</span>
-                <span class="text-blue-500 ml-0.7">Gate</span>
+                <span class="text-blue-500 ml-0.5">Gate</span>
             </span>
             
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-gray-950">
@@ -32,6 +31,7 @@
                 Analiza consumos de tu punto de suministro eléctrico importando las lecturas de tu Distribuidora
             </p>
         </header>
+
         <!-- Panel de Configuración General -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
@@ -310,7 +310,7 @@
             </button>
         </div>
 
-        <!-- Mensajes de Estado -->
+        <!-- Messages de Estado -->
         <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center"></div>
 
         <!-- Resultados -->
@@ -348,7 +348,7 @@
                 </div>
             </div>
 
-            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
+            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente, con mayor altura) -->
             <div class="space-y-6 mb-8">
 
                 <!-- PANEL: Patrón de Consumo (Doble Clasificación con Comparación) -->
@@ -504,26 +504,26 @@
                     </div>
                 </div>
 
-                <!-- 1. Evolución Cronológica Diaria -->
+                <!-- 1. Evolución Cronológica Diaria (Aumentado de h-80 a h-[450px]) -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
-                    <div class="relative h-80">
+                    <div class="relative h-[450px]">
                         <canvas id="chartDaily"></canvas>
                     </div>
                 </div>
 
-                <!-- 2. Acumulado por Día de la Semana -->
+                <!-- 2. Acumulado por Día de la Semana (Aumentado de h-80 a h-[450px]) -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
-                    <div class="relative h-80">
+                    <div class="relative h-[450px]">
                         <canvas id="chartDayOfWeek"></canvas>
                     </div>
                 </div>
 
-                <!-- 3. Perfil Horario de 24 horas -->
+                <!-- 3. Perfil Horario de 24 horas (Aumentado de h-96 a h-[500px]) -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
-                    <div class="relative h-96">
+                    <div class="relative h-[500px]">
                         <canvas id="chartHourly"></canvas>
                     </div>
                 </div>
@@ -598,11 +598,10 @@
                 </div>
             </div>
             <p class="text-[10px] text-gray-400 mt-8">
-    Analizador de Consumo Eléctrico • Proyecto libre y de código abierto • Contacto: 
-    <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
-</p>
-           
-</footer>
+                Analizador de Consumo Eléctrico • Proyecto libre y de código abierto • Contacto: 
+                <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
+            </p>
+        </footer>
     </div>
 
     <script>
@@ -1574,6 +1573,15 @@
             const kwhData = sortedDates.map(d => stats[d].kwh);
             const costData = sortedDates.map(d => stats[d].cost);
 
+            // Generar etiquetas formateadas solo con "Día/Mes" (DD/MM)
+            const friendlyLabels = sortedDates.map(dateStr => {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}`; // Retorna DD/MM
+                }
+                return dateStr;
+            });
+
             const numDays = sortedDates.length || 1;
             const totalKwh = kwhData.reduce((a, b) => a + b, 0);
             const totalCost = costData.reduce((a, b) => a + b, 0);
@@ -1600,7 +1608,7 @@
             window.chartInstance2 = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: sortedDates,
+                    labels: friendlyLabels, // Uso de etiquetas simplificadas "DD/MM"
                     datasets: [
                         {
                             label: 'Consumo (kWh)',
@@ -1651,6 +1659,17 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                // Muestra la fecha completa en formato YYYY-MM-DD al pasar el ratón
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return sortedDates[index] || context[0].label;
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             type: 'linear',
