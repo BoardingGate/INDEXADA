@@ -727,7 +727,19 @@
                     skipEmptyLines: true,
                     complete: (results) => {
                         window.rawCsvData = results.data;
+
+                        // Se limpian selecciones previas del calendario para dar paso a la nueva descarga
+                        if (window.calendarSelectedDates) {
+                            window.calendarSelectedDates.clear();
+                        }
+
+                        // Se ajustan automáticamente los filtros generales del período a las fechas propuestas
+                        document.getElementById('filterStartDate').value = startDate;
+                        document.getElementById('filterEndDate').value = endDate;
+                        saveConfig();
+
                         processData(window.rawCsvData);
+
                         statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas del CUPS ${data.cups}.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         dropZonePrompt.classList.add('hidden');
