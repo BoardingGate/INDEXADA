@@ -50,34 +50,6 @@
             </div>
         </div>
 
-        <!-- Panel de Filtros Temporales -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-md font-bold text-purple-700">Filtros de Período (Opcional)</h3>
-                <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
-                    Limpiar Filtros
-                </button>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio (YYYY-MM-DD)</label>
-                    <input type="date" id="filterStartDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Fin (YYYY-MM-DD)</label>
-                    <input type="date" id="filterEndDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (0-23)</label>
-                    <input type="number" id="filterStartHour" min="0" max="23" placeholder="Ej: 0" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (0-23)</label>
-                    <input type="number" id="filterEndHour" min="0" max="23" placeholder="Ej: 23" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-            </div>
-        </div>
-
         <!-- Panel de Configuración de Potencia Contratada -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
@@ -108,6 +80,34 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
                     <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Filtros Temporales -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-md font-bold text-purple-700">Filtros de Período (Opcional)</h3>
+                <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
+                    Limpiar Filtros
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio (YYYY-MM-DD)</label>
+                    <input type="date" id="filterStartDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Fin (YYYY-MM-DD)</label>
+                    <input type="date" id="filterEndDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (0-23)</label>
+                    <input type="number" id="filterStartHour" min="0" max="23" placeholder="Ej: 0" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (0-23)</label>
+                    <input type="number" id="filterEndHour" min="0" max="23" placeholder="Ej: 23" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                 </div>
             </div>
         </div>
@@ -331,7 +331,7 @@
                         <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
                             <div class="text-left">
                                 <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
-                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo para comparar el coste simulatáneo bajo tarifas indexadas (PVPC) y manuales.</p>
+                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo para comparar el coste simultáneo bajo tarifas indexadas (PVPC) y manuales.</p>
                             </div>
                             <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
                                 Sin datos
@@ -454,6 +454,23 @@
     </div>
 
     <script>
+        // --- DEPURADOR ERUDA DINÁMICO (Activo solo ante fallos de ejecución) ---
+        window.addEventListener('error', function (e) {
+            if (typeof eruda === 'undefined') {
+                const script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/eruda";
+                script.onload = function () {
+                    eruda.init();
+                    eruda.show();
+                    console.error("Error capturado: ", e.error || e.message);
+                };
+                document.body.appendChild(script);
+            } else {
+                eruda.show();
+                console.error("Error capturado: ", e.error || e.message);
+            }
+        });
+
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
         window.chartInstance1 = null;
@@ -551,7 +568,6 @@
                     let rawDate = row[colFecha];
                     if (!rawDate) return null;
 
-                    // Limpiar posibles horas acopladas a la columna de fechas
                     rawDate = rawDate.trim().split(' ')[0];
 
                     let parts = rawDate.split(/[-/]/);
@@ -584,7 +600,7 @@
                     return;
                 }
 
-                // Descargar precios oficiales PVPC de REE (siempre se descargan en segundo plano para permitir la comparativa)
+                // Descargar precios oficiales PVPC de REE
                 const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
                 const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
                 const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
@@ -602,14 +618,12 @@
                 const useWeekendValle = document.getElementById('weekendValle').checked;
                 const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
 
-                // 2. Calcular los costes simulados tanto para PVPC como para Tarifa Manual de TODOS los registros
+                // 2. Calcular los costes simulados
                 const pricedData = cleanData.map(item => {
-                    // Coste simulado bajo PVPC
                     const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
                     const precioPvpc = preciosMap ? (preciosMap[key] || 0) : 0;
                     const costePvpc = item.consumo * precioPvpc;
 
-                    // Coste simulado bajo Tarifa Manual por Tramos
                     let precioManual = priceValle;
                     const dateParts = item.fechaStr.split('-');
                     const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
@@ -630,7 +644,6 @@
                     }
                     const costeManual = item.consumo * precioManual;
 
-                    // Definir los valores de coste y precio activos según la selección del selector superior
                     const precioActivo = (mode === 'pvpc') ? precioPvpc : precioManual;
                     const costeActivo = (mode === 'pvpc') ? costePvpc : costeManual;
 
@@ -645,7 +658,7 @@
                     };
                 });
 
-                // 3. Construcción del mapa global de días disponibles para el calendario dinámico
+                // 3. Construcción del mapa de días del calendario
                 window.allAvailableDays = {};
                 pricedData.forEach(item => {
                     if (!window.allAvailableDays[item.fechaStr]) {
@@ -655,7 +668,7 @@
                     window.allAvailableDays[item.fechaStr].cost += item.coste;
                 });
 
-                // 4. Aplicar filtros sobre el conjunto de datos ya tarificados
+                // 4. Aplicar filtros
                 const startDateVal = filterStartDate.value;
                 const endDateVal = filterEndDate.value;
                 const startHourVal = filterStartHour.value !== "" ? parseInt(filterStartHour.value, 10) : null;
@@ -690,7 +703,6 @@
             }
         }
 
-        // Función definitiva para obtener los precios oficiales de Red Eléctrica
         async function fetchPreciosPVPC(inicio, fin) {
             const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
 
@@ -701,8 +713,6 @@
                 }
 
                 const data = await response.json();
-                
-                // Extraer indicador del PVPC del listado de series públicas
                 const pvpcSeries = data.included.find(series => 
                     series.type.toLowerCase().includes('pvpc') || 
                     (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
@@ -719,7 +729,7 @@
                     const localHour = dateObj.getHours();
 
                     const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0; // Conversión de €/MWh a €/kWh
+                    preciosMap[key] = v.value / 1000.0;
                 });
 
                 return preciosMap;
@@ -731,24 +741,9 @@
         }
 
         function renderResultsAndCharts(data) {
-            // Obtener variables de potencia y calcular sus costes proporcionales al período de días
-            const sortedDates = Object.keys(dailyStats).sort();
-            const numDays = sortedDates.length || 1;
-
-            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
-            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
-            const p1PricePvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
-            const p2PricePvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
-            const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
-            const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
-
-            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
-            const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
-
-            const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
-
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
+            const mode = rateMode.value;
 
             let totalKwh = 0;
             let totalCost = 0;
@@ -756,7 +751,6 @@
             let filteredCost = 0;
             let filteredHoursCount = 0;
 
-            // Variables para picos de potencia
             let maxPeakHourly = 0;
             let maxPeakP1 = 0;
             let maxPeakP2 = 0;
@@ -765,12 +759,11 @@
             let totalKwhP2 = 0;
             let countP2 = 0;
 
-            // ACUMULADORES PARA EL DOBLE PATRÓN:
-            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   // Consumo por franja horaria
-            let p1CostTime = 0, p2CostTime = 0, p3CostTime = 0; // Coste por franja horaria
+            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   
+            let p1CostTime = 0, p2CostTime = 0, p3CostTime = 0; 
 
-            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; // Consumo por nivel de coste real
-            let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; // Coste por nivel de coste real
+            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; 
+            let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; 
 
             let totalCostPvpc = 0;
             let totalCostManual = 0;
@@ -781,7 +774,6 @@
             tableBody.innerHTML = "";
             let tableRowsHtml = "";
 
-            // Inicializar acumulaciones de gráficos
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
                 2: { label: 'Martes', kwh: 0, cost: 0 },
@@ -802,32 +794,27 @@
                 count: 0
             }));
 
+            // Bucle principal de datos
             data.forEach(item => {
                 totalKwh += item.consumo;
                 totalCost += item.coste;
                 totalCostPvpc += item.costePvpc;
                 totalCostManual += item.costeManual;
 
-                // 1. Acumulaciones por Día de la Semana
                 const dateParts = item.fechaStr.split('-');
                 const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const dayOfWeek = dateObj.getDay(); 
                 dayOfWeekStats[dayOfWeek].kwh += item.consumo;
                 dayOfWeekStats[dayOfWeek].cost += item.coste;
 
-                // Determinar periodo de potencia de facturación en España (P1 Punta/Llano o P2 Valle)
                 const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                 const isHoliday = holidaysList.includes(item.fechaStr);
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // 1. CLASIFICACIÓN POR HORARIO (Tramos oficiales peajes de acceso 2.0TD)
-           // 1. CLASIFICACIÓN POR HORARIO (Dinámica según Tarifa Manual o PVPC)
-                const currentMode = document.getElementById('rateMode').value;
-                let itemSlot = 'P3'; // Por defecto Valle (P3)
-
-                if (currentMode === 'manual') {
-                    // Obtener configuración manual en tiempo real
+                // 1. CLASIFICACIÓN POR HORARIO (Tramos oficiales o manuales según selección)
+                let itemSlot = 'P3';
+                if (mode === 'manual') {
                     const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                     const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
                     const useWeekendValle = document.getElementById('weekendValle').checked;
@@ -842,7 +829,6 @@
                         itemSlot = 'P3';
                     }
                 } else {
-                    // Tramos oficiales peajes de acceso 2.0TD para PVPC
                     if (isWeekend || isHoliday) {
                         itemSlot = 'P3';
                     } else {
@@ -859,7 +845,6 @@
                     }
                 }
 
-                // Acumulación en base al tramo determinado
                 if (itemSlot === 'P1') {
                     p1KwhTime += item.consumo;
                     p1CostTime += item.coste;
@@ -871,7 +856,7 @@
                     p3CostTime += item.coste;
                 }
 
-                // 2. CLASIFICACIÓN POR COSTE REAL (Según precio por kWh de cada registro)
+                // 2. CLASIFICACIÓN POR COSTE REAL
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
@@ -886,7 +871,6 @@
                     p2CostPrice += item.coste;
                 }
 
-                // Evaluar picos máximos de consumo (su equivalente en potencia kW media de esa hora)
                 if (item.consumo > maxPeakHourly) {
                     maxPeakHourly = item.consumo;
                 }
@@ -900,14 +884,12 @@
                     countP2++;
                 }
 
-                // 2. Acumulaciones para Gráfica Diaria Cronológica
                 if (!dailyStats[item.fechaStr]) {
                     dailyStats[item.fechaStr] = { kwh: 0, cost: 0 };
                 }
                 dailyStats[item.fechaStr].kwh += item.consumo;
                 dailyStats[item.fechaStr].cost += item.coste;
 
-                // 3. Acumulación por Perfil Horario de 24 horas
                 const h = item.hora;
                 if (h >= 0 && h < 24) {
                     hourlyStats[h].totalKwh += item.consumo;
@@ -916,7 +898,6 @@
                     hourlyStats[h].count += 1;
                 }
 
-                // Filtro para la tabla y métricas corregidas del vehículo
                 if (item.consumo > threshold) {
                     const adjustedKwh = Math.max(0, item.consumo - subtractVal);
                     const adjustedCost = adjustedKwh * item.precio;
@@ -940,22 +921,35 @@
                 }
             });
 
-            // Calcular métricas adicionales para las nuevas tarjetas
+            // --- CÁLCULOS DEL TÉRMINO DE POTENCIA (Ejecutados con dailyStats rellenado) ---
             const sortedDates = Object.keys(dailyStats).sort();
+            const numDays = sortedDates.length || 1;
+
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+            const p1PricePvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+            const p2PricePvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+            const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
+            const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
+
+            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+            const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
+
+            const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
+            const grandTotalActive = totalCost + activePowerCost;
+
             const dayOfWeekCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
             sortedDates.forEach(dateStr => {
                 const dateParts = dateStr.split('-');
                 const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+                const dayOfWeek = dateObj.getDay(); 
                 dayOfWeekCount[dayOfWeek]++;
             });
-            const numDays = sortedDates.length || 1;
+
             const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
             // Actualizar Métricas de Texto en pantalla
-            totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-             const grandTotalActive = totalCost + activePowerCost;
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
             totalCostEl.innerHTML = `
@@ -965,16 +959,14 @@
                     • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                 </span>
             `;
-
+            
             totalDaysEl.textContent = `${numDays} días`;
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
-           // Calcular promedios de potencia
             const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
             const avgPowerP2 = countP2 > 0 ? (totalKwhP2 / countP2) : 0;
 
-            // Actualizar Métricas de Potencias Máximas y Medias
             maxPeakHourlyTextEl.textContent = `${maxPeakHourly.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
             requiredPowerTextEl.innerHTML = `
@@ -990,7 +982,6 @@
                 </div>
             `;
 
-            // Calcular porcentajes sobre el total
             const pctKwh = totalKwh > 0 ? (filteredKwh / totalKwh) * 100 : 0;
             const pctCost = totalCost > 0 ? (filteredCost / totalCost) * 100 : 0;
 
@@ -1013,7 +1004,7 @@
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            // Calcular porcentajes e importes para clasificación horaria
+            // Calcular porcentajes de clasificación horaria e inyectar en interfaz
             const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
             const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
             const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
@@ -1022,16 +1013,6 @@
             const p2PctTimeCost = totalCost > 0 ? (p2CostTime / totalCost) * 100 : 0;
             const p3PctTimeCost = totalCost > 0 ? (p3CostTime / totalCost) * 100 : 0;
 
-            // Calcular porcentajes e importes para clasificación por coste real
-            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
-            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
-            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
-
-            const p1PctPriceCost = totalCost > 0 ? (p1CostPrice / totalCost) * 100 : 0;
-            const p2PctPriceCost = totalCost > 0 ? (p2CostPrice / totalCost) * 100 : 0;
-            const p3PctPriceCost = totalCost > 0 ? (p3CostPrice / totalCost) * 100 : 0;
-
-            // Inyectar textos en el HTML
             document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span>`;
 
@@ -1040,6 +1021,15 @@
 
             document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span>`;
+
+            // Calcular porcentajes de clasificación por coste real
+            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
+            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
+            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
+
+            const p1PctPriceCost = totalCost > 0 ? (p1CostPrice / totalCost) * 100 : 0;
+            const p2PctPriceCost = totalCost > 0 ? (p2CostPrice / totalCost) * 100 : 0;
+            const p3PctPriceCost = totalCost > 0 ? (p3CostPrice / totalCost) * 100 : 0;
 
             document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span>`;
@@ -1050,32 +1040,30 @@
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span>`;
 
-            // Construir comparativa de desviación global
-            // Cálculos comparativos detallados (Energía + Potencia)
+            // --- TABLA COMPARATIVA GLOBAL (Energía + Potencia con Diferenciales) ---
             const grandTotalPvpc = totalCostPvpc + totalPowerCostPvpc;
             const grandTotalManual = totalCostManual + totalPowerCostManual;
 
-            // Diferenciales individuales
             const diffEnergy = totalCostPvpc - totalCostManual;
             const diffEnergyPct = totalCostManual > 0 ? (diffEnergy / totalCostManual) * 100 : 0;
-            const diffEnergyText = `${Math.abs(diffEnergy).toFixed(2)} € (${Math.abs(diffEnergyPct).toFixed(1)}%) ${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%) ${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
             const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
 
             const diffPower = totalPowerCostPvpc - totalPowerCostManual;
             const diffPowerPct = totalPowerCostManual > 0 ? (diffPower / totalPowerCostManual) * 100 : 0;
-            const diffPowerText = `${Math.abs(diffPower).toFixed(2)} € (${Math.abs(diffPowerPct).toFixed(1)}%) ${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%) ${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
             const diffPowerClass = diffPower < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
 
             const diffTotal = grandTotalPvpc - grandTotalManual;
             const diffTotalPct = grandTotalManual > 0 ? (diffTotal / grandTotalManual) * 100 : 0;
-            const diffTotalText = `${Math.abs(diffTotal).toFixed(2)} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
             const diffTotalClass = diffTotal < 0 ? 'text-emerald-700 font-bold text-sm' : 'text-rose-700 font-bold text-sm';
 
             const isPvpcCheaper = diffTotal < 0;
             const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
             const bannerText = isPvpcCheaper 
-                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toFixed(2)} € en este período).`
-                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toFixed(2)} € en este período).`;
+                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
+                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
 
             let comparisonHtml = `
                 <div class="w-full">
@@ -1130,7 +1118,7 @@
 
             const monthsMap = {};
             Object.keys(calendarSource).forEach(dateStr => {
-                const yyyymm = dateStr.substring(0, 7); // Extrae "YYYY-MM"
+                const yyyymm = dateStr.substring(0, 7); 
                 if (!monthsMap[yyyymm]) {
                     monthsMap[yyyymm] = [];
                 }
@@ -1159,12 +1147,10 @@
                         <div class="grid grid-cols-7 gap-2">
                 `;
 
-                // Renderizar celdas vacías (offset)
                 for (let i = 0; i < offset; i++) {
                     monthHtml += `<div class="bg-gray-200/40 rounded-lg border border-dashed border-gray-300 min-h-[68px]"></div>`;
                 }
 
-                // Generar los días del mes
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dayStr = String(day).padStart(2, '0');
                     const dateKey = `${yyyymm}-${dayStr}`;
@@ -1172,17 +1158,15 @@
 
                     const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
                     
-                    // Comprobar si el día debe mostrarse activo/seleccionado
                     let isSelected = false;
                     if (hasCustomCalendar) {
                         isSelected = window.calendarSelectedDates.has(dateKey);
                     } else if (startVal || endVal) {
                         isSelected = (startVal && dateKey === startVal) || (endVal && dateKey === endVal) || (startVal && endVal && dateKey >= startVal && dateKey <= endVal);
                     } else {
-                        isSelected = true; // Si no hay ningún filtro de fecha, todo está activo por defecto
+                        isSelected = true; 
                     }
 
-                    // Clase de realce de selección activa frente a inactiva (atenuada)
                     const selectHighlightClass = isSelected 
                         ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
                         : "opacity-35 hover:opacity-75 transition-opacity";
@@ -1214,7 +1198,6 @@
                             </div>
                         `;
                     } else {
-                        // Celdas para días fuera del rango original del archivo CSV
                         monthHtml += `
                             <div class="bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
                                 <span class="text-xs font-semibold text-gray-400 leading-none">${day}</span>
@@ -1232,7 +1215,7 @@
 
             calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs font-semibold">No hay lecturas disponibles para construir el calendario.</p>`;
 
-            // Renderizar todos los gráficos
+            // Renderizar gráficos
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
             renderHourlyChart(hourlyStats);
@@ -1240,13 +1223,9 @@
             resultsSection.classList.remove('hidden');
         }
 
-        // Gráfico 1: Evolución cronológica diaria con detección dinámica de carga
         function renderDailyChart(stats) {
             const canvas = document.getElementById('chartDaily');
-            if (!canvas) {
-                console.warn("No se encontró el lienzo 'chartDaily'. Saltando renderizado.");
-                return;
-            }
+            if (!canvas) return;
 
             const sortedDates = Object.keys(stats).sort();
             const kwhData = sortedDates.map(d => stats[d].kwh);
@@ -1348,20 +1327,14 @@
             });
         }
 
-        // Gráfico 2: Promedio y Acumulado diario por día de la semana
         function renderDayOfWeekChart(stats, counts) {
             const canvas = document.getElementById('chartDayOfWeek');
-            if (!canvas) {
-                console.warn("No se encontró el lienzo 'chartDayOfWeek'. Saltando renderizado.");
-                return;
-            }
+            if (!canvas) return;
 
             const safeCounts = counts || {};
-
-            const order = [1, 2, 3, 4, 5, 6, 0]; // Lunes a Domingo
+            const order = [1, 2, 3, 4, 5, 6, 0]; 
             const labels = order.map(i => stats[i].label);
             
-            // 1. Cálculos para datos de Medias Diarias
             const kwhDataMedia = order.map(i => {
                 const count = safeCounts[i] || 1;
                 return stats[i].kwh / count;
@@ -1371,7 +1344,6 @@
                 return stats[i].cost / count;
             });
 
-            // 2. Lecturas para datos de Acumulados Totales
             const kwhDataAcumulado = order.map(i => stats[i].kwh);
             const costDataAcumulado = order.map(i => stats[i].cost);
 
@@ -1392,7 +1364,7 @@
                             borderColor: 'rgba(59, 130, 246, 1)',
                             borderWidth: 1,
                             yAxisID: 'y',
-                            hidden: false // ACTIVO POR DEFECTO
+                            hidden: false 
                         },
                         {
                             label: 'Importe Medio (€)',
@@ -1403,28 +1375,28 @@
                             borderWidth: 3,
                             fill: false,
                             yAxisID: 'y1',
-                            hidden: false // ACTIVO POR DEFECTO
+                            hidden: false 
                         },
                         {
                             label: 'Consumo Acumulado (kWh)',
                             data: kwhDataAcumulado,
-                            backgroundColor: 'rgba(147, 51, 234, 0.35)', // Púrpura para distinguir
+                            backgroundColor: 'rgba(147, 51, 234, 0.35)', 
                             borderColor: 'rgba(147, 51, 234, 1)',
                             borderWidth: 1,
                             yAxisID: 'y',
-                            hidden: true // DESACTIVADO POR DEFECTO
+                            hidden: true 
                         },
                         {
                             label: 'Importe Acumulado (€)',
                             data: costDataAcumulado,
                             type: 'line',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)', // Naranja para distinguir
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)', 
                             borderColor: 'rgba(245, 158, 11, 1)',
                             borderWidth: 2,
-                            borderDash: [5, 5], // Línea discontinua
+                            borderDash: [5, 5], 
                             fill: false,
                             yAxisID: 'y1',
-                            hidden: true // DESACTIVADO POR DEFECTO
+                            hidden: true 
                         }
                     ]
                 },
@@ -1454,13 +1426,9 @@
             });
         }
 
-        // Gráfico 3: Perfil horario medio y acumulado (24 horas)
         function renderHourlyChart(stats) {
             const canvas = document.getElementById('chartHourly');
-            if (!canvas) {
-                console.warn("No se encontró el lienzo 'chartHourly'. Saltando renderizado.");
-                return;
-            }
+            if (!canvas) return;
 
             const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
             const totalKwhData = stats.map(s => s.totalKwh);
@@ -1589,7 +1557,7 @@
         }
 
         // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
-function saveConfig() {
+        function saveConfig() {
             const config = {
                 rateMode: document.getElementById('rateMode').value,
                 thresholdInput: document.getElementById('thresholdInput').value,
@@ -1610,7 +1578,7 @@ function saveConfig() {
                 calendarSelectedDates: Array.from(window.calendarSelectedDates),
                 pvpcHighThreshold: document.getElementById('pvpcHighThreshold').value,
                 pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value,
-                // Nuevas variables añadidas:
+                // Persistencia de potencias contratadas y precios
                 powerP1: document.getElementById('powerP1').value,
                 powerP2: document.getElementById('powerP2').value,
                 powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
@@ -1645,12 +1613,6 @@ function saveConfig() {
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
-                if (config.powerP1 !== undefined) document.getElementById('powerP1').value = config.powerP1;
-                if (config.powerP2 !== undefined) document.getElementById('powerP2').value = config.powerP2;
-                if (config.powerPriceP1Pvpc !== undefined) document.getElementById('powerPriceP1Pvpc').value = config.powerPriceP1Pvpc;
-                if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
-                if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
-                if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
@@ -1661,6 +1623,14 @@ function saveConfig() {
                     if (elLow) elLow.value = config.pvpcLowThreshold;
                 }
                 
+                // Carga de potencias
+                if (config.powerP1 !== undefined) document.getElementById('powerP1').value = config.powerP1;
+                if (config.powerP2 !== undefined) document.getElementById('powerP2').value = config.powerP2;
+                if (config.powerPriceP1Pvpc !== undefined) document.getElementById('powerPriceP1Pvpc').value = config.powerPriceP1Pvpc;
+                if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
+                if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
+                if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
+
                 if (config.calendarSelectedDates !== undefined && Array.isArray(config.calendarSelectedDates)) {
                     window.calendarSelectedDates = new Set(config.calendarSelectedDates);
                 } else {
@@ -1673,7 +1643,6 @@ function saveConfig() {
             }
         }
 
-        // Mostrar u ocultar paneles de tarifa según selección
         function toggleRatePanels() {
             const mode = document.getElementById('rateMode').value;
             if (mode === 'pvpc') {
@@ -1683,13 +1652,11 @@ function saveConfig() {
             }
         }
 
-        // Listeners para guardar configuración en tiempo real
         document.getElementById('rateMode').addEventListener('change', () => {
             toggleRatePanels();
             saveConfig();
         });
 
-        // Evento auto-contenido para limpiar filtros de fecha y hora
         document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
             e.preventDefault(); 
             document.getElementById('filterStartDate').value = '';
@@ -1697,25 +1664,23 @@ function saveConfig() {
             document.getElementById('filterStartHour').value = '';
             document.getElementById('filterEndHour').value = '';
             
-            // Limpiar también el conjunto de días del calendario
             if (window.calendarSelectedDates) {
                 window.calendarSelectedDates.clear();
             }
             
-            saveConfig(); // Guardar el vaciado en localStorage
+            saveConfig(); 
 
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
             }
         });
 
-        // Registrar observadores en todos los inputs para autoguardado rápido
+        // Observadores de cambios en los inputs para autoguardado rápido
         const inputsToWatch = [
             'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
             'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
             'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate', 'filterStartHour', 'filterEndHour',
             'pvpcHighThreshold', 'pvpcLowThreshold',
-            // Nuevos inputs añadidos:
             'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual'
         ];
         inputsToWatch.forEach(id => {
@@ -1728,20 +1693,14 @@ function saveConfig() {
 
         loadConfig();
 
-        // Función interactiva para conmutar días individuales (selección discreta no continua)
         window.handleCalendarDayClick = function(dateStr) {
             if (!window.calendarSelectedDates) {
                 window.calendarSelectedDates = new Set();
             }
 
-            // Al usar la selección directa por casillas, limpiamos los campos superiores de rango
-            // para que no haya confusiones de diseño en el panel de filtros
             document.getElementById('filterStartDate').value = '';
             document.getElementById('filterEndDate').value = '';
 
-            // Si es la primera vez que se interactúa y el conjunto está vacío,
-            // asumimos que el usuario quiere empezar desactivando el día en el que hace clic.
-            // Para ello, primero activamos todos los días disponibles menos el pulsado.
             const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
             if (!hasCustomCalendar && window.allAvailableDays) {
                 Object.keys(window.allAvailableDays).forEach(key => {
@@ -1750,7 +1709,6 @@ function saveConfig() {
                     }
                 });
             } else {
-                // Si ya había una selección personalizada previa, simplemente conmutamos el día pulsado
                 if (window.calendarSelectedDates.has(dateStr)) {
                     window.calendarSelectedDates.delete(dateStr);
                 } else {
@@ -1758,9 +1716,8 @@ function saveConfig() {
                 }
             }
             
-            saveConfig(); // Persistir la sesión en el almacenamiento local
+            saveConfig(); 
 
-            // Lanzar recálculo automático si el archivo CSV ya está cargado
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
             }
