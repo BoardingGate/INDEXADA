@@ -17,7 +17,7 @@
         <!-- Cabecera -->
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
-            <p class="text-gray-600 mt-2">Analiza consumos, costes de potencia y energía importando lecturas de tu distribuidora o de Datadis.</p>
+            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora o de Datadis para analizar consumos y costes de forma gráfica.</p>
         </header>
 
         <!-- Panel de Configuración General -->
@@ -61,42 +61,29 @@
             </div>
         </div>
 
-        <!-- Panel de Importación Datadis (Bookmarklet y Consola) -->
+        <!-- Panel Informativo de Datadis.es (Método Manual Recomendado) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
-            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="text-md font-bold text-blue-700">Importación rápida desde Datadis.es</h3>
+                    <h3 class="text-md font-bold text-blue-700">Cómo obtener tus consumos desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
-                        Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
+                        Datadis es una plataforma oficial y gratuita en España que unifica los datos de todas las distribuidoras eléctricas para que puedas descargarlos fácilmente en un único archivo.
                     </p>
                 </div>
-                <!-- Botón de Registro Oficial -->
-                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
-                    <span>Regístrate en Datadis.es</span>
+                <!-- Botón de Acceso -->
+                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-md text-xs transition-colors flex items-center gap-1.5 shadow-xs">
+                    <span>Acceder a Datadis.es</span>
                     <span class="text-[10px]">↗</span>
                 </a>
             </div>
 
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
-                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">Instrucciones de descarga (Sin restricciones de CORS):</h4>
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">Instrucciones para descargar tu fichero de consumo:</h4>
                 <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-2 leading-relaxed">
-                    <li>
-                        Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador:
-                        <div class="my-2">
-                            <!-- Código JavaScript Bookmarklet optimizado con feedback interactivo contra errores de seguridad -->
-                            <a href="javascript:(async function(){alert('🔄 Descargador Datadis iniciado...\nComprobando entorno de seguridad y sesión activa.');try{if(window.location.hostname!=='datadis.es'&&!window.location.hostname.endsWith('.datadis.es')){alert('⚠️ Error de Origen:\nDebes ejecutar este marcador estando dentro de la web oficial de Datadis (https://datadis.es).');return;}let t='';let keysChecked=[];try{for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);keysChecked.push('sessionStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('sessionStorage: BLOQUEADO/ERROR');}if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);keysChecked.push('localStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('localStorage: BLOQUEADO/ERROR');}}if(!t){try{const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];keysChecked.push('cookie: '+k);if(v&&v.includes('eyJ')){t=v;break;}}}catch(e){keysChecked.push('cookies: BLOQUEADO/ERROR');}}if(!t){alert('❌ No se encontró una sesión activa de Datadis.\n\nDiagnóstico de claves analizadas:\n'+keysChecked.slice(0,10).join('\n')+'\n\nSugerencia: Asegúrate de haber iniciado sesión y de estar viendo tus consumos en el portal privado, no en la web pública inicial.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('📅 Conectado con éxito.\nIntroduce fecha de inicio para la descarga (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('📅 Introduce fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;alert('⏳ Conectando con la base de datos de Datadis. Por favor, espera...');const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});if(!rS.ok){alert('❌ Error al consultar tus puntos de suministro (suministros): Código '+rS.status);return;}const s=await rS.json();if(!s.length){alert('❌ Suministros no encontrados en tu cuenta de Datadis.');return;}const c=s[0].cups;alert('✅ Suministro detectado: '+c+'\nDescargando curvas de consumo...');const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});if(!rC.ok){alert('❌ Error al descargar lecturas de consumo: Código '+rC.status);return;}const cons=await rC.json();if(!cons.length){alert('❌ No hay lecturas disponibles para el período indicado.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('🎉 ¡Descarga finalizada con éxito!\n\nSe ha guardado el archivo "consumo_datadis_'+c+'.csv" en tu carpeta de Descargas.\n\nAhora puedes arrastrar este archivo al Analizador.');}catch(e){alert('❌ Error inesperado al extraer datos: '+e.message);}})();" 
-                               class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-4 rounded text-xs select-none cursor-grab shadow-sm transition-colors">
-                                📥 Descargador Datadis
-                            </a>
-                        </div>
-                    </li>
-                    <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión de forma habitual.</li>
-                    <li>
-                        <strong>Si al pulsar el marcador verde de tu navegador no ocurre nada (bloqueo por directiva de seguridad CSP de Datadis):</strong>
-                        <p class="mt-1 font-medium text-gray-800">Copia el siguiente código en tu portapapeles, pulsa <kbd class="bg-white px-1 border rounded shadow-xs font-mono text-[10px]">F12</kbd> dentro de Datadis, pégalo en la pestaña de **"Consola"** y pulsa **Enter**:</p>
-                        <textarea readonly class="w-full mt-2 p-2 font-mono text-[10px] text-gray-700 bg-gray-100 rounded border border-gray-300 h-20 focus:outline-none" onclick="this.select();">javascript:(async function(){try{let t='';for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}if(!t){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}if(!t){const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];if(v&&v.includes('eyJ')){t=v;break;}}}if(!t){alert('Error: No se detecto sesión activa. Logueate de nuevo.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas en el periodo.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('Descarga exitosa.');}catch(e){alert('Error: '+e.message);}})();</textarea>
-                    </li>
-                    <li class="mt-2">Una vez descargado el archivo CSV, arrástralo a la zona **"Archivo CSV Distribuidora"** de esta aplicación.</li>
+                    <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong>. Si no tienes cuenta, puedes registrarte en pocos minutos aportando tu DNI y una copia de cualquier factura de la luz.</li>
+                    <li>Inicia sesión y dirígete a la sección de **"Consumos"** o **"Descargas"** dentro de tu área privada de usuario.</li>
+                    <li>Selecciona tu punto de suministro (CUPS), elige el rango de fechas que desees estudiar (por ejemplo, el último mes o el último año) y selecciona la opción de exportar o descargar en formato **CSV**.</li>
+                    <li>Una vez descargado el archivo en tu ordenador o móvil, simplemente arrástralo y suéltalo en la casilla gris superior de esta aplicación (**"Archivo CSV Distribuidora"**) o haz clic en ella para seleccionarlo. Tus gráficas y tablas de costes se calcularán de manera inmediata y segura en tu navegador.</li>
                 </ol>
             </div>
         </div>
@@ -659,17 +646,85 @@
 
             showStatus("Archivo cargado. Procesando e interpretando lecturas...", "info");
 
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    window.rawCsvData = results.data;
-                    processData(window.rawCsvData);
-                },
-                error: function(err) {
-                    showStatus("Error al estructurar el archivo CSV: " + err.message, "error");
-                }
+            // Comprobación si es JSON o CSV
+            if (file.name.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const rawData = JSON.parse(e.target.result);
+                        processJsonData(rawData);
+                    } catch(err) {
+                        showStatus("Error al estructurar el archivo JSON de Datadis: " + err.message, "error");
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        window.rawCsvData = results.data;
+                        processData(window.rawCsvData);
+                    },
+                    error: function(err) {
+                        showStatus("Error al estructurar el archivo CSV: " + err.message, "error");
+                    }
+                });
+            }
+        }
+
+        // --- PROCESAMIENTO DE JSON DIRECTO PEGADO O EN ARCHIVO ---
+        document.getElementById('importJsonBtn').addEventListener('click', () => {
+            const val = document.getElementById('jsonPasteArea').value.trim();
+            if (!val) {
+                showStatus("El cuadro de texto JSON está vacío.", "error");
+                return;
+            }
+            try {
+                const rawData = JSON.parse(val);
+                processJsonData(rawData);
+            } catch(e) {
+                showStatus("Error al analizar el contenido JSON: " + e.message, "error");
+            }
+        });
+
+        function processJsonData(rawData) {
+            if (!Array.isArray(rawData)) {
+                showStatus("El archivo o contenido JSON no tiene un formato de lista válido de Datadis.", "error");
+                return;
+            }
+            
+            showStatus("Contenido JSON detectado correctamente. Mapeando campos...", "info");
+
+            // Convertir la estructura JSON a la estructura de base CSV mapeada
+            const mappedRows = rawData.map(item => {
+                if (!item.date || !item.time || item.consumptionKwh === undefined) return null;
+                const fmtDate = item.date.replace(/\//g, '-');
+                const horaNum = parseInt(item.time.split(':')[0], 10);
+                
+                return {
+                    "fechaStr": fmtDate,
+                    "hora": isNaN(horaNum) ? 0 : (horaNum === 24 ? 0 : horaNum),
+                    "consumo": parseFloat(item.consumptionKwh)
+                };
+            }).filter(x => x !== null);
+
+            if (mappedRows.length === 0) {
+                showStatus("No se localizaron registros válidos mapeables dentro de la lista JSON.", "error");
+                return;
+            }
+
+            // Simular parsedRows del csv directo
+            const simulatedParsedRows = mappedRows.map(x => {
+                const row = {};
+                row["Fecha"] = x.fechaStr;
+                row["Hora"] = String(x.hora);
+                row["Consumo (kWh)"] = String(x.consumo);
+                return row;
             });
+
+            window.rawCsvData = simulatedParsedRows;
+            processData(window.rawCsvData);
         }
 
         async function processData(parsedRows) {
@@ -837,44 +892,6 @@
             } catch (err) {
                 showStatus("Error al procesar: " + err.message, "error");
                 console.error(err);
-            }
-        }
-
-        // --- FUNCIÓN GLOBAL PARA OBTENER PRECIOS OFICIALES PVPC DE REE ---
-        async function fetchPreciosPVPC(inicio, fin) {
-            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Servidor público de REE respondió con código: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const pvpcSeries = data.included.find(series => 
-                    series.type.toLowerCase().includes('pvpc') || 
-                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                );
-
-                if (!pvpcSeries) {
-                    throw new Error("No se localizó la serie PVPC en la base de datos de Red Eléctrica.");
-                }
-
-                const preciosMap = {};
-                pvpcSeries.attributes.values.forEach(v => {
-                    const dateObj = new Date(v.datetime);
-                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
-                    const localHour = dateObj.getHours();
-
-                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
-                    preciosMap[key] = v.value / 1000.0;
-                });
-
-                return preciosMap;
-
-            } catch (error) {
-                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
-                return null;
             }
         }
 
@@ -1359,339 +1376,6 @@
             renderHourlyChart(hourlyStats);
 
             resultsSection.classList.remove('hidden');
-        }
-
-        function renderDailyChart(stats) {
-            const canvas = document.getElementById('chartDaily');
-            if (!canvas) return;
-
-            const sortedDates = Object.keys(stats).sort();
-            const kwhData = sortedDates.map(d => stats[d].kwh);
-            const costData = sortedDates.map(d => stats[d].cost);
-
-            const numDays = sortedDates.length || 1;
-            const totalKwh = kwhData.reduce((a, b) => a + b, 0);
-            const totalCost = costData.reduce((a, b) => a + b, 0);
-            const avgDailyKwh = totalKwh / numDays;
-            const avgDailyCost = totalCost / numDays;
-
-            const dailyThreshold = parseFloat(dailyEvThresholdInput.value) || 9999;
-
-            const pointBackgroundColors = sortedDates.map(d => 
-                stats[d].kwh >= dailyThreshold ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)'
-            );
-            const pointBorderColors = sortedDates.map(d => 
-                stats[d].kwh >= dailyThreshold ? 'rgba(153, 27, 27, 1)' : 'rgba(59, 130, 246, 1)'
-            );
-            const pointRadii = sortedDates.map(d => 
-                stats[d].kwh >= dailyThreshold ? 6 : 3
-            );
-
-            if (window.chartInstance2) {
-                window.chartInstance2.destroy();
-            }
-
-            const ctx = canvas.getContext('2d');
-            window.chartInstance2 = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: sortedDates,
-                    datasets: [
-                        {
-                            label: 'Consumo (kWh)',
-                            data: kwhData,
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 2,
-                            fill: true,
-                            yAxisID: 'y',
-                            pointBackgroundColor: pointBackgroundColors,
-                            pointBorderColor: pointBorderColors,
-                            pointRadius: pointRadii,
-                            pointHoverRadius: 8
-                        },
-                        {
-                            label: 'Importe (€)',
-                            data: costData,
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 2,
-                            fill: true,
-                            yAxisID: 'y1'
-                        },
-                        {
-                            label: 'Consumo Diario Medio (kWh)',
-                            data: Array(sortedDates.length).fill(avgDailyKwh),
-                            type: 'line',
-                            borderColor: 'rgba(59, 130, 246, 0.5)',
-                            borderWidth: 1.5,
-                            borderDash: [6, 6],
-                            pointRadius: 0,
-                            fill: false,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Importe Diario Medio (€)',
-                            data: Array(sortedDates.length).fill(avgDailyCost),
-                            type: 'line',
-                            borderColor: 'rgba(16, 185, 129, 0.5)',
-                            borderWidth: 1.5,
-                            borderDash: [6, 6],
-                            pointRadius: 0,
-                            fill: false,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'Consumo (kWh)' }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Importe (€)' }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderDayOfWeekChart(stats, counts) {
-            const canvas = document.getElementById('chartDayOfWeek');
-            if (!canvas) return;
-
-            const safeCounts = counts || {};
-            const order = [1, 2, 3, 4, 5, 6, 0]; 
-            const labels = order.map(i => stats[i].label);
-            
-            const kwhDataMedia = order.map(i => {
-                const count = safeCounts[i] || 1;
-                return stats[i].kwh / count;
-            });
-            const costDataMedia = order.map(i => {
-                const count = safeCounts[i] || 1;
-                return stats[i].cost / count;
-            });
-
-            const kwhDataAcumulado = order.map(i => stats[i].kwh);
-            const costDataAcumulado = order.map(i => stats[i].cost);
-
-            if (window.chartInstance1) {
-                window.chartInstance1.destroy();
-            }
-
-            const ctx = canvas.getContext('2d');
-            window.chartInstance1 = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Consumo Medio (kWh)',
-                            data: kwhDataMedia,
-                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 1,
-                            yAxisID: 'y',
-                            hidden: false 
-                        },
-                        {
-                            label: 'Importe Medio (€)',
-                            data: costDataMedia,
-                            type: 'line',
-                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 3,
-                            fill: false,
-                            yAxisID: 'y1',
-                            hidden: false 
-                        },
-                        {
-                            label: 'Consumo Acumulado (kWh)',
-                            data: kwhDataAcumulado,
-                            backgroundColor: 'rgba(147, 51, 234, 0.35)', 
-                            borderColor: 'rgba(147, 51, 234, 1)',
-                            borderWidth: 1,
-                            yAxisID: 'y',
-                            hidden: true 
-                        },
-                        {
-                            label: 'Importe Acumulado (€)',
-                            data: costDataAcumulado,
-                            type: 'line',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)', 
-                            borderColor: 'rgba(245, 158, 11, 1)',
-                            borderWidth: 2,
-                            borderDash: [5, 5], 
-                            fill: false,
-                            yAxisID: 'y1',
-                            hidden: true 
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'Consumo (kWh)' }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Importe (€)' }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderHourlyChart(stats) {
-            const canvas = document.getElementById('chartHourly');
-            if (!canvas) return;
-
-            const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
-            const totalKwhData = stats.map(s => s.totalKwh);
-            const totalCostData = stats.map(s => s.totalCost);
-            const avgKwhData = stats.map(s => s.count > 0 ? (s.totalKwh / s.count) : 0);
-            const avgPriceData = stats.map(s => s.count > 0 ? (s.totalPrice / s.count) : 0);
-
-            const totalKwh = stats.reduce((sum, s) => sum + s.totalKwh, 0);
-            const totalCost = stats.reduce((sum, s) => sum + s.totalCost, 0);
-            const totalCount = stats.reduce((sum, s) => sum + s.count, 0);
-
-            const avgHourlyKwh = totalCount > 0 ? (totalKwh / totalCount) : 0;
-            const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
-
-            if (window.chartInstance3) {
-                window.chartInstance3.destroy();
-            }
-
-            const ctx = canvas.getContext('2d');
-            window.chartInstance3 = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Consumo Acumulado (kWh)',
-                            data: totalKwhData,
-                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
-                            borderColor: 'rgba(59, 130, 246, 0.7)',
-                            borderWidth: 1,
-                            yAxisID: 'y',
-                            order: 6
-                        },
-                        {
-                            label: 'Consumo Medio (kWh)',
-                            data: avgKwhData,
-                            type: 'line',
-                            borderColor: 'rgba(29, 78, 216, 1)',
-                            borderWidth: 2,
-                            fill: false,
-                            yAxisID: 'y',
-                            order: 4
-                        },
-                        {
-                            label: 'Importe Acumulado (€)',
-                            data: totalCostData,
-                            type: 'line',
-                            borderColor: 'rgba(16, 185, 129, 0.8)',
-                            borderWidth: 2,
-                            fill: false,
-                            yAxisID: 'y1',
-                            order: 3
-                        },
-                        {
-                            label: 'Precio Medio (€/kWh)',
-                            data: avgPriceData,
-                            type: 'line',
-                            borderColor: 'rgba(245, 158, 11, 1)',
-                            borderWidth: 2,
-                            fill: false,
-                            yAxisID: 'y2',
-                            order: 1
-                        },
-                        {
-                            label: 'Media Consumo Horario (kWh)',
-                            data: Array(24).fill(avgHourlyKwh),
-                            type: 'line',
-                            borderColor: 'rgba(29, 78, 216, 0.5)',
-                            borderWidth: 1.5,
-                            borderDash: [6, 6],
-                            pointRadius: 0,
-                            fill: false,
-                            yAxisID: 'y',
-                            order: 5
-                        },
-                        {
-                            label: 'Precio Medio Periodo (€/kWh)',
-                            data: Array(24).fill(avgPeriodPrice),
-                            type: 'line',
-                            borderColor: 'rgba(245, 158, 11, 0.6)',
-                            borderWidth: 1.5,
-                            borderDash: [6, 6],
-                            pointRadius: 0,
-                            fill: false,
-                            yAxisID: 'y2',
-                            order: 2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'Consumo (kWh)' }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: { display: true, text: 'Importe Acumulado (€)' },
-                            grid: { drawOnChartArea: false }
-                        },
-                        y2: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: { display: true, text: 'Precio Medio (€/kWh)' },
-                            grid: { drawOnChartArea: false },
-                            ticks: {
-                                callback: function(value) {
-                                    return value.toFixed(3) + ' €';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
         }
 
         // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
