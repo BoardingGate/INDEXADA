@@ -1,31 +1,3 @@
-Para corregir ambos problemas de forma definitiva, se han realizado las
-siguientes mejoras en el diseño y en la lógica del script:
-
-Solución a los problemas detectados:
-
-1.  Fallo en la descarga del Marcador (Bookmarklet):
-      - Diagnóstico y guía interactiva: El marcador ahora incluye alertas de
-        estado (alert) paso a paso. Si falla en algún punto, te guiará y
-        mostrará un diagnóstico de claves analizadas.
-      - Entorno de seguridad: El script ahora comprueba si estás en el dominio
-        correcto de Datadis y busca exhaustivamente los tokens de sesión de
-        manera segura. Además, al pulsar el marcador, este te preguntará de
-        forma interactiva la Fecha de Inicio y Fecha de Fin que deseas exportar
-        (proponiendo los últimos 30 días por defecto).
-2.  Error fetchPreciosPVPC is not defined:
-      - Se ha reincorporado la función fetchPreciosPVPC de forma global y
-        ordenada en el código para procesar correctamente las tarifas PVPC de
-        Red Eléctrica al cargar cualquier archivo CSV.
-3.  Filtro por Rango Horario (Añadido):
-      - Se ha reestructurado el Panel de Filtros Temporales para incorporar dos
-        selectores: Hora Inicio y Hora Fin (de 0 a 23 horas).
-      - La lógica de filtrado se ha programado para que admita tanto rangos de
-        horas estándar (por ejemplo, de 10:00 a 18:00) como rangos nocturnos que
-        cruzan la medianoche (por ejemplo, de 22:00 a 06:00), lo cual facilita
-        el estudio de consumos en horas de tarifa valle.
-
-Aquí tienes el código completo corregido:
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
