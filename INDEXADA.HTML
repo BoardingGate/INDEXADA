@@ -211,12 +211,12 @@
                 <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación)</h3>
-                            <p class="text-xs text-gray-500">Compara tus hábitos según la hora de reloj frente al coste real que pagas por el €/kWh.</p>
+                            <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
+                            <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
                         </div>
                         <!-- Ajuste de Umbrales de Precio para PVPC / Indexado -->
                         <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-200 shadow-inner">
-                            <span class="font-bold text-gray-700">Rangos de Coste Real:</span>
+                            <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
                             <div>
                                 <label class="font-medium mr-1 text-red-700">Caro (P1) si &ge;</label>
                                 <input type="number" id="pvpcHighThreshold" step="0.005" value="0.150" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
@@ -229,9 +229,9 @@
                     </div>
 
                     <div class="space-y-6">
-                        <!-- 1. Clasificación por Tramos Horarios -->
+                        <!-- 1. Clasificación por Tramos Horarios (Tarifa fija manual por tramos) -->
                         <div>
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">1. Clasificación por Horario (Peajes Acceso 2.0TD - Los precios aplicados son los introducidos en el apartado "Manual por Tramos" si se selecciona dicho Tipo de Tarifa en el selector general superior)</h4>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario (Tarifa Fija por Tramos introducida por el usuario)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Punta -->
                                 <div class="p-3 bg-red-50/50 rounded-xl border border-red-100 flex flex-col justify-between shadow-xs">
@@ -242,7 +242,7 @@
                                             <span id="p1KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
                                         <div class="flex justify-between border-t border-red-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste:</span>
+                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
                                             <span id="p1CostTimeText" class="text-red-700">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
@@ -256,7 +256,7 @@
                                             <span id="p2KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
                                         <div class="flex justify-between border-t border-yellow-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste:</span>
+                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
                                             <span id="p2CostTimeText" class="text-yellow-700">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
@@ -270,7 +270,7 @@
                                             <span id="p3KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
                                         <div class="flex justify-between border-t border-green-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste:</span>
+                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
                                             <span id="p3CostTimeText" class="text-green-700">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
@@ -278,9 +278,9 @@
                             </div>
                         </div>
 
-                        <!-- 2. Clasificación por Coste Real -->
+                        <!-- 2. Clasificación por Coste Real (Según PVPC Indexado) -->
                         <div>
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">2. Clasificación por Coste Real (Según precio horario de la energía)</h4>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Alto -->
                                 <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-col justify-between shadow-xs">
@@ -291,7 +291,7 @@
                                             <span id="p1KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
                                         <div class="flex justify-between border-t border-rose-200 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste:</span>
+                                            <span class="text-gray-500">Coste PVPC:</span>
                                             <span id="p1CostPriceText" class="text-rose-700">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
@@ -305,7 +305,7 @@
                                             <span id="p2KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
                                         <div class="flex justify-between border-t border-amber-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste:</span>
+                                            <span class="text-gray-500">Coste PVPC:</span>
                                             <span id="p2CostPriceText" class="text-amber-700">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
@@ -319,7 +319,7 @@
                                             <span id="p3KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
                                         </div>
                                         <div class="flex justify-between border-t border-emerald-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste:</span>
+                                            <span class="text-gray-500">Coste PVPC:</span>
                                             <span id="p3CostPriceText" class="text-green-700">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
@@ -813,63 +813,46 @@
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // 1. CLASIFICACIÓN POR HORARIO (Tramos oficiales o manuales según selección)
+                // 1. CLASIFICACIÓN POR HORARIO (SIEMPRE usando la Tarifa Fija Manual del usuario para esta comparativa fija)
                 let itemSlot = 'P3';
-                if (mode === 'manual') {
-                    const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
-                    const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
-                    const useWeekendValle = document.getElementById('weekendValle').checked;
+                const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                const useWeekendValle = document.getElementById('weekendValle').checked;
 
-                    if ((isWeekend && useWeekendValle) || isHoliday) {
-                        itemSlot = 'P3';
-                    } else if (hoursPunta.includes(item.hora)) {
-                        itemSlot = 'P1';
-                    } else if (hoursLlano.includes(item.hora)) {
-                        itemSlot = 'P2';
-                    } else {
-                        itemSlot = 'P3';
-                    }
+                if ((isWeekend && useWeekendValle) || isHoliday) {
+                    itemSlot = 'P3';
+                } else if (hoursPunta.includes(item.hora)) {
+                    itemSlot = 'P1';
+                } else if (hoursLlano.includes(item.hora)) {
+                    itemSlot = 'P2';
                 } else {
-                    if (isWeekend || isHoliday) {
-                        itemSlot = 'P3';
-                    } else {
-                        const officialP1 = [10, 11, 12, 13, 18, 19, 20, 21];
-                        const officialP2 = [8, 9, 14, 15, 16, 17, 22, 23];
-                        
-                        if (officialP1.includes(item.hora)) {
-                            itemSlot = 'P1';
-                        } else if (officialP2.includes(item.hora)) {
-                            itemSlot = 'P2';
-                        } else {
-                            itemSlot = 'P3';
-                        }
-                    }
+                    itemSlot = 'P3';
                 }
 
                 if (itemSlot === 'P1') {
                     p1KwhTime += item.consumo;
-                    p1CostTime += item.coste;
+                    p1CostTime += item.costeManual; // Siempre coste manual
                 } else if (itemSlot === 'P2') {
                     p2KwhTime += item.consumo;
-                    p2CostTime += item.coste;
+                    p2CostTime += item.costeManual; // Siempre coste manual
                 } else {
                     p3KwhTime += item.consumo;
-                    p3CostTime += item.coste;
+                    p3CostTime += item.costeManual; // Siempre coste manual
                 }
 
-                // 2. CLASIFICACIÓN POR COSTE REAL
+                // 2. CLASIFICACIÓN POR COSTE REAL (SIEMPRE usando la tarifa oficial PVPC indexada)
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-                if (item.precio >= pvpcHigh) {
+                if (item.precioPvpc >= pvpcHigh) {
                     p1KwhPrice += item.consumo;
-                    p1CostPrice += item.coste;
-                } else if (item.precio <= pvpcLow) {
+                    p1CostPrice += item.costePvpc; // Siempre coste PVPC
+                } else if (item.precioPvpc <= pvpcLow) {
                     p3KwhPrice += item.consumo;
-                    p3CostPrice += item.coste;
+                    p3CostPrice += item.costePvpc; // Siempre coste PVPC
                 } else {
                     p2KwhPrice += item.consumo;
-                    p2CostPrice += item.coste;
+                    p2CostPrice += item.costePvpc; // Siempre coste PVPC
                 }
 
                 if (item.consumo > maxPeakHourly) {
@@ -922,7 +905,7 @@
                 }
             });
 
-            // --- CÁLCULOS DEL TÉRMINO DE POTENCIA (Ejecutados con dailyStats rellenado) ---
+            // --- CÁLCULOS DEL TÉRMINO DE POTENCIA ---
             const sortedDates = Object.keys(dailyStats).sort();
             const numDays = sortedDates.length || 1;
 
@@ -1005,32 +988,22 @@
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            // Calcular porcentajes de clasificación horaria e inyectar en interfaz
+            // Porcentajes e Inyecciones de Bloque 1 (SIEMPRE tarifa fija manual)
             const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
             const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
             const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
 
-            const p1PctTimeCost = totalCost > 0 ? (p1CostTime / totalCost) * 100 : 0;
-            const p2PctTimeCost = totalCost > 0 ? (p2CostTime / totalCost) * 100 : 0;
-            const p3PctTimeCost = totalCost > 0 ? (p3CostTime / totalCost) * 100 : 0;
+            const p1PctTimeCost = totalCostManual > 0 ? (p1CostTime / totalCostManual) * 100 : 0;
+            const p2PctTimeCost = totalCostManual > 0 ? (p2CostTime / totalCostManual) * 100 : 0;
+            const p3PctTimeCost = totalCostManual > 0 ? (p3CostTime / totalCostManual) * 100 : 0;
 
-            // Determinar precios por tramo para colocar entre corchetes
-            let p1PriceLabel = "", p2PriceLabel = "", p3PriceLabel = "";
-            if (mode === 'manual') {
-                const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
-                const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
-                const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
-                p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
-                p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
-                p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
-            } else {
-                const avgP1 = p1KwhTime > 0 ? (p1CostTime / p1KwhTime) : 0;
-                const avgP2 = p2KwhTime > 0 ? (p2CostTime / p2KwhTime) : 0;
-                const avgP3 = p3KwhTime > 0 ? (p3CostTime / p3KwhTime) : 0;
-                p1PriceLabel = ` [Med PVPC: ${avgP1.toFixed(5)} €/kWh]`;
-                p2PriceLabel = ` [Med PVPC: ${avgP2.toFixed(5)} €/kWh]`;
-                p3PriceLabel = ` [Med PVPC: ${avgP3.toFixed(5)} €/kWh]`;
-            }
+            const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
+
+            const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
+            const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
+            const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
 
             document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
@@ -1041,23 +1014,31 @@
             document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
 
-            // Calcular porcentajes de clasificación por coste real
+            // Porcentajes e Inyecciones de Bloque 2 (SIEMPRE tarifa oficial indexada PVPC de REE)
             const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
             const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
             const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
 
-            const p1PctPriceCost = totalCost > 0 ? (p1CostPrice / totalCost) * 100 : 0;
-            const p2PctPriceCost = totalCost > 0 ? (p2CostPrice / totalCost) * 100 : 0;
-            const p3PctPriceCost = totalCost > 0 ? (p3CostPrice / totalCost) * 100 : 0;
+            const p1PctPriceCost = totalCostPvpc > 0 ? (p1CostPrice / totalCostPvpc) * 100 : 0;
+            const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
+            const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
+
+            const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : 0;
+            const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : 0;
+            const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : 0;
+
+            const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
+            const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
+            const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
 
             document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span>`;
+            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
 
             document.getElementById('p2KwhPriceText').innerHTML = `${p2KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span>`;
+            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
 
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span>`;
+            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
             // --- TABLA COMPARATIVA GLOBAL (Energía + Potencia con Diferenciales) ---
             const grandTotalPvpc = totalCostPvpc + totalPowerCostPvpc;
