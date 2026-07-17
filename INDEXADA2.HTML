@@ -17,7 +17,7 @@
         <!-- Cabecera -->
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
-            <p class="text-gray-600 mt-2">Sube el CSV de tu distribuidora o impórtalo fácilmente desde Datadis para analizar tus consumos y costes.</p>
+            <p class="text-gray-600 mt-2">Analiza consumos, costes de potencia y energía importando lecturas de tu distribuidora o de Datadis.</p>
         </header>
 
         <!-- Panel de Configuración General -->
@@ -61,13 +61,13 @@
             </div>
         </div>
 
-        <!-- Panel de Importación Datadis (Bookmarklet) -->
+        <!-- Panel de Importación Datadis (Bookmarklet y Consola) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="text-md font-bold text-blue-700">Importación rápida desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
-                        Descarga los consumos del período que desees sin configurar servidores ni sufrir restricciones de CORS de forma segura.
+                        Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
                     </p>
                 </div>
                 <!-- Botón de Registro Oficial -->
@@ -81,7 +81,7 @@
                 <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">Instrucciones de descarga (Sin restricciones de CORS):</h4>
                 <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-2 leading-relaxed">
                     <li>
-                        Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador (si no la visualizas, pulsa <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Ctrl+Mayús+B</kbd> o <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Cmd+Shift+B</kbd> en Mac):
+                        Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador:
                         <div class="my-2">
                             <!-- Código JavaScript Bookmarklet optimizado con feedback interactivo contra errores de seguridad -->
                             <a href="javascript:(async function(){alert('🔄 Descargador Datadis iniciado...\nComprobando entorno de seguridad y sesión activa.');try{if(window.location.hostname!=='datadis.es'&&!window.location.hostname.endsWith('.datadis.es')){alert('⚠️ Error de Origen:\nDebes ejecutar este marcador estando dentro de la web oficial de Datadis (https://datadis.es).');return;}let t='';let keysChecked=[];try{for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);keysChecked.push('sessionStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('sessionStorage: BLOQUEADO/ERROR');}if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);keysChecked.push('localStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('localStorage: BLOQUEADO/ERROR');}}if(!t){try{const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];keysChecked.push('cookie: '+k);if(v&&v.includes('eyJ')){t=v;break;}}}catch(e){keysChecked.push('cookies: BLOQUEADO/ERROR');}}if(!t){alert('❌ No se encontró una sesión activa de Datadis.\n\nDiagnóstico de claves analizadas:\n'+keysChecked.slice(0,10).join('\n')+'\n\nSugerencia: Asegúrate de haber iniciado sesión y de estar viendo tus consumos en el portal privado, no en la web pública inicial.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('📅 Conectado con éxito.\nIntroduce fecha de inicio para la descarga (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('📅 Introduce fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;alert('⏳ Conectando con la base de datos de Datadis. Por favor, espera...');const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});if(!rS.ok){alert('❌ Error al consultar tus puntos de suministro (suministros): Código '+rS.status);return;}const s=await rS.json();if(!s.length){alert('❌ Suministros no encontrados en tu cuenta de Datadis.');return;}const c=s[0].cups;alert('✅ Suministro detectado: '+c+'\nDescargando curvas de consumo...');const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});if(!rC.ok){alert('❌ Error al descargar lecturas de consumo: Código '+rC.status);return;}const cons=await rC.json();if(!cons.length){alert('❌ No hay lecturas disponibles para el período indicado.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('🎉 ¡Descarga finalizada con éxito!\n\nSe ha guardado el archivo "consumo_datadis_'+c+'.csv" en tu carpeta de Descargas.\n\nAhora puedes arrastrar este archivo al Analizador.');}catch(e){alert('❌ Error inesperado al extraer datos: '+e.message);}})();" 
@@ -91,8 +91,12 @@
                         </div>
                     </li>
                     <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión de forma habitual.</li>
-                    <li>Una vez dentro de tu área privada de usuario (donde se ven tus datos de contrato y consumo), haz clic en el marcador <strong>"Descargador Datadis"</strong> de tu barra superior.</li>
-                    <li>Sigue los mensajes interactivos para definir el periodo exacto de descarga. El archivo CSV se guardará automáticamente en tu carpeta de Descargas.</li>
+                    <li>
+                        <strong>Si al pulsar el marcador verde de tu navegador no ocurre nada (bloqueo por directiva de seguridad CSP de Datadis):</strong>
+                        <p class="mt-1 font-medium text-gray-800">Copia el siguiente código en tu portapapeles, pulsa <kbd class="bg-white px-1 border rounded shadow-xs font-mono text-[10px]">F12</kbd> dentro de Datadis, pégalo en la pestaña de **"Consola"** y pulsa **Enter**:</p>
+                        <textarea readonly class="w-full mt-2 p-2 font-mono text-[10px] text-gray-700 bg-gray-100 rounded border border-gray-300 h-20 focus:outline-none" onclick="this.select();">javascript:(async function(){try{let t='';for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}if(!t){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}if(!t){const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];if(v&&v.includes('eyJ')){t=v;break;}}}if(!t){alert('Error: No se detecto sesión activa. Logueate de nuevo.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas en el periodo.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('Descarga exitosa.');}catch(e){alert('Error: '+e.message);}})();</textarea>
+                    </li>
+                    <li class="mt-2">Una vez descargado el archivo CSV, arrástralo a la zona **"Archivo CSV Distribuidora"** de esta aplicación.</li>
                 </ol>
             </div>
         </div>
@@ -152,22 +156,60 @@
                     <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (Opcional)</label>
                     <select id="filterStartHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                         <option value="">Todas las horas</option>
-                        <script>
-                            for(let i=0; i<24; i++) {
-                                document.write(`<option value="${i}">${String(i).padStart(2, '0')}:00</option>`);
-                            }
-                        </script>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (Opcional)</label>
                     <select id="filterEndHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                         <option value="">Todas las horas</option>
-                        <script>
-                            for(let i=0; i<24; i++) {
-                                document.write(`<option value="${i}">${String(i).padStart(2, '0')}:00</option>`);
-                            }
-                        </script>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
                     </select>
                 </div>
             </div>
@@ -233,7 +275,7 @@
         <!-- Resultados -->
         <div id="resultsSection" class="hidden">
 
-            <!-- Métricas Globales (Ampliado a 7 indicadores) -->
+            <!-- Métricas Globales (7 indicadores) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-blue-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Total</h3>
@@ -519,23 +561,6 @@
     </div>
 
     <script>
-        // --- DEPURADOR ERUDA DINÁMICO (Activo solo ante fallos de ejecución) ---
-        window.addEventListener('error', function (e) {
-            if (typeof eruda === 'undefined') {
-                const script = document.createElement('script');
-                script.src = "https://cdn.jsdelivr.net/npm/eruda";
-                script.onload = function () {
-                    eruda.init();
-                    eruda.show();
-                    console.error("Error capturado: ", e.error || e.message);
-                };
-                document.body.appendChild(script);
-            } else {
-                eruda.show();
-                console.error("Error capturado: ", e.error || e.message);
-            }
-        });
-
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
         window.chartInstance1 = null;
@@ -853,7 +878,823 @@
             }
         }
 
-        // --- GESTIÓN DE PERSISTENCIA (localStorage) ---        
+        // --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
+        function renderResultsAndCharts(data) {
+            const threshold = parseFloat(thresholdInput.value) || 0;
+            const subtractVal = parseFloat(subtractInput.value) || 0;
+            const mode = rateMode.value;
+
+            let totalKwh = 0;
+            let totalCost = 0;
+            let filteredKwh = 0;
+            let filteredCost = 0;
+            let filteredHoursCount = 0;
+
+            let maxPeakHourly = 0;
+            let maxPeakP1 = 0;
+            let maxPeakP2 = 0;
+            let totalKwhP1 = 0;
+            let countP1 = 0;
+            let totalKwhP2 = 0;
+            let countP2 = 0;
+
+            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   
+            let p1CostTime = 0, p2CostTime = 0, p3CostTime = 0; 
+
+            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; 
+            let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; 
+
+            let totalCostPvpc = 0;
+            let totalCostManual = 0;
+
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            tableBody.innerHTML = "";
+            let tableRowsHtml = "";
+
+            const dayOfWeekStats = {
+                1: { label: 'Lunes', kwh: 0, cost: 0 },
+                2: { label: 'Martes', kwh: 0, cost: 0 },
+                3: { label: 'Miércoles', kwh: 0, cost: 0 },
+                4: { label: 'Jueves', kwh: 0, cost: 0 },
+                5: { label: 'Viernes', kwh: 0, cost: 0 },
+                6: { label: 'Sábado', kwh: 0, cost: 0 },
+                0: { label: 'Domingo', kwh: 0, cost: 0 }
+            };
+
+            const dailyStats = {}; 
+
+            const hourlyStats = Array.from({ length: 24 }, (_, i) => ({
+                hour: i,
+                totalKwh: 0,
+                totalCost: 0,
+                totalPrice: 0,
+                count: 0
+            }));
+
+            // Bucle principal de datos
+            data.forEach(item => {
+                totalKwh += item.consumo;
+                totalCost += item.coste;
+                totalCostPvpc += item.costePvpc;
+                totalCostManual += item.costeManual;
+
+                const dateParts = item.fechaStr.split('-');
+                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dayOfWeek = dateObj.getDay(); 
+                dayOfWeekStats[dayOfWeek].kwh += item.consumo;
+                dayOfWeekStats[dayOfWeek].cost += item.coste;
+
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHoliday = holidaysList.includes(item.fechaStr);
+                const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
+                const isP1 = !isP2;
+
+                // 1. CLASIFICACIÓN POR HORARIO
+                let itemSlot = 'P3';
+                const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                const useWeekendValle = document.getElementById('weekendValle').checked;
+
+                if ((isWeekend && useWeekendValle) || isHoliday) {
+                    itemSlot = 'P3';
+                } else if (hoursPunta.includes(item.hora)) {
+                    itemSlot = 'P1';
+                } else if (hoursLlano.includes(item.hora)) {
+                    itemSlot = 'P2';
+                } else {
+                    itemSlot = 'P3';
+                }
+
+                if (itemSlot === 'P1') {
+                    p1KwhTime += item.consumo;
+                    p1CostTime += item.costeManual; 
+                } else if (itemSlot === 'P2') {
+                    p2KwhTime += item.consumo;
+                    p2CostTime += item.costeManual; 
+                } else {
+                    p3KwhTime += item.consumo;
+                    p3CostTime += item.costeManual; 
+                }
+
+                // 2. CLASIFICACIÓN POR COSTE REAL (PVPC)
+                const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+                const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+
+                if (item.precioPvpc >= pvpcHigh) {
+                    p1KwhPrice += item.consumo;
+                    p1CostPrice += item.costePvpc; 
+                } else if (item.precioPvpc <= pvpcLow) {
+                    p3KwhPrice += item.consumo;
+                    p3CostPrice += item.costePvpc; 
+                } else {
+                    p2KwhPrice += item.consumo;
+                    p2CostPrice += item.costePvpc; 
+                }
+
+                if (item.consumo > maxPeakHourly) {
+                    maxPeakHourly = item.consumo;
+                }
+                if (isP1) {
+                    if (item.consumo > maxPeakP1) maxPeakP1 = item.consumo;
+                    totalKwhP1 += item.consumo;
+                    countP1++;
+                } else {
+                    if (item.consumo > maxPeakP2) maxPeakP2 = item.consumo;
+                    totalKwhP2 += item.consumo;
+                    countP2++;
+                }
+
+                if (!dailyStats[item.fechaStr]) {
+                    dailyStats[item.fechaStr] = { kwh: 0, cost: 0 };
+                }
+                dailyStats[item.fechaStr].kwh += item.consumo;
+                dailyStats[item.fechaStr].cost += item.coste;
+
+                const h = item.hora;
+                if (h >= 0 && h < 24) {
+                    hourlyStats[h].totalKwh += item.consumo;
+                    hourlyStats[h].totalCost += item.coste;
+                    hourlyStats[h].totalPrice += item.precio;
+                    hourlyStats[h].count += 1;
+                }
+
+                if (item.consumo > threshold) {
+                    const adjustedKwh = Math.max(0, item.consumo - subtractVal);
+                    const adjustedCost = adjustedKwh * item.precio;
+
+                    filteredKwh += adjustedKwh;
+                    filteredCost += adjustedCost;
+                    filteredHoursCount++;
+
+                    tableRowsHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 border-b">${item.fechaStr}</td>
+                            <td class="p-4 border-b">${String(item.hora).padStart(2, '0')}:00</td>
+                            <td class="p-4 border-b text-right font-mono">
+                                ${adjustedKwh.toFixed(3)} 
+                                <span class="text-xs text-gray-400 block" title="Original: ${item.consumo.toFixed(3)} kWh">(-${subtractVal.toFixed(2)})</span>
+                            </td>
+                            <td class="p-4 border-b text-right font-mono">${item.precio.toFixed(5)}</td>
+                            <td class="p-4 border-b text-right font-mono font-semibold">${adjustedCost.toFixed(3)} €</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            // --- CÁLCULOS DEL TÉRMINO DE POTENCIA ---
+            const sortedDates = Object.keys(dailyStats).sort();
+            const numDays = sortedDates.length || 1;
+
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+            const p1PricePvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+            const p2PricePvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+            const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
+            const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
+
+            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+            const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
+
+            const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
+            const grandTotalActive = totalCost + activePowerCost;
+
+            const dayOfWeekCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
+            sortedDates.forEach(dateStr => {
+                const dateParts = dateStr.split('-');
+                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dayOfWeek = dateObj.getDay(); 
+                dayOfWeekCount[dayOfWeek]++;
+            });
+
+            const avgDailyKwh = totalKwh / numDays;
+            const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
+
+            // Actualizar Métricas de Texto en pantalla
+            totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            
+            totalCostEl.innerHTML = `
+                ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                <span class="text-[10px] text-gray-500 block font-normal mt-1 leading-tight text-left">
+                    • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
+                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                </span>
+            `;
+            
+            totalDaysEl.textContent = `${numDays} días`;
+            avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+
+            const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
+            const avgPowerP2 = countP2 > 0 ? (totalKwhP2 / countP2) : 0;
+
+            maxPeakHourlyTextEl.textContent = `${maxPeakHourly.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            
+            requiredPowerTextEl.innerHTML = `
+                <div class="leading-tight">
+                    <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Máximos</span>
+                    P1: <span class="font-bold text-gray-900">${maxPeakP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>
+                    P2: <span class="font-bold text-gray-900">${maxPeakP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>
+                </div>
+                <div class="mt-1.5 pt-1.5 border-t border-gray-100 leading-tight">
+                    <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Medias</span>
+                    P1: <span class="font-bold text-gray-900">${avgPowerP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>
+                    P2: <span class="font-bold text-gray-900">${avgPowerP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>
+                </div>
+            `;
+
+            const pctKwh = totalKwh > 0 ? (filteredKwh / totalKwh) * 100 : 0;
+            const pctCost = totalCost > 0 ? (filteredCost / totalCost) * 100 : 0;
+
+            filteredHoursEl.textContent = `${filteredHoursCount} h`;
+            
+            filteredKwhEl.innerHTML = `
+                ${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh 
+                <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctKwh.toFixed(1)}%)</span>
+            `;
+            
+            filteredCostEl.innerHTML = `
+                ${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € 
+                <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctCost.toFixed(1)}%)</span>
+            `;
+
+            const avgFilteredKwh = filteredHoursCount > 0 ? (filteredKwh / filteredHoursCount) : 0;
+            const avgFilteredPrice = filteredKwh > 0 ? (filteredCost / filteredKwh) : 0;
+            filteredAvgKwhEl.textContent = `${avgFilteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+
+            tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+
+            // Porcentajes e Inyecciones de Bloque 1 (Tarifa fija manual)
+            const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
+            const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
+            const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
+
+            const p1PctTimeCost = totalCostManual > 0 ? (p1CostTime / totalCostManual) * 100 : 0;
+            const p2PctTimeCost = totalCostManual > 0 ? (p2CostTime / totalCostManual) * 100 : 0;
+            const p3PctTimeCost = totalCostManual > 0 ? (p3CostTime / totalCostManual) * 100 : 0;
+
+            const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
+
+            const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
+            const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
+            const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
+
+            document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
+
+            document.getElementById('p2KwhTimeText').innerHTML = `${p2KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p2CostTimeText').innerHTML = `${p2CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-yellow-600 font-normal text-[10px]">(${p2PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2PriceLabel}</span>`;
+
+            document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
+
+            // Porcentajes e Inyecciones de Bloque 2 (Tarifa oficial indexada PVPC)
+            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
+            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
+            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
+
+            const p1PctPriceCost = totalCostPvpc > 0 ? (p1CostPrice / totalCostPvpc) * 100 : 0;
+            const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
+            const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
+
+            const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : 0;
+            const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : 0;
+            const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : 0;
+
+            const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
+            const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
+            const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
+
+            document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
+
+            document.getElementById('p2KwhPriceText').innerHTML = `${p2KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
+
+            document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
+
+            // --- TABLA COMPARATIVA GLOBAL (Energía + Potencia con Diferenciales) ---
+            const grandTotalPvpc = totalCostPvpc + totalPowerCostPvpc;
+            const grandTotalManual = totalCostManual + totalPowerCostManual;
+
+            const diffEnergy = totalCostPvpc - totalCostManual;
+            const diffEnergyPct = totalCostManual > 0 ? (diffEnergy / totalCostManual) * 100 : 0;
+            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%) ${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+
+            const diffPower = totalPowerCostPvpc - totalPowerCostManual;
+            const diffPowerPct = totalPowerCostManual > 0 ? (diffPower / totalPowerCostManual) * 100 : 0;
+            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%) ${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffPowerClass = diffPower < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+
+            const diffTotal = grandTotalPvpc - grandTotalManual;
+            const diffTotalPct = grandTotalManual > 0 ? (diffTotal / grandTotalManual) * 100 : 0;
+            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700 font-bold text-sm' : 'text-rose-700 font-bold text-sm';
+
+            const isPvpcCheaper = diffTotal < 0;
+            const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
+            const bannerText = isPvpcCheaper 
+                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
+                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
+
+            let comparisonHtml = `
+                <div class="w-full">
+                    <div class="border-b pb-2 mb-3">
+                        <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
+                        <p class="text-[11px] text-gray-500">Desglose integral separando término de consumo de energía y costes de potencia contratada.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b text-gray-400 uppercase text-[9px] tracking-wider font-semibold">
+                                    <th class="py-2">Concepto Facturado</th>
+                                    <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
+                                    <th class="py-2 text-right">Tarifa Manual (Tramos)</th>
+                                    <th class="py-2 text-right">Diferencia / Desviación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Energía (Consumo de Red)</td>
+                                    <td class="py-2.5 text-right font-mono">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono ${diffEnergyClass}">${diffEnergyText}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Potencia (Coste Fijo del Período)</td>
+                                    <td class="py-2.5 text-right font-mono">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono ${diffPowerClass}">${diffPowerText}</td>
+                                </tr>
+                                <tr class="bg-gray-50 font-bold border-t border-gray-300">
+                                    <td class="py-3 text-gray-900 uppercase">Total Facturado Estimado</td>
+                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-3 text-right font-mono ${diffTotalClass}">${diffTotalText}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
+                        ${bannerText}
+                    </div>
+                </div>
+            `;
+            document.getElementById('comparisonBox').innerHTML = comparisonHtml;
+
+            // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
+            const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
+            const startVal = filterStartDate.value;
+            const endVal = filterEndDate.value;
+            const calendarSource = window.allAvailableDays || dailyStats;
+
+            const monthsMap = {};
+            Object.keys(calendarSource).forEach(dateStr => {
+                const yyyymm = dateStr.substring(0, 7); 
+                if (!monthsMap[yyyymm]) {
+                    monthsMap[yyyymm] = [];
+                }
+                monthsMap[yyyymm].push(dateStr);
+            });
+
+            let calendarHtml = "";
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+            Object.keys(monthsMap).sort().forEach(yyyymm => {
+                const [year, monthNum] = yyyymm.split('-').map(Number);
+                const firstDayDate = new Date(year, monthNum - 1, 1);
+                
+                let firstDayOfWeek = firstDayDate.getDay();
+                const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+                let monthHtml = `
+                    <div class="border border-gray-300 rounded-xl p-4 bg-gray-100 shadow-md">
+                        <h4 class="text-sm font-extrabold text-blue-900 mb-3 text-center uppercase tracking-wide">
+                            ${monthNames[monthNum - 1]} ${year}
+                        </h4>
+                        <div class="grid grid-cols-7 gap-1 text-center font-black text-[10px] text-gray-700 mb-2 border-b border-gray-300 pb-1.5">
+                            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-2">
+                `;
+
+                for (let i = 0; i < offset; i++) {
+                    monthHtml += `<div class="bg-gray-200/40 rounded-lg border border-dashed border-gray-300 min-h-[68px]"></div>`;
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayStr = String(day).padStart(2, '0');
+                    const dateKey = `${yyyymm}-${dayStr}`;
+                    const dayData = calendarSource[dateKey];
+
+                    const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
+                    
+                    let isSelected = false;
+                    if (hasCustomCalendar) {
+                        isSelected = window.calendarSelectedDates.has(dateKey);
+                    } else if (startVal || endVal) {
+                        isSelected = (startVal && dateKey === startVal) || (endVal && dateKey === endVal) || (startVal && endVal && dateKey >= startVal && dateKey <= endVal);
+                    } else {
+                        isSelected = true; 
+                    }
+
+                    const selectHighlightClass = isSelected 
+                        ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
+                        : "opacity-35 hover:opacity-75 transition-opacity";
+
+                    if (dayData) {
+                        const isEvChargingDay = dayData.kwh >= dailyEvThreshold;
+                        
+                        let cellClass, dayLabelClass, kwhClass, costClass;
+
+                        if (isEvChargingDay) {
+                            cellClass = "bg-red-50 border-2 border-red-500 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:border-red-700 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-black text-red-600 leading-none";
+                            kwhClass = "text-[10px] font-black text-red-700 leading-tight";
+                            costClass = "text-[9px] font-black text-red-800 leading-tight mt-0.5";
+                        } else {
+                            cellClass = "bg-white border border-gray-400 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-600 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-bold text-gray-700 leading-none";
+                            kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
+                            costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
+                        }
+
+                        monthHtml += `
+                            <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
+                                <span class="${dayLabelClass}">${day}</span>
+                                <div class="text-right mt-1.5">
+                                    <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
+                                    <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        monthHtml += `
+                            <div class="bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
+                                <span class="text-xs font-semibold text-gray-400 leading-none">${day}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                monthHtml += `
+                        </div>
+                    </div>
+                `;
+                calendarHtml += monthHtml;
+            });
+
+            calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs font-semibold">No hay lecturas disponibles para construir el calendario.</p>`;
+
+            // Renderizar gráficos
+            renderDailyChart(dailyStats);
+            renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
+            renderHourlyChart(hourlyStats);
+
+            resultsSection.classList.remove('hidden');
+        }
+
+        function renderDailyChart(stats) {
+            const canvas = document.getElementById('chartDaily');
+            if (!canvas) return;
+
+            const sortedDates = Object.keys(stats).sort();
+            const kwhData = sortedDates.map(d => stats[d].kwh);
+            const costData = sortedDates.map(d => stats[d].cost);
+
+            const numDays = sortedDates.length || 1;
+            const totalKwh = kwhData.reduce((a, b) => a + b, 0);
+            const totalCost = costData.reduce((a, b) => a + b, 0);
+            const avgDailyKwh = totalKwh / numDays;
+            const avgDailyCost = totalCost / numDays;
+
+            const dailyThreshold = parseFloat(dailyEvThresholdInput.value) || 9999;
+
+            const pointBackgroundColors = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)'
+            );
+            const pointBorderColors = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 'rgba(153, 27, 27, 1)' : 'rgba(59, 130, 246, 1)'
+            );
+            const pointRadii = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 6 : 3
+            );
+
+            if (window.chartInstance2) {
+                window.chartInstance2.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.chartInstance2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [
+                        {
+                            label: 'Consumo (kWh)',
+                            data: kwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y',
+                            pointBackgroundColor: pointBackgroundColors,
+                            pointBorderColor: pointBorderColors,
+                            pointRadius: pointRadii,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Importe (€)',
+                            data: costData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'Consumo Diario Medio (kWh)',
+                            data: Array(sortedDates.length).fill(avgDailyKwh),
+                            type: 'line',
+                            borderColor: 'rgba(59, 130, 246, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Importe Diario Medio (€)',
+                            data: Array(sortedDates.length).fill(avgDailyCost),
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDayOfWeekChart(stats, counts) {
+            const canvas = document.getElementById('chartDayOfWeek');
+            if (!canvas) return;
+
+            const safeCounts = counts || {};
+            const order = [1, 2, 3, 4, 5, 6, 0]; 
+            const labels = order.map(i => stats[i].label);
+            
+            const kwhDataMedia = order.map(i => {
+                const count = safeCounts[i] || 1;
+                return stats[i].kwh / count;
+            });
+            const costDataMedia = order.map(i => {
+                const count = safeCounts[i] || 1;
+                return stats[i].cost / count;
+            });
+
+            const kwhDataAcumulado = order.map(i => stats[i].kwh);
+            const costDataAcumulado = order.map(i => stats[i].cost);
+
+            if (window.chartInstance1) {
+                window.chartInstance1.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.chartInstance1 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo Medio (kWh)',
+                            data: kwhDataMedia,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            hidden: false 
+                        },
+                        {
+                            label: 'Importe Medio (€)',
+                            data: costDataMedia,
+                            type: 'line',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1',
+                            hidden: false 
+                        },
+                        {
+                            label: 'Consumo Acumulado (kWh)',
+                            data: kwhDataAcumulado,
+                            backgroundColor: 'rgba(147, 51, 234, 0.35)', 
+                            borderColor: 'rgba(147, 51, 234, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            hidden: true 
+                        },
+                        {
+                            label: 'Importe Acumulado (€)',
+                            data: costDataAcumulado,
+                            type: 'line',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)', 
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5], 
+                            fill: false,
+                            yAxisID: 'y1',
+                            hidden: true 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHourlyChart(stats) {
+            const canvas = document.getElementById('chartHourly');
+            if (!canvas) return;
+
+            const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
+            const totalKwhData = stats.map(s => s.totalKwh);
+            const totalCostData = stats.map(s => s.totalCost);
+            const avgKwhData = stats.map(s => s.count > 0 ? (s.totalKwh / s.count) : 0);
+            const avgPriceData = stats.map(s => s.count > 0 ? (s.totalPrice / s.count) : 0);
+
+            const totalKwh = stats.reduce((sum, s) => sum + s.totalKwh, 0);
+            const totalCost = stats.reduce((sum, s) => sum + s.totalCost, 0);
+            const totalCount = stats.reduce((sum, s) => sum + s.count, 0);
+
+            const avgHourlyKwh = totalCount > 0 ? (totalKwh / totalCount) : 0;
+            const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
+
+            if (window.chartInstance3) {
+                window.chartInstance3.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.chartInstance3 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo Acumulado (kWh)',
+                            data: totalKwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                            borderColor: 'rgba(59, 130, 246, 0.7)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            order: 6
+                        },
+                        {
+                            label: 'Consumo Medio (kWh)',
+                            data: avgKwhData,
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y',
+                            order: 4
+                        },
+                        {
+                            label: 'Importe Acumulado (€)',
+                            data: totalCostData,
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 0.8)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            order: 3
+                        },
+                        {
+                            label: 'Precio Medio (€/kWh)',
+                            data: avgPriceData,
+                            type: 'line',
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 1
+                        },
+                        {
+                            label: 'Media Consumo Horario (kWh)',
+                            data: Array(24).fill(avgHourlyKwh),
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y',
+                            order: 5
+                        },
+                        {
+                            label: 'Precio Medio Periodo (€/kWh)',
+                            data: Array(24).fill(avgPeriodPrice),
+                            type: 'line',
+                            borderColor: 'rgba(245, 158, 11, 0.6)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Importe Acumulado (€)' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y2: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Precio Medio (€/kWh)' },
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(3) + ' €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
         function saveConfig() {
             const config = {
                 rateMode: document.getElementById('rateMode').value,
