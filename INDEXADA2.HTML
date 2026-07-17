@@ -1,31 +1,3 @@
-El error The operation is insecure (una excepción SecurityError del navegador)
-se produce habitualmente por políticas de seguridad estrictas del propio
-navegador en el lado del cliente. Esto ocurre cuando un script intenta acceder a
-elementos de almacenamiento (sessionStorage, localStorage o document.cookie)
-bajo ciertas condiciones restrictivas, como por ejemplo:
-
-1.  Estar dentro de un iframe (marco) de otro origen: El portal privado de
-    Datadis a menudo carga ciertos elementos o procesos de autenticación dentro
-    de subdominios o iframes gestionados por terceros. Si el navegador detecta
-    un intento de lectura de almacenamiento cruzado entre marcos, interrumpe el
-    script inmediatamente por seguridad con ese mensaje de error.
-2.  Restricciones de cookies/almacenamiento de terceros: Configuraciones
-    estrictas en el navegador (como el bloqueo de cookies de terceros o el modo
-    de navegación privada estricto) impiden que los scripts lean las propiedades
-    de almacenamiento global.
-
-Solución aplicada en el código corregido:
-
-Se ha reestructurado el script del marcador encapsulando cada intento de acceso
-a almacenamiento (sessionStorage, localStorage y cookies) de manera individual
-dentro de bloques try...catch. De este modo, si el navegador bloquea la lectura
-de una propiedad de seguridad concreta (provocando el SecurityError), el script
-no se interrumpe; simplemente omite ese origen bloqueado y continúa buscando el
-token de acceso en los demás almacenes o en los marcos (frames) del mismo
-origen.
-
-Aquí tienes el código completo corregido listo para su uso:
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
