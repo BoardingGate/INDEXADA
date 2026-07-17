@@ -672,7 +672,7 @@
         }
 
         // --- Descarga directa desde Datadis vía proxy propio ---
-        const DATADIS_PROXY_URL = 'https://datadis-proxy.simbioticsystem.workers.dev/';
+        const DATADIS_PROXY_URL = 'https://boardinggate.vercel.app/api/datadis-proxy';
 
         function toDatadisDate(isoDate) {
             // Convierte YYYY-MM-DD (input date) a YYYY/MM/DD (formato Datadis)
@@ -746,6 +746,16 @@
         }
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
+
+        // Por defecto, proponer los últimos 30 días
+        (function initDatadisDefaultDates() {
+            const toIso = (d) => d.toISOString().split('T')[0];
+            const hoy = new Date();
+            const hace30 = new Date();
+            hace30.setDate(hoy.getDate() - 30);
+            document.getElementById('datadisEnd').value = toIso(hoy);
+            document.getElementById('datadisStart').value = toIso(hace30);
+        })();
 
         function handleFiles(files) {
             const file = files[0];
