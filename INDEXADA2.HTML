@@ -67,7 +67,7 @@
                 <div>
                     <h3 class="text-md font-bold text-blue-700">Importación rápida desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
-                        Descarga los consumos del último mes sin configurar servidores ni realizar procesos complejos.
+                        Descarga los consumos del período que desees sin configurar servidores ni sufrir restricciones de CORS.
                     </p>
                 </div>
                 <!-- Botón de Registro Oficial -->
@@ -83,16 +83,16 @@
                     <li>
                         Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador (si no la visualizas, pulsa <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Ctrl+Mayús+B</kbd> o <kbd class="bg-white px-1.5 py-0.5 border rounded shadow-xs font-mono text-[10px]">Cmd+Shift+B</kbd> en Mac):
                         <div class="my-2">
-                            <!-- Código JavaScript Bookmarklet en una sola línea -->
-                            <a href="javascript:(async function(){try{let t=sessionStorage.getItem('token')||localStorage.getItem('token');if(!t){for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i);if(k.toLowerCase().includes('token')){const v=sessionStorage.getItem(k);if(v&&v.startsWith('eyJ')){t=v;break;}}}}if(!t){alert('Por favor, inicia sesión en Datadis.es primero.');return;}const f=new Date(),i=new Date();i.setDate(f.getDate()-30);const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;const fIni=fmt(i),fFin=fmt(f);const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('No se encontraron suministros (CUPS) en tu cuenta.');return;}const c=s[0].cups;alert('Conexión con Datadis establecida.\nDescargando consumos de los últimos 30 días para el CUPS:\n'+c);const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('No hay lecturas disponibles.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);}catch(e){alert('Error al extraer datos: '+e.message);}})();" 
+                            <!-- Código JavaScript Bookmarklet optimizado con rangos de fecha y detección robusta -->
+                            <a href="javascript:(async function(){try{let t='';for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}break;}}if(!t){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}break;}}}if(!t){const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),v=c.split('=')[1];if(v&&v.includes('eyJ')){t=v;break;}}}if(!t){alert('No se detectó sesión activa en Datadis. Asegúrate de estar dentro del portal privado (logueado) e intenta de nuevo.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;alert('Conectado a Datadis.\nDescargando consumos del '+fIni+' al '+fFin+' para el CUPS:\n'+c);const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas disponibles en el periodo seleccionado.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);}catch(e){alert('Error al extraer datos: '+e.message);}})();" 
                                class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-4 rounded text-xs select-none cursor-grab shadow-sm transition-colors">
                                 📥 Descargador Datadis
                             </a>
                         </div>
                     </li>
-                    <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión con tu usuario y contraseña.</li>
-                    <li>Una vez dentro del panel privado, haz clic en el marcador <strong>"Descargador Datadis"</strong> que guardaste en tu barra superior.</li>
-                    <li>Se descargará automáticamente en tu ordenador un archivo CSV con las lecturas. Arrástralo a la casilla **"Archivo CSV Distribuidora"** de esta aplicación para procesarlo.</li>
+                    <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión de forma habitual.</li>
+                    <li>Una vez dentro de tu área privada de usuario, haz clic en el marcador <strong>"Descargador Datadis"</strong> de tu barra superior.</li>
+                    <li>Sigue los mensajes para definir el periodo deseado. El archivo CSV resultante se descargará automáticamente; arrástralo a la casilla **"Archivo CSV Distribuidora"** de esta aplicación.</li>
                 </ol>
             </div>
         </div>
@@ -773,6 +773,45 @@
             }
         }
 
+        // --- FUNCIÓN GLOBAL PARA OBTENER PRECIOS OFICIALES PVPC DE REE ---
+        async function fetchPreciosPVPC(inicio, fin) {
+            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Servidor público de REE respondió con código: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const pvpcSeries = data.included.find(series => 
+                    series.type.toLowerCase().includes('pvpc') || 
+                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                );
+
+                if (!pvpcSeries) {
+                    throw new Error("No se localizó la serie PVPC en la base de datos de Red Eléctrica.");
+                }
+
+                const preciosMap = {};
+                pvpcSeries.attributes.values.forEach(v => {
+                    const dateObj = new Date(v.datetime);
+                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
+                    const localHour = dateObj.getHours();
+
+                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
+                    preciosMap[key] = v.value / 1000.0;
+                });
+
+                return preciosMap;
+
+            } catch (error) {
+                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
+                return null;
+            }
+        }
+
+        // --- GESTIÓN DE GRÁFICOS CON CHART.JS ---
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
@@ -845,7 +884,7 @@
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // 1. CLASIFICACIÓN POR HORARIO (Tarifa fija manual por tramos)
+                // 1. CLASIFICACIÓN POR HORARIO
                 let itemSlot = 'P3';
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
@@ -1701,6 +1740,16 @@
 
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
+            }
+        });
+
+        // Botón Recalcular centralizado
+        document.getElementById('recalculateBtn').addEventListener('click', () => {
+            saveConfig();
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            } else {
+                showStatus("No hay datos cargados para procesar. Suba un archivo CSV utilizando las instrucciones de Datadis o arrastrando un fichero.", "error");
             }
         });
 
