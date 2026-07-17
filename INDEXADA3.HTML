@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Consumo Eléctrico</title>
+    <!-- Tailwind CSS para diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse para procesar CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Cabecera -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
+            <p class="text-gray-600 mt-2">Analiza consumos, costes de potencia y energía importando lecturas de tu distribuidora o de Datadis.</p>
+        </header>
+
+        <!-- Panel de Configuración General -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">1. Tipo de Tarifa</label>
+                <select id="rateMode" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="pvpc">PVPC (Precios Oficiales de Red Eléctrica)</option>
+                    <option value="manual">Manual por Tramos</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">2. Umbral de Consumo (kWh)</label>
+                <input type="number" id="thresholdInput" step="0.1" value="1.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Filtrar horas que superen este valor.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">3. Restar por Vivienda (kWh)</label>
+                <input type="number" id="subtractInput" step="0.05" value="0.20" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Consumo de la casa a deducir en esas horas.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">4. Carga Diaria si kWh &ge;</label>
+                <input type="number" id="dailyEvThresholdInput" step="1.0" value="15.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Consumo mínimo en 1 día para marcar coche cargado.</p>
+            </div>
+            <div class="flex flex-col">
+                <label class="block text-sm font-medium text-gray-700 mb-2">5. Archivo CSV Distribuidora</label>
+                <!-- Zona Arrastrar y Soltar (Drag & Drop) -->
+                <div id="dropZone" class="border-2 border-dashed border-blue-300 rounded-lg p-3 text-center cursor-pointer hover:bg-blue-50 transition-colors flex flex-col justify-center items-center h-[42px] relative bg-gray-50">
+                    <input type="file" id="csvInput" accept=".csv" class="hidden">
+                    <div id="dropZonePrompt" class="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span class="font-semibold text-blue-600">Arrastra aquí tu CSV</span>
+                        <span>o haz clic</span>
+                    </div>
+                    <div id="fileSuccessText" class="hidden text-xs text-green-700 font-bold flex items-center gap-1 truncate max-w-full">
+                        <span>✅</span>
+                        <span id="fileNameSpan" class="truncate font-medium text-gray-600"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Importación Datadis (Bookmarklet y Consola) -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
+            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-md font-bold text-blue-700">Importación rápida desde Datadis.es</h3>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
+                    </p>
+                </div>
+                <!-- Botón de Registro Oficial -->
+                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                    <span>Regístrate en Datadis.es</span>
+                    <span class="text-[10px]">↗</span>
+                </a>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
+                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">Instrucciones de descarga (Sin restricciones de CORS):</h4>
+                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-2 leading-relaxed">
+                    <li>
+                        Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador:
+                        <div class="my-2">
+                            <!-- Código JavaScript Bookmarklet optimizado con feedback interactivo contra errores de seguridad -->
+                            <a href="javascript:(async function(){alert('🔄 Descargador Datadis iniciado...\nComprobando entorno de seguridad y sesión activa.');try{if(window.location.hostname!=='datadis.es'&&!window.location.hostname.endsWith('.datadis.es')){alert('⚠️ Error de Origen:\nDebes ejecutar este marcador estando dentro de la web oficial de Datadis (https://datadis.es).');return;}let t='';let keysChecked=[];try{for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);keysChecked.push('sessionStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('sessionStorage: BLOQUEADO/ERROR');}if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);keysChecked.push('localStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('localStorage: BLOQUEADO/ERROR');}}if(!t){try{const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];keysChecked.push('cookie: '+k);if(v&&v.includes('eyJ')){t=v;break;}}}catch(e){keysChecked.push('cookies: BLOQUEADO/ERROR');}}if(!t){alert('❌ No se encontró una sesión activa de Datadis.\n\nDiagnóstico de claves analizadas:\n'+keysChecked.slice(0,10).join('\n')+'\n\nSugerencia: Asegúrate de haber iniciado sesión y de estar viendo tus consumos en el portal privado, no en la web pública inicial.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('📅 Conectado con éxito.\nIntroduce fecha de inicio para la descarga (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('📅 Introduce fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;alert('⏳ Conectando con la base de datos de Datadis. Por favor, espera...');const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});if(!rS.ok){alert('❌ Error al consultar tus puntos de suministro (suministros): Código '+rS.status);return;}const s=await rS.json();if(!s.length){alert('❌ Suministros no encontrados en tu cuenta de Datadis.');return;}const c=s[0].cups;alert('✅ Suministro detectado: '+c+'\nDescargando curvas de consumo...');const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});if(!rC.ok){alert('❌ Error al descargar lecturas de consumo: Código '+rC.status);return;}const cons=await rC.json();if(!cons.length){alert('❌ No hay lecturas disponibles para el período indicado.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('🎉 ¡Descarga finalizada con éxito!\n\nSe ha guardado el archivo "consumo_datadis_'+c+'.csv" en tu carpeta de Descargas.\n\nAhora puedes arrastrar este archivo al Analizador.');}catch(e){alert('❌ Error inesperado al extraer datos: '+e.message);}})();" 
+                               class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-4 rounded text-xs select-none cursor-grab shadow-sm transition-colors">
+                                📥 Descargador Datadis
+                            </a>
+                        </div>
+                    </li>
+                    <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión de forma habitual.</li>
+                    <li>
+                        <strong>Si al pulsar el marcador verde de tu navegador no ocurre nada (bloqueo por directiva de seguridad CSP de Datadis):</strong>
+                        <p class="mt-1 font-medium text-gray-800">Copia el siguiente código en tu portapapeles, pulsa <kbd class="bg-white px-1 border rounded shadow-xs font-mono text-[10px]">F12</kbd> dentro de Datadis, pégalo en la pestaña de **"Consola"** y pulsa **Enter**:</p>
+                        <textarea readonly class="w-full mt-2 p-2 font-mono text-[10px] text-gray-700 bg-gray-100 rounded border border-gray-300 h-20 focus:outline-none" onclick="this.select();">javascript:(async function(){try{let t='';for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}if(!t){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}if(!t){const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];if(v&&v.includes('eyJ')){t=v;break;}}}if(!t){alert('Error: No se detecto sesión activa. Logueate de nuevo.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas en el periodo.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('Descarga exitosa.');}catch(e){alert('Error: '+e.message);}})();</textarea>
+                    </li>
+                    <li class="mt-2">Una vez descargado el archivo CSV, arrástralo a la zona **"Archivo CSV Distribuidora"** de esta aplicación.</li>
+                </ol>
+            </div>
+
+            <!-- Panel de Descarga Directa vía Proxy -->
+            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
+                <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Alternativa: Descarga directa (sin bookmarklet)</h4>
+                <p class="text-xs text-gray-600 mb-3">
+                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la API oficial a través de un proxy propio y carga los datos automáticamente. Tus credenciales solo se usan para esta petición, no se guardan en la app.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Usuario Datadis (NIF)</label>
+                        <input type="text" id="datadisUser" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input type="password" id="datadisPass" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">CUPS (opcional)</label>
+                        <input type="text" id="datadisCups" placeholder="Autodetectar" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicio</label>
+                        <input type="date" id="datadisStart" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha fin</label>
+                        <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <button id="datadisDirectBtn" type="button" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    ⬇️ Descargar y analizar directamente
+                </button>
+                <p id="datadisDirectStatus" class="text-xs mt-2"></p>
+            </div>
+        </div>
+
+        <!-- Panel de Configuración de Potencia Contratada -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
+            <div class="mb-4">
+                <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
+                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
+                    <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
+                    <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
+                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
+                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
+                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
+                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Filtros Temporales y Horarios -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
+                <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
+                    Limpiar Filtros
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio (YYYY-MM-DD)</label>
+                    <input type="date" id="filterStartDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Fin (YYYY-MM-DD)</label>
+                    <input type="date" id="filterEndDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (Opcional)</label>
+                    <select id="filterStartHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas las horas</option>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (Opcional)</label>
+                    <select id="filterEndHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Todas las horas</option>
+                        <option value="0">00:00</option>
+                        <option value="1">01:00</option>
+                        <option value="2">02:00</option>
+                        <option value="3">03:00</option>
+                        <option value="4">04:00</option>
+                        <option value="5">05:00</option>
+                        <option value="6">06:00</option>
+                        <option value="7">07:00</option>
+                        <option value="8">08:00</option>
+                        <option value="9">09:00</option>
+                        <option value="10">10:00</option>
+                        <option value="11">11:00</option>
+                        <option value="12">12:00</option>
+                        <option value="13">13:00</option>
+                        <option value="14">14:00</option>
+                        <option value="15">15:00</option>
+                        <option value="16">16:00</option>
+                        <option value="17">17:00</option>
+                        <option value="18">18:00</option>
+                        <option value="19">19:00</option>
+                        <option value="20">20:00</option>
+                        <option value="21">21:00</option>
+                        <option value="22">22:00</option>
+                        <option value="23">23:00</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración Específica de Tarifa Manual -->
+        <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
+            <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <!-- Tramo Punta -->
+                <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
+                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                    <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                    <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
+                </div>
+
+                <!-- Tramo Llano -->
+                <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
+                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                    <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                    <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
+                </div>
+
+                <!-- Tramo Valle -->
+                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
+                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                    <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                    <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t">
+                <div>
+                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mt-2">
+                        <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
+                        <span>Fines de semana completos a precio VALLE</span>
+                    </label>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Fechas festivas adicionales (YYYY-MM-DD separadas por comas):</label>
+                    <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="2024-01-01,2024-01-06,2024-05-01,2024-08-15,2024-10-12,2024-11-01,2024-12-06,2024-12-08,2024-12-25">
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón Recalcular centralizado -->
+        <div class="flex justify-center mb-8">
+            <button id="recalculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Recalcular Datos
+            </button>
+        </div>
+
+        <!-- Mensajes de Estado -->
+        <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center"></div>
+
+        <!-- Resultados -->
+        <div id="resultsSection" class="hidden">
+
+            <!-- Métricas Globales (7 indicadores) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-blue-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Total</h3>
+                    <p id="totalKwh" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-green-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Coste Total</h3>
+                    <p id="totalCost" class="text-lg font-bold text-gray-900 mt-2">0.00 €</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-purple-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Nº de Días</h3>
+                    <p id="totalDays" class="text-lg font-bold text-gray-900 mt-2">0 días</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
+                    <p id="avgDailyKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-pink-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Precio Medio kWh</h3>
+                    <p id="avgPriceKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00000 €</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-red-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Pico Máx. Horario</h3>
+                    <p id="maxPeakHourlyText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-indigo-500">
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Potencia P1 / P2</h3>
+                    <p id="requiredPowerText" class="text-xs font-semibold text-gray-950 mt-2">P1: 0.00 kW<br>P2: 0.00 kW</p>
+                </div>
+            </div>
+
+            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
+            <div class="space-y-6 mb-8">
+
+                <!-- PANEL: Patrón de Consumo (Doble Clasificación con Comparación) -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
+                            <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 1. Clasificación por Tramos Horarios -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario (Tarifa Fija por Tramos introducida por el usuario)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- P1 Punta -->
+                                <div class="p-3 bg-red-50/50 rounded-xl border border-red-100 flex flex-col justify-between shadow-xs">
+                                    <span class="font-bold text-red-800 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-500">Consumo:</span>
+                                            <span id="p1KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-red-100 pt-1 font-semibold flex-col">
+                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
+                                            <span id="p1CostTimeText" class="text-red-700">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- P2 Llano -->
+                                <div class="p-3 bg-yellow-50/50 rounded-xl border border-yellow-100 flex flex-col justify-between shadow-xs">
+                                    <span class="font-bold text-yellow-800 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-500">Consumo:</span>
+                                            <span id="p2KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-yellow-100 pt-1 font-semibold flex-col">
+                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
+                                            <span id="p2CostTimeText" class="text-yellow-700">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- P3 Valle -->
+                                <div class="p-3 bg-green-50/50 rounded-xl border border-green-100 flex flex-col justify-between shadow-xs">
+                                    <span class="font-bold text-green-800 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-500">Consumo:</span>
+                                            <span id="p3KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-green-100 pt-1 font-semibold flex-col">
+                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
+                                            <span id="p3CostTimeText" class="text-green-700">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Clasificación por Coste Real -->
+                        <div class="pt-4 border-t border-gray-100">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
+                                
+                                <!-- Ajuste de Umbrales de Precio para PVPC / Indexado -->
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                    <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
+                                    <div>
+                                        <label class="font-medium mr-1 text-red-700">Caro (P1) si &ge;</label>
+                                        <input type="number" id="pvpcHighThreshold" step="0.005" value="0.150" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
+                                    </div>
+                                    <div>
+                                        <label class="font-medium mr-1 text-green-700">Barato (P3) si &le;</label>
+                                        <input type="number" id="pvpcLowThreshold" step="0.005" value="0.080" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- P1 Alto -->
+                                <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-col justify-between shadow-xs">
+                                    <span class="font-bold text-rose-800 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-500">Consumo:</span>
+                                            <span id="p1KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-rose-200 pt-1 font-semibold flex-col">
+                                            <span class="text-gray-500">Coste PVPC:</span>
+                                            <span id="p1CostPriceText" class="text-rose-700">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- P2 Medio -->
+                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100 flex flex-col justify-between shadow-xs">
+                                    <span class="font-bold text-amber-800 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-500">Consumo:</span>
+                                            <span id="p2KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-amber-100 pt-1 font-semibold flex-col">
+                                            <span class="text-gray-500">Coste PVPC:</span>
+                                            <span id="p2CostPriceText" class="text-amber-700">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- P3 Bajo -->
+                                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col justify-between shadow-xs">
+                                    <span class="font-bold text-emerald-800 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-500">Consumo:</span>
+                                            <span id="p3KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-emerald-100 pt-1 font-semibold flex-col">
+                                            <span class="text-gray-500">Coste PVPC:</span>
+                                            <span id="p3CostPriceText" class="text-green-700">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Comparación Global de Sistemas de Facturación -->
+                        <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
+                            <div class="text-left">
+                                <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
+                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo descargado de tu distribuidora o de Datadis para ver el desglose económico.</p>
+                            </div>
+                            <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
+                                Sin datos
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANEL: Consumo Diario por Calendario -->
+                <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
+                        <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
+                        <p class="text-xs text-gray-500">Muestra los kWh totales e importes diarios de manera estructurada por mes.</p>
+                    </div>
+                    <div id="calendarGridContainer" class="space-y-8">
+                        <!-- Se generarán dinámicamente aquí los meses -->
+                    </div>
+                    <!-- Instrucciones de selección al pie del calendario -->
+                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
+                        <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
+                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros"</strong>.</p>
+                    </div>
+                </div>
+
+                <!-- 1. Evolución Cronológica Diaria -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
+                    <div class="relative h-80">
+                        <canvas id="chartDaily"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. Acumulado por Día de la Semana -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
+                    <div class="relative h-80">
+                        <canvas id="chartDayOfWeek"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3. Perfil Horario de 24 horas -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
+                    <div class="relative h-96">
+                        <canvas id="chartHourly"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas Filtradas -->
+            <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-4">Análisis de horas que superan el umbral</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div>
+                        <span class="text-gray-600 text-sm block">Horas afectadas:</span>
+                        <span id="filteredHours" class="text-2xl font-bold text-yellow-900 font-mono">0 h</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600 text-sm block">Subtotal Consumo (Vehículo):</span>
+                        <span id="filteredKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
+                        <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600 text-sm block">Consumo Medio (Vehículo):</span>
+                        <span id="filteredAvgKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600 text-sm block">Precio Medio (Vehículo):</span>
+                        <span id="filteredAvgPrice" class="text-2xl font-bold text-yellow-900 font-mono">0.00000 €/kWh</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Detalles -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-semibold">Detalle de las horas que superan el umbral</h3>
+                </div>
+                <div class="overflow-x-auto max-h-96">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-sm uppercase">
+                                <th class="p-4 border-b">Fecha</th>
+                                <th class="p-4 border-b">Hora</th>
+                                <th class="p-4 border-b text-right">Consumo Neto Vehículo (kWh)</th>
+                                <th class="p-4 border-b text-right">Precio Aplicado (€/kWh)</th>
+                                <th class="p-4 border-b text-right">Coste Vehículo (€)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="text-sm divide-y">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Referidos (Pie de Página) -->
+        <footer class="mt-16 border-t border-gray-200 pt-8 pb-4 text-center">
+            <div class="bg-gradient-to-r from-purple-950 to-indigo-950 text-white p-6 rounded-2xl shadow-lg max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="text-left md:max-w-xl">
+                    <h4 class="text-lg font-bold flex items-center gap-2">
+                        <span>¿Quieres ahorrar aún más en tu factura de la luz?</span> 🐙
+                    </h4>
+                    <p class="text-xs text-purple-200 mt-1.5 leading-relaxed">
+                        Si contratas tu tarifa de luz con <span class="font-semibold text-pink-400">Octopus Energy</span> usando nuestro enlace oficial de referidos, te llevarás <span class="font-bold text-white bg-pink-500 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">50 € de regalo</span> directos como saldo de descuento para tus próximas facturas.
+                    </p>
+                </div>
+                <div class="w-full md:w-auto">
+                    <a href="https://share.octopusenergy.es/topaz-boar-888" target="_blank" rel="noopener noreferrer" class="inline-block w-full md:w-auto bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl text-xs transition-all shadow-md hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                        Conseguir 50€ Gratis (consulte el importe exacto en la web)
+                    </a>
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-8">Analizador de Consumo Eléctrico • Proyecto libre y de código abierto</p>
+        </footer>
+    </div>
+
+    <script>
+        // Variables globales de datos y referencias de gráficos
+        window.rawCsvData = null;
+        window.chartInstance1 = null;
+        window.chartInstance2 = null;
+        window.chartInstance3 = null;
+        window.calendarSelectedDates = new Set();
+
+        const STORAGE_KEY = 'analizador_consumo_config';
+
+        // Elementos del DOM
+        const rateMode = document.getElementById('rateMode');
+        const manualConfig = document.getElementById('manualConfig');
+        
+        const thresholdInput = document.getElementById('thresholdInput');
+        const subtractInput = document.getElementById('subtractInput');
+        const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');
+        
+        // Elementos del Drag & Drop
+        const dropZone = document.getElementById('dropZone');
+        const csvInput = document.getElementById('csvInput');
+        const dropZonePrompt = document.getElementById('dropZonePrompt');
+        const fileSuccessText = document.getElementById('fileSuccessText');
+        const fileNameSpan = document.getElementById('fileNameSpan');
+
+        const statusMessage = document.getElementById('statusMessage');
+        const resultsSection = document.getElementById('resultsSection');
+        const recalculateBtn = document.getElementById('recalculateBtn');
+
+        const filterStartDate = document.getElementById('filterStartDate');
+        const filterEndDate = document.getElementById('filterEndDate');
+        const filterStartHour = document.getElementById('filterStartHour');
+        const filterEndHour = document.getElementById('filterEndHour');
+        
+        const totalKwhEl = document.getElementById('totalKwh');
+        const totalCostEl = document.getElementById('totalCost');
+        const filteredHoursEl = document.getElementById('filteredHours');
+        const filteredKwhEl = document.getElementById('filteredKwh');
+        const filteredCostEl = document.getElementById('filteredCost');
+        const filteredAvgKwhEl = document.getElementById('filteredAvgKwh');
+        const filteredAvgPriceEl = document.getElementById('filteredAvgPrice');
+        const tableBody = document.getElementById('tableBody');
+
+        const totalDaysEl = document.getElementById('totalDays');
+        const avgDailyKwhTextEl = document.getElementById('avgDailyKwhText');
+        const avgPriceKwhTextEl = document.getElementById('avgPriceKwhText');
+        const maxPeakHourlyTextEl = document.getElementById('maxPeakHourlyText');
+        const requiredPowerTextEl = document.getElementById('requiredPowerText');
+        const calendarGridContainer = document.getElementById('calendarGridContainer');
+
+        // --- GESTIÓN DE ARRASTRAR Y SOLTAR (DRAG & DROP) ---
+        dropZone.addEventListener('click', () => csvInput.click());
+
+        csvInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('bg-blue-100', 'border-blue-500');
+        });
+
+        ['dragleave', 'dragend'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('bg-blue-100', 'border-blue-500');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-blue-100', 'border-blue-500');
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function showStatus(text, type = 'info') {
+            statusMessage.textContent = text;
+            statusMessage.className = `p-4 rounded-lg mb-8 text-center block ${
+                type === 'error' ? 'bg-red-100 text-red-800' : 
+                type === 'success' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+            }`;
+        }
+
+        // --- Descarga directa desde Datadis vía proxy propio ---
+        const DATADIS_PROXY_URL = 'https://datadis-proxy.simbioticsystem.workers.dev/';
+
+        function toDatadisDate(isoDate) {
+            // Convierte YYYY-MM-DD (input date) a YYYY/MM/DD (formato Datadis)
+            return isoDate.replaceAll('-', '/');
+        }
+
+        async function descargarDesdeDatadis() {
+            const statusEl = document.getElementById('datadisDirectStatus');
+            const username = document.getElementById('datadisUser').value.trim();
+            const password = document.getElementById('datadisPass').value;
+            const cups = document.getElementById('datadisCups').value.trim();
+            const startDate = document.getElementById('datadisStart').value;
+            const endDate = document.getElementById('datadisEnd').value;
+
+            if (!username || !password || !startDate || !endDate) {
+                statusEl.textContent = '⚠️ Rellena usuario, contraseña y ambas fechas.';
+                statusEl.className = 'text-xs mt-2 text-red-600';
+                return;
+            }
+
+            statusEl.textContent = '⏳ Conectando con Datadis...';
+            statusEl.className = 'text-xs mt-2 text-gray-600';
+
+            try {
+                const resp = await fetch(DATADIS_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        cups: cups || undefined,
+                        startDate: toDatadisDate(startDate),
+                        endDate: toDatadisDate(endDate),
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || data.error) {
+                    statusEl.textContent = '❌ ' + (data.error || `Error del proxy (código ${resp.status}).`);
+                    statusEl.className = 'text-xs mt-2 text-red-600';
+                    return;
+                }
+
+                let csv = 'Fecha,Hora,Consumo (kWh)\n';
+                data.consumptionData.forEach((x) => {
+                    csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKwh}\n`;
+                });
+
+                Papa.parse(csv, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        window.rawCsvData = results.data;
+                        processData(window.rawCsvData);
+                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas del CUPS ${data.cups}.`;
+                        statusEl.className = 'text-xs mt-2 text-emerald-700';
+                        dropZonePrompt.classList.add('hidden');
+                        fileSuccessText.classList.remove('hidden');
+                        fileNameSpan.textContent = `Datadis API (CUPS ${data.cups})`;
+                    },
+                    error: (err) => {
+                        statusEl.textContent = '❌ Error al procesar los datos recibidos: ' + err.message;
+                        statusEl.className = 'text-xs mt-2 text-red-600';
+                    },
+                });
+            } catch (err) {
+                statusEl.textContent = '❌ Error de conexión con el proxy: ' + err.message;
+                statusEl.className = 'text-xs mt-2 text-red-600';
+            }
+        }
+
+        document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file) return;
+
+            // Cambiar visualmente el dropzone para confirmar carga
+            dropZonePrompt.classList.add('hidden');
+            fileSuccessText.classList.remove('hidden');
+            fileNameSpan.textContent = file.name;
+            dropZone.classList.add('border-green-400', 'bg-green-50');
+            dropZone.classList.remove('border-blue-300', 'bg-gray-50');
+
+            showStatus("Archivo cargado. Procesando e interpretando lecturas...", "info");
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    window.rawCsvData = results.data;
+                    processData(window.rawCsvData);
+                },
+                error: function(err) {
+                    showStatus("Error al estructurar el archivo CSV: " + err.message, "error");
+                }
+            });
+        }
+
+        async function processData(parsedRows) {
+            const mode = rateMode.value;
+
+            try {
+                const firstRow = parsedRows[0];
+                const colFecha = Object.keys(firstRow).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
+                const colHora = Object.keys(firstRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
+                const colConsumo = Object.keys(firstRow).find(k => k.toLowerCase().includes('consum') || k.toLowerCase().includes('val') || k.toLowerCase().includes('activa'));
+
+                if (!colFecha || !colHora || !colConsumo) {
+                    showStatus("Columnas no identificadas. Asegúrese de que el CSV contenga campos de Fecha, Hora y Consumo.", "error");
+                    return;
+                }
+       
+                // 1. Estructurar y sanitizar todos los datos
+                let cleanData = parsedRows.map(row => {
+                    let rawDate = row[colFecha];
+                    if (!rawDate) return null;
+
+                    rawDate = rawDate.trim().split(' ')[0];
+
+                    let parts = rawDate.split(/[-/]/);
+                    let formattedDate = rawDate;
+                    if (parts.length === 3) {
+                        if (parts[2].length === 4) {
+                            formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        } else if (parts[0].length === 4) {
+                            formattedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                        }
+                    }
+
+                    let hora = parseInt(row[colHora], 10);
+                    if (isNaN(hora)) return null;
+                    if (hora === 24) hora = 0; 
+
+                    let consumoRaw = row[colConsumo] ? String(row[colConsumo]).replace(',', '.') : '0';
+                    let consumo = parseFloat(consumoRaw);
+                    if (isNaN(consumo)) return null;
+
+                    return {
+                        fechaStr: formattedDate,
+                        hora: hora,
+                        consumo: consumo
+                    };
+                }).filter(item => item !== null);
+
+                if (cleanData.length === 0) {
+                    showStatus("No se encontraron registros válidos en el archivo.", "error");
+                    return;
+                }
+
+                // Descargar precios oficiales PVPC de REE
+                const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
+                const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
+                const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
+
+                showStatus("Conectando con la base de Datos Públicos oficiales de Red Eléctrica de España...", "info");
+                const preciosMap = await fetchPreciosPVPC(fechaInicio, fechaFin);
+
+                // Leer parámetros de la tarifa manual de tramos
+                const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+                const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+                const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+                const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
+                const useWeekendValle = document.getElementById('weekendValle').checked;
+                const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
+
+                // 2. Calcular los costes simulados
+                const pricedData = cleanData.map(item => {
+                    const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
+                    const precioPvpc = preciosMap ? (preciosMap[key] || 0) : 0;
+                    const costePvpc = item.consumo * precioPvpc;
+
+                    let precioManual = priceValle;
+                    const dateParts = item.fechaStr.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayOfWeek = dateObj.getDay(); 
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isHoliday = holidays.includes(item.fechaStr);
+
+                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                        precioManual = priceValle;
+                    } else {
+                        if (hoursPunta.includes(item.hora)) {
+                            precioManual = pricePunta;
+                        } else if (hoursLlano.includes(item.hora)) {
+                            precioManual = priceLlano;
+                        } else {
+                            precioManual = priceValle;
+                        }
+                    }
+                    const costeManual = item.consumo * precioManual;
+
+                    const precioActivo = (mode === 'pvpc') ? precioPvpc : precioManual;
+                    const costeActivo = (mode === 'pvpc') ? costePvpc : costeManual;
+
+                    return {
+                        ...item,
+                        precioPvpc: precioPvpc,
+                        costePvpc: costePvpc,
+                        precioManual: precioManual,
+                        costeManual: costeManual,
+                        precio: precioActivo,
+                        coste: costeActivo
+                    };
+                });
+
+                // 3. Construcción del mapa de días del calendario
+                window.allAvailableDays = {};
+                pricedData.forEach(item => {
+                    if (!window.allAvailableDays[item.fechaStr]) {
+                        window.allAvailableDays[item.fechaStr] = { kwh: 0, cost: 0 };
+                    }
+                    window.allAvailableDays[item.fechaStr].kwh += item.consumo;
+                    window.allAvailableDays[item.fechaStr].cost += item.coste;
+                });
+
+                // 4. Aplicar filtros
+                const startDateVal = filterStartDate.value;
+                const endDateVal = filterEndDate.value;
+                const startHourVal = filterStartHour.value;
+                const endHourVal = filterEndHour.value;
+
+                let filteredData = pricedData.filter(item => {
+                    const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
+                    
+                    if (hasCustomCalendar) {
+                        if (!window.calendarSelectedDates.has(item.fechaStr)) return false;
+                    } else {
+                        if (startDateVal && item.fechaStr < startDateVal) return false;
+                        if (endDateVal && item.fechaStr > endDateVal) return false;
+                    }
+
+                    // Filtrado Opcional por Rango Horario
+                    if (startHourVal !== "" && endHourVal !== "") {
+                        const startH = parseInt(startHourVal, 10);
+                        const endH = parseInt(endHourVal, 10);
+                        if (startH <= endH) {
+                            if (item.hora < startH || item.hora > endH) return false;
+                        } else {
+                            // Rango que cruza la medianoche (Ej: De 22:00 a 06:00)
+                            if (item.hora < startH && item.hora > endH) return false;
+                        }
+                    } else if (startHourVal !== "") {
+                        if (item.hora < parseInt(startHourVal, 10)) return false;
+                    } else if (endHourVal !== "") {
+                        if (item.hora > parseInt(endHourVal, 10)) return false;
+                    }
+                    
+                    return true;
+                });
+
+                if (filteredData.length === 0) {
+                    showStatus("Ningún registro coincide con los filtros temporales especificados.", "error");
+                    return;
+                }
+
+                showStatus("Procesamiento finalizado.", "success");
+                renderResultsAndCharts(filteredData);
+
+            } catch (err) {
+                showStatus("Error al procesar: " + err.message, "error");
+                console.error(err);
+            }
+        }
+
+        // --- FUNCIÓN GLOBAL PARA OBTENER PRECIOS OFICIALES PVPC DE REE ---
+        async function fetchPreciosPVPC(inicio, fin) {
+            const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${inicio}T00:00&end_date=${fin}T23:59&time_trunc=hour`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Servidor público de REE respondió con código: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const pvpcSeries = data.included.find(series => 
+                    series.type.toLowerCase().includes('pvpc') || 
+                    (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                );
+
+                if (!pvpcSeries) {
+                    throw new Error("No se localizó la serie PVPC en la base de datos de Red Eléctrica.");
+                }
+
+                const preciosMap = {};
+                pvpcSeries.attributes.values.forEach(v => {
+                    const dateObj = new Date(v.datetime);
+                    const localDateStr = dateObj.toLocaleDateString('sv-SE'); 
+                    const localHour = dateObj.getHours();
+
+                    const key = `${localDateStr}_T${String(localHour).padStart(2, '0')}`;
+                    preciosMap[key] = v.value / 1000.0;
+                });
+
+                return preciosMap;
+
+            } catch (error) {
+                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
+                return null;
+            }
+        }
+
+        // --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
+        function renderResultsAndCharts(data) {
+            const threshold = parseFloat(thresholdInput.value) || 0;
+            const subtractVal = parseFloat(subtractInput.value) || 0;
+            const mode = rateMode.value;
+
+            let totalKwh = 0;
+            let totalCost = 0;
+            let filteredKwh = 0;
+            let filteredCost = 0;
+            let filteredHoursCount = 0;
+
+            let maxPeakHourly = 0;
+            let maxPeakP1 = 0;
+            let maxPeakP2 = 0;
+            let totalKwhP1 = 0;
+            let countP1 = 0;
+            let totalKwhP2 = 0;
+            let countP2 = 0;
+
+            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   
+            let p1CostTime = 0, p2CostTime = 0, p3CostTime = 0; 
+
+            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; 
+            let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; 
+
+            let totalCostPvpc = 0;
+            let totalCostManual = 0;
+
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            tableBody.innerHTML = "";
+            let tableRowsHtml = "";
+
+            const dayOfWeekStats = {
+                1: { label: 'Lunes', kwh: 0, cost: 0 },
+                2: { label: 'Martes', kwh: 0, cost: 0 },
+                3: { label: 'Miércoles', kwh: 0, cost: 0 },
+                4: { label: 'Jueves', kwh: 0, cost: 0 },
+                5: { label: 'Viernes', kwh: 0, cost: 0 },
+                6: { label: 'Sábado', kwh: 0, cost: 0 },
+                0: { label: 'Domingo', kwh: 0, cost: 0 }
+            };
+
+            const dailyStats = {}; 
+
+            const hourlyStats = Array.from({ length: 24 }, (_, i) => ({
+                hour: i,
+                totalKwh: 0,
+                totalCost: 0,
+                totalPrice: 0,
+                count: 0
+            }));
+
+            // Bucle principal de datos
+            data.forEach(item => {
+                totalKwh += item.consumo;
+                totalCost += item.coste;
+                totalCostPvpc += item.costePvpc;
+                totalCostManual += item.costeManual;
+
+                const dateParts = item.fechaStr.split('-');
+                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dayOfWeek = dateObj.getDay(); 
+                dayOfWeekStats[dayOfWeek].kwh += item.consumo;
+                dayOfWeekStats[dayOfWeek].cost += item.coste;
+
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHoliday = holidaysList.includes(item.fechaStr);
+                const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
+                const isP1 = !isP2;
+
+                // 1. CLASIFICACIÓN POR HORARIO
+                let itemSlot = 'P3';
+                const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                const useWeekendValle = document.getElementById('weekendValle').checked;
+
+                if ((isWeekend && useWeekendValle) || isHoliday) {
+                    itemSlot = 'P3';
+                } else if (hoursPunta.includes(item.hora)) {
+                    itemSlot = 'P1';
+                } else if (hoursLlano.includes(item.hora)) {
+                    itemSlot = 'P2';
+                } else {
+                    itemSlot = 'P3';
+                }
+
+                if (itemSlot === 'P1') {
+                    p1KwhTime += item.consumo;
+                    p1CostTime += item.costeManual; 
+                } else if (itemSlot === 'P2') {
+                    p2KwhTime += item.consumo;
+                    p2CostTime += item.costeManual; 
+                } else {
+                    p3KwhTime += item.consumo;
+                    p3CostTime += item.costeManual; 
+                }
+
+                // 2. CLASIFICACIÓN POR COSTE REAL (PVPC)
+                const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+                const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+
+                if (item.precioPvpc >= pvpcHigh) {
+                    p1KwhPrice += item.consumo;
+                    p1CostPrice += item.costePvpc; 
+                } else if (item.precioPvpc <= pvpcLow) {
+                    p3KwhPrice += item.consumo;
+                    p3CostPrice += item.costePvpc; 
+                } else {
+                    p2KwhPrice += item.consumo;
+                    p2CostPrice += item.costePvpc; 
+                }
+
+                if (item.consumo > maxPeakHourly) {
+                    maxPeakHourly = item.consumo;
+                }
+                if (isP1) {
+                    if (item.consumo > maxPeakP1) maxPeakP1 = item.consumo;
+                    totalKwhP1 += item.consumo;
+                    countP1++;
+                } else {
+                    if (item.consumo > maxPeakP2) maxPeakP2 = item.consumo;
+                    totalKwhP2 += item.consumo;
+                    countP2++;
+                }
+
+                if (!dailyStats[item.fechaStr]) {
+                    dailyStats[item.fechaStr] = { kwh: 0, cost: 0 };
+                }
+                dailyStats[item.fechaStr].kwh += item.consumo;
+                dailyStats[item.fechaStr].cost += item.coste;
+
+                const h = item.hora;
+                if (h >= 0 && h < 24) {
+                    hourlyStats[h].totalKwh += item.consumo;
+                    hourlyStats[h].totalCost += item.coste;
+                    hourlyStats[h].totalPrice += item.precio;
+                    hourlyStats[h].count += 1;
+                }
+
+                if (item.consumo > threshold) {
+                    const adjustedKwh = Math.max(0, item.consumo - subtractVal);
+                    const adjustedCost = adjustedKwh * item.precio;
+
+                    filteredKwh += adjustedKwh;
+                    filteredCost += adjustedCost;
+                    filteredHoursCount++;
+
+                    tableRowsHtml += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-4 border-b">${item.fechaStr}</td>
+                            <td class="p-4 border-b">${String(item.hora).padStart(2, '0')}:00</td>
+                            <td class="p-4 border-b text-right font-mono">
+                                ${adjustedKwh.toFixed(3)} 
+                                <span class="text-xs text-gray-400 block" title="Original: ${item.consumo.toFixed(3)} kWh">(-${subtractVal.toFixed(2)})</span>
+                            </td>
+                            <td class="p-4 border-b text-right font-mono">${item.precio.toFixed(5)}</td>
+                            <td class="p-4 border-b text-right font-mono font-semibold">${adjustedCost.toFixed(3)} €</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            // --- CÁLCULOS DEL TÉRMINO DE POTENCIA ---
+            const sortedDates = Object.keys(dailyStats).sort();
+            const numDays = sortedDates.length || 1;
+
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+            const p1PricePvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+            const p2PricePvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+            const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
+            const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
+
+            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+            const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
+
+            const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
+            const grandTotalActive = totalCost + activePowerCost;
+
+            const dayOfWeekCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
+            sortedDates.forEach(dateStr => {
+                const dateParts = dateStr.split('-');
+                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dayOfWeek = dateObj.getDay(); 
+                dayOfWeekCount[dayOfWeek]++;
+            });
+
+            const avgDailyKwh = totalKwh / numDays;
+            const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
+
+            // Actualizar Métricas de Texto en pantalla
+            totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            
+            totalCostEl.innerHTML = `
+                ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                <span class="text-[10px] text-gray-500 block font-normal mt-1 leading-tight text-left">
+                    • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
+                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                </span>
+            `;
+            
+            totalDaysEl.textContent = `${numDays} días`;
+            avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+
+            const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
+            const avgPowerP2 = countP2 > 0 ? (totalKwhP2 / countP2) : 0;
+
+            maxPeakHourlyTextEl.textContent = `${maxPeakHourly.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            
+            requiredPowerTextEl.innerHTML = `
+                <div class="leading-tight">
+                    <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Máximos</span>
+                    P1: <span class="font-bold text-gray-900">${maxPeakP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>
+                    P2: <span class="font-bold text-gray-900">${maxPeakP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>
+                </div>
+                <div class="mt-1.5 pt-1.5 border-t border-gray-100 leading-tight">
+                    <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Medias</span>
+                    P1: <span class="font-bold text-gray-900">${avgPowerP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span><br>
+                    P2: <span class="font-bold text-gray-900">${avgPowerP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kW</span>
+                </div>
+            `;
+
+            const pctKwh = totalKwh > 0 ? (filteredKwh / totalKwh) * 100 : 0;
+            const pctCost = totalCost > 0 ? (filteredCost / totalCost) * 100 : 0;
+
+            filteredHoursEl.textContent = `${filteredHoursCount} h`;
+            
+            filteredKwhEl.innerHTML = `
+                ${filteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh 
+                <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctKwh.toFixed(1)}%)</span>
+            `;
+            
+            filteredCostEl.innerHTML = `
+                ${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € 
+                <span class="text-xs text-yellow-700 font-normal block sm:inline ml-0 sm:ml-1">(${pctCost.toFixed(1)}%)</span>
+            `;
+
+            const avgFilteredKwh = filteredHoursCount > 0 ? (filteredKwh / filteredHoursCount) : 0;
+            const avgFilteredPrice = filteredKwh > 0 ? (filteredCost / filteredKwh) : 0;
+            filteredAvgKwhEl.textContent = `${avgFilteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+
+            tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+
+            // Porcentajes e Inyecciones de Bloque 1 (Tarifa fija manual)
+            const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
+            const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
+            const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
+
+            const p1PctTimeCost = totalCostManual > 0 ? (p1CostTime / totalCostManual) * 100 : 0;
+            const p2PctTimeCost = totalCostManual > 0 ? (p2CostTime / totalCostManual) * 100 : 0;
+            const p3PctTimeCost = totalCostManual > 0 ? (p3CostTime / totalCostManual) * 100 : 0;
+
+            const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
+
+            const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
+            const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
+            const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
+
+            document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
+
+            document.getElementById('p2KwhTimeText').innerHTML = `${p2KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p2CostTimeText').innerHTML = `${p2CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-yellow-600 font-normal text-[10px]">(${p2PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2PriceLabel}</span>`;
+
+            document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
+
+            // Porcentajes e Inyecciones de Bloque 2 (Tarifa oficial indexada PVPC)
+            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
+            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
+            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
+
+            const p1PctPriceCost = totalCostPvpc > 0 ? (p1CostPrice / totalCostPvpc) * 100 : 0;
+            const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
+            const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
+
+            const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : 0;
+            const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : 0;
+            const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : 0;
+
+            const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
+            const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
+            const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
+
+            document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
+
+            document.getElementById('p2KwhPriceText').innerHTML = `${p2KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
+
+            document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
+
+            // --- TABLA COMPARATIVA GLOBAL (Energía + Potencia con Diferenciales) ---
+            const grandTotalPvpc = totalCostPvpc + totalPowerCostPvpc;
+            const grandTotalManual = totalCostManual + totalPowerCostManual;
+
+            const diffEnergy = totalCostPvpc - totalCostManual;
+            const diffEnergyPct = totalCostManual > 0 ? (diffEnergy / totalCostManual) * 100 : 0;
+            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%) ${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+
+            const diffPower = totalPowerCostPvpc - totalPowerCostManual;
+            const diffPowerPct = totalPowerCostManual > 0 ? (diffPower / totalPowerCostManual) * 100 : 0;
+            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%) ${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffPowerClass = diffPower < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+
+            const diffTotal = grandTotalPvpc - grandTotalManual;
+            const diffTotalPct = grandTotalManual > 0 ? (diffTotal / grandTotalManual) * 100 : 0;
+            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
+            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700 font-bold text-sm' : 'text-rose-700 font-bold text-sm';
+
+            const isPvpcCheaper = diffTotal < 0;
+            const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
+            const bannerText = isPvpcCheaper 
+                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
+                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
+
+            let comparisonHtml = `
+                <div class="w-full">
+                    <div class="border-b pb-2 mb-3">
+                        <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
+                        <p class="text-[11px] text-gray-500">Desglose integral separando término de consumo de energía y costes de potencia contratada.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b text-gray-400 uppercase text-[9px] tracking-wider font-semibold">
+                                    <th class="py-2">Concepto Facturado</th>
+                                    <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
+                                    <th class="py-2 text-right">Tarifa Manual (Tramos)</th>
+                                    <th class="py-2 text-right">Diferencia / Desviación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Energía (Consumo de Red)</td>
+                                    <td class="py-2.5 text-right font-mono">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono ${diffEnergyClass}">${diffEnergyText}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2.5 font-medium text-gray-700">Término de Potencia (Coste Fijo del Período)</td>
+                                    <td class="py-2.5 text-right font-mono">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-2.5 text-right font-mono ${diffPowerClass}">${diffPowerText}</td>
+                                </tr>
+                                <tr class="bg-gray-50 font-bold border-t border-gray-300">
+                                    <td class="py-3 text-gray-900 uppercase">Total Facturado Estimado</td>
+                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-3 text-right font-mono ${diffTotalClass}">${diffTotalText}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
+                        ${bannerText}
+                    </div>
+                </div>
+            `;
+            document.getElementById('comparisonBox').innerHTML = comparisonHtml;
+
+            // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
+            const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
+            const startVal = filterStartDate.value;
+            const endVal = filterEndDate.value;
+            const calendarSource = window.allAvailableDays || dailyStats;
+
+            const monthsMap = {};
+            Object.keys(calendarSource).forEach(dateStr => {
+                const yyyymm = dateStr.substring(0, 7); 
+                if (!monthsMap[yyyymm]) {
+                    monthsMap[yyyymm] = [];
+                }
+                monthsMap[yyyymm].push(dateStr);
+            });
+
+            let calendarHtml = "";
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+            Object.keys(monthsMap).sort().forEach(yyyymm => {
+                const [year, monthNum] = yyyymm.split('-').map(Number);
+                const firstDayDate = new Date(year, monthNum - 1, 1);
+                
+                let firstDayOfWeek = firstDayDate.getDay();
+                const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+                let monthHtml = `
+                    <div class="border border-gray-300 rounded-xl p-4 bg-gray-100 shadow-md">
+                        <h4 class="text-sm font-extrabold text-blue-900 mb-3 text-center uppercase tracking-wide">
+                            ${monthNames[monthNum - 1]} ${year}
+                        </h4>
+                        <div class="grid grid-cols-7 gap-1 text-center font-black text-[10px] text-gray-700 mb-2 border-b border-gray-300 pb-1.5">
+                            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-2">
+                `;
+
+                for (let i = 0; i < offset; i++) {
+                    monthHtml += `<div class="bg-gray-200/40 rounded-lg border border-dashed border-gray-300 min-h-[68px]"></div>`;
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayStr = String(day).padStart(2, '0');
+                    const dateKey = `${yyyymm}-${dayStr}`;
+                    const dayData = calendarSource[dateKey];
+
+                    const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
+                    
+                    let isSelected = false;
+                    if (hasCustomCalendar) {
+                        isSelected = window.calendarSelectedDates.has(dateKey);
+                    } else if (startVal || endVal) {
+                        isSelected = (startVal && dateKey === startVal) || (endVal && dateKey === endVal) || (startVal && endVal && dateKey >= startVal && dateKey <= endVal);
+                    } else {
+                        isSelected = true; 
+                    }
+
+                    const selectHighlightClass = isSelected 
+                        ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
+                        : "opacity-35 hover:opacity-75 transition-opacity";
+
+                    if (dayData) {
+                        const isEvChargingDay = dayData.kwh >= dailyEvThreshold;
+                        
+                        let cellClass, dayLabelClass, kwhClass, costClass;
+
+                        if (isEvChargingDay) {
+                            cellClass = "bg-red-50 border-2 border-red-500 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:border-red-700 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-black text-red-600 leading-none";
+                            kwhClass = "text-[10px] font-black text-red-700 leading-tight";
+                            costClass = "text-[9px] font-black text-red-800 leading-tight mt-0.5";
+                        } else {
+                            cellClass = "bg-white border border-gray-400 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-600 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-bold text-gray-700 leading-none";
+                            kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
+                            costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
+                        }
+
+                        monthHtml += `
+                            <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
+                                <span class="${dayLabelClass}">${day}</span>
+                                <div class="text-right mt-1.5">
+                                    <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
+                                    <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        monthHtml += `
+                            <div class="bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
+                                <span class="text-xs font-semibold text-gray-400 leading-none">${day}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                monthHtml += `
+                        </div>
+                    </div>
+                `;
+                calendarHtml += monthHtml;
+            });
+
+            calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs font-semibold">No hay lecturas disponibles para construir el calendario.</p>`;
+
+            // Renderizar gráficos
+            renderDailyChart(dailyStats);
+            renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
+            renderHourlyChart(hourlyStats);
+
+            resultsSection.classList.remove('hidden');
+        }
+
+        function renderDailyChart(stats) {
+            const canvas = document.getElementById('chartDaily');
+            if (!canvas) return;
+
+            const sortedDates = Object.keys(stats).sort();
+            const kwhData = sortedDates.map(d => stats[d].kwh);
+            const costData = sortedDates.map(d => stats[d].cost);
+
+            const numDays = sortedDates.length || 1;
+            const totalKwh = kwhData.reduce((a, b) => a + b, 0);
+            const totalCost = costData.reduce((a, b) => a + b, 0);
+            const avgDailyKwh = totalKwh / numDays;
+            const avgDailyCost = totalCost / numDays;
+
+            const dailyThreshold = parseFloat(dailyEvThresholdInput.value) || 9999;
+
+            const pointBackgroundColors = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 'rgba(239, 68, 68, 1)' : 'rgba(59, 130, 246, 1)'
+            );
+            const pointBorderColors = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 'rgba(153, 27, 27, 1)' : 'rgba(59, 130, 246, 1)'
+            );
+            const pointRadii = sortedDates.map(d => 
+                stats[d].kwh >= dailyThreshold ? 6 : 3
+            );
+
+            if (window.chartInstance2) {
+                window.chartInstance2.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.chartInstance2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [
+                        {
+                            label: 'Consumo (kWh)',
+                            data: kwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y',
+                            pointBackgroundColor: pointBackgroundColors,
+                            pointBorderColor: pointBorderColors,
+                            pointRadius: pointRadii,
+                            pointHoverRadius: 8
+                        },
+                        {
+                            label: 'Importe (€)',
+                            data: costData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'Consumo Diario Medio (kWh)',
+                            data: Array(sortedDates.length).fill(avgDailyKwh),
+                            type: 'line',
+                            borderColor: 'rgba(59, 130, 246, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Importe Diario Medio (€)',
+                            data: Array(sortedDates.length).fill(avgDailyCost),
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDayOfWeekChart(stats, counts) {
+            const canvas = document.getElementById('chartDayOfWeek');
+            if (!canvas) return;
+
+            const safeCounts = counts || {};
+            const order = [1, 2, 3, 4, 5, 6, 0]; 
+            const labels = order.map(i => stats[i].label);
+            
+            const kwhDataMedia = order.map(i => {
+                const count = safeCounts[i] || 1;
+                return stats[i].kwh / count;
+            });
+            const costDataMedia = order.map(i => {
+                const count = safeCounts[i] || 1;
+                return stats[i].cost / count;
+            });
+
+            const kwhDataAcumulado = order.map(i => stats[i].kwh);
+            const costDataAcumulado = order.map(i => stats[i].cost);
+
+            if (window.chartInstance1) {
+                window.chartInstance1.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.chartInstance1 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo Medio (kWh)',
+                            data: kwhDataMedia,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            hidden: false 
+                        },
+                        {
+                            label: 'Importe Medio (€)',
+                            data: costDataMedia,
+                            type: 'line',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 3,
+                            fill: false,
+                            yAxisID: 'y1',
+                            hidden: false 
+                        },
+                        {
+                            label: 'Consumo Acumulado (kWh)',
+                            data: kwhDataAcumulado,
+                            backgroundColor: 'rgba(147, 51, 234, 0.35)', 
+                            borderColor: 'rgba(147, 51, 234, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            hidden: true 
+                        },
+                        {
+                            label: 'Importe Acumulado (€)',
+                            data: costDataAcumulado,
+                            type: 'line',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)', 
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5], 
+                            fill: false,
+                            yAxisID: 'y1',
+                            hidden: true 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Importe (€)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHourlyChart(stats) {
+            const canvas = document.getElementById('chartHourly');
+            if (!canvas) return;
+
+            const labels = stats.map(s => `${String(s.hour).padStart(2, '0')}:00`);
+            const totalKwhData = stats.map(s => s.totalKwh);
+            const totalCostData = stats.map(s => s.totalCost);
+            const avgKwhData = stats.map(s => s.count > 0 ? (s.totalKwh / s.count) : 0);
+            const avgPriceData = stats.map(s => s.count > 0 ? (s.totalPrice / s.count) : 0);
+
+            const totalKwh = stats.reduce((sum, s) => sum + s.totalKwh, 0);
+            const totalCost = stats.reduce((sum, s) => sum + s.totalCost, 0);
+            const totalCount = stats.reduce((sum, s) => sum + s.count, 0);
+
+            const avgHourlyKwh = totalCount > 0 ? (totalKwh / totalCount) : 0;
+            const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
+
+            if (window.chartInstance3) {
+                window.chartInstance3.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.chartInstance3 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo Acumulado (kWh)',
+                            data: totalKwhData,
+                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                            borderColor: 'rgba(59, 130, 246, 0.7)',
+                            borderWidth: 1,
+                            yAxisID: 'y',
+                            order: 6
+                        },
+                        {
+                            label: 'Consumo Medio (kWh)',
+                            data: avgKwhData,
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y',
+                            order: 4
+                        },
+                        {
+                            label: 'Importe Acumulado (€)',
+                            data: totalCostData,
+                            type: 'line',
+                            borderColor: 'rgba(16, 185, 129, 0.8)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            order: 3
+                        },
+                        {
+                            label: 'Precio Medio (€/kWh)',
+                            data: avgPriceData,
+                            type: 'line',
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 1
+                        },
+                        {
+                            label: 'Media Consumo Horario (kWh)',
+                            data: Array(24).fill(avgHourlyKwh),
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 0.5)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y',
+                            order: 5
+                        },
+                        {
+                            label: 'Precio Medio Periodo (€/kWh)',
+                            data: Array(24).fill(avgPeriodPrice),
+                            type: 'line',
+                            borderColor: 'rgba(245, 158, 11, 0.6)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 6],
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y2',
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Consumo (kWh)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Importe Acumulado (€)' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y2: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Precio Medio (€/kWh)' },
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(3) + ' €';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
+        function saveConfig() {
+            const config = {
+                rateMode: document.getElementById('rateMode').value,
+                thresholdInput: document.getElementById('thresholdInput').value,
+                subtractInput: document.getElementById('subtractInput').value,
+                dailyEvThresholdInput: document.getElementById('dailyEvThresholdInput').value,
+                pricePunta: document.getElementById('pricePunta').value,
+                hoursPunta: document.getElementById('hoursPunta').value,
+                priceLlano: document.getElementById('priceLlano').value,
+                hoursLlano: document.getElementById('hoursLlano').value,
+                priceValle: document.getElementById('priceValle').value,
+                hoursValle: document.getElementById('hoursValle').value,
+                weekendValle: document.getElementById('weekendValle').checked,
+                holidaysInput: document.getElementById('holidaysInput').value,
+                filterStartDate: document.getElementById('filterStartDate').value,
+                filterEndDate: document.getElementById('filterEndDate').value,
+                filterStartHour: document.getElementById('filterStartHour').value,
+                filterEndHour: document.getElementById('filterEndHour').value,
+                calendarSelectedDates: Array.from(window.calendarSelectedDates),
+                pvpcHighThreshold: document.getElementById('pvpcHighThreshold').value,
+                pvpcLowThreshold: document.getElementById('pvpcLowThreshold').value,
+                powerP1: document.getElementById('powerP1').value,
+                powerP2: document.getElementById('powerP2').value,
+                powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
+                powerPriceP2Pvpc: document.getElementById('powerPriceP2Pvpc').value,
+                powerPriceP1Manual: document.getElementById('powerPriceP1Manual').value,
+                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) {
+                toggleRatePanels();
+                return;
+            }
+            try {
+                const config = JSON.parse(saved);
+                if (config.rateMode !== undefined) document.getElementById('rateMode').value = config.rateMode;
+                if (config.thresholdInput !== undefined) document.getElementById('thresholdInput').value = config.thresholdInput;
+                if (config.subtractInput !== undefined) document.getElementById('subtractInput').value = config.subtractInput;
+                if (config.dailyEvThresholdInput !== undefined) document.getElementById('dailyEvThresholdInput').value = config.dailyEvThresholdInput;
+                if (config.pricePunta !== undefined) document.getElementById('pricePunta').value = config.pricePunta;
+                if (config.hoursPunta !== undefined) document.getElementById('hoursPunta').value = config.hoursPunta;
+                if (config.priceLlano !== undefined) document.getElementById('priceLlano').value = config.priceLlano;
+                if (config.hoursLlano !== undefined) document.getElementById('hoursLlano').value = config.hoursLlano;
+                if (config.priceValle !== undefined) document.getElementById('priceValle').value = config.priceValle;
+                if (config.hoursValle !== undefined) document.getElementById('hoursValle').value = config.hoursValle;
+                if (config.weekendValle !== undefined) document.getElementById('weekendValle').checked = config.weekendValle;
+                if (config.holidaysInput !== undefined) document.getElementById('holidaysInput').value = config.holidaysInput;
+                if (config.filterStartDate !== undefined) document.getElementById('filterStartDate').value = config.filterStartDate;
+                if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
+                if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
+                if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+                
+                if (config.pvpcHighThreshold !== undefined) {
+                    const elHigh = document.getElementById('pvpcHighThreshold');
+                    if (elHigh) elHigh.value = config.pvpcHighThreshold;
+                }
+                if (config.pvpcLowThreshold !== undefined) {
+                    const elLow = document.getElementById('pvpcLowThreshold');
+                    if (elLow) elLow.value = config.pvpcLowThreshold;
+                }
+                
+                // Carga de potencias
+                if (config.powerP1 !== undefined) document.getElementById('powerP1').value = config.powerP1;
+                if (config.powerP2 !== undefined) document.getElementById('powerP2').value = config.powerP2;
+                if (config.powerPriceP1Pvpc !== undefined) document.getElementById('powerPriceP1Pvpc').value = config.powerPriceP1Pvpc;
+                if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
+                if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
+                if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
+
+                if (config.calendarSelectedDates !== undefined && Array.isArray(config.calendarSelectedDates)) {
+                    window.calendarSelectedDates = new Set(config.calendarSelectedDates);
+                } else {
+                    window.calendarSelectedDates = new Set();
+                }
+
+                toggleRatePanels();
+            } catch (e) {
+                console.error("Error al restaurar la sesión guardada:", e);
+            }
+        }
+
+        function toggleRatePanels() {
+            const mode = document.getElementById('rateMode').value;
+            if (mode === 'pvpc') {
+                document.getElementById('manualConfig').classList.add('hidden');
+            } else {
+                document.getElementById('manualConfig').classList.remove('hidden');
+            }
+        }
+
+        // Cambio de selector de tipo de cálculo que dispara el recálculo dinámico directo
+        document.getElementById('rateMode').addEventListener('change', () => {
+            toggleRatePanels();
+            saveConfig();
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        });
+
+        document.getElementById('clearFiltersBtn').addEventListener('click', (e) => {
+            e.preventDefault(); 
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterStartHour').value = '';
+            document.getElementById('filterEndHour').value = '';
+            
+            if (window.calendarSelectedDates) {
+                window.calendarSelectedDates.clear();
+            }
+            
+            saveConfig(); 
+
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        });
+
+        // Botón Recalcular centralizado
+        document.getElementById('recalculateBtn').addEventListener('click', () => {
+            saveConfig();
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            } else {
+                showStatus("No hay datos cargados para procesar. Suba un archivo CSV utilizando las instrucciones de Datadis o arrastrando un fichero.", "error");
+            }
+        });
+
+        // Observadores de cambios en los inputs para autoguardado rápido y recálculo automático instantáneo
+        const inputsToWatch = [
+            'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
+            'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
+            'weekendValle', 'holidaysInput', 'filterStartDate', 'filterEndDate',
+            'filterStartHour', 'filterEndHour',
+            'pvpcHighThreshold', 'pvpcLowThreshold',
+            'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual'
+        ];
+        
+        inputsToWatch.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', () => {
+                    saveConfig();
+                    if (window.rawCsvData) {
+                        processData(window.rawCsvData);
+                    }
+                });
+                el.addEventListener('change', () => {
+                    saveConfig();
+                    if (window.rawCsvData) {
+                        processData(window.rawCsvData);
+                    }
+                });
+            }
+        });
+
+        loadConfig();
+
+        window.handleCalendarDayClick = function(dateStr) {
+            if (!window.calendarSelectedDates) {
+                window.calendarSelectedDates = new Set();
+            }
+
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+
+            const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
+            if (!hasCustomCalendar && window.allAvailableDays) {
+                Object.keys(window.allAvailableDays).forEach(key => {
+                    if (key !== dateStr) {
+                        window.calendarSelectedDates.add(key);
+                    }
+                });
+            } else {
+                if (window.calendarSelectedDates.has(dateStr)) {
+                    window.calendarSelectedDates.delete(dateStr);
+                } else {
+                    window.calendarSelectedDates.add(dateStr);
+                }
+            }
+            
+            saveConfig(); 
+
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        };
+
+    </script>
+</body>
+</html>
