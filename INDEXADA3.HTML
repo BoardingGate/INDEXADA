@@ -61,11 +61,11 @@
             </div>
         </div>
 
-        <!-- Panel de Importación Datadis (Bookmarklet y Consola) -->
+        <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="text-md font-bold text-blue-700">Importación rápida desde Datadis.es</h3>
+                    <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
                         Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
                     </p>
@@ -78,31 +78,22 @@
             </div>
 
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
-                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">Instrucciones de descarga (Sin restricciones de CORS):</h4>
-                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-2 leading-relaxed">
-                    <li>
-                        Arrastra este botón verde directamente a la **barra de marcadores** de tu navegador:
-                        <div class="my-2">
-                            <!-- Código JavaScript Bookmarklet optimizado con feedback interactivo contra errores de seguridad -->
-                            <a href="javascript:(async function(){alert('🔄 Descargador Datadis iniciado...\nComprobando entorno de seguridad y sesión activa.');try{if(window.location.hostname!=='datadis.es'&&!window.location.hostname.endsWith('.datadis.es')){alert('⚠️ Error de Origen:\nDebes ejecutar este marcador estando dentro de la web oficial de Datadis (https://datadis.es).');return;}let t='';let keysChecked=[];try{for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);keysChecked.push('sessionStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('sessionStorage: BLOQUEADO/ERROR');}if(!t){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);keysChecked.push('localStorage: '+k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}catch(e){keysChecked.push('localStorage: BLOQUEADO/ERROR');}}if(!t){try{const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];keysChecked.push('cookie: '+k);if(v&&v.includes('eyJ')){t=v;break;}}}catch(e){keysChecked.push('cookies: BLOQUEADO/ERROR');}}if(!t){alert('❌ No se encontró una sesión activa de Datadis.\n\nDiagnóstico de claves analizadas:\n'+keysChecked.slice(0,10).join('\n')+'\n\nSugerencia: Asegúrate de haber iniciado sesión y de estar viendo tus consumos en el portal privado, no en la web pública inicial.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('📅 Conectado con éxito.\nIntroduce fecha de inicio para la descarga (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('📅 Introduce fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;alert('⏳ Conectando con la base de datos de Datadis. Por favor, espera...');const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});if(!rS.ok){alert('❌ Error al consultar tus puntos de suministro (suministros): Código '+rS.status);return;}const s=await rS.json();if(!s.length){alert('❌ Suministros no encontrados en tu cuenta de Datadis.');return;}const c=s[0].cups;alert('✅ Suministro detectado: '+c+'\nDescargando curvas de consumo...');const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});if(!rC.ok){alert('❌ Error al descargar lecturas de consumo: Código '+rC.status);return;}const cons=await rC.json();if(!cons.length){alert('❌ No hay lecturas disponibles para el período indicado.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('🎉 ¡Descarga finalizada con éxito!\n\nSe ha guardado el archivo "consumo_datadis_'+c+'.csv" en tu carpeta de Descargas.\n\nAhora puedes arrastrar este archivo al Analizador.');}catch(e){alert('❌ Error inesperado al extraer datos: '+e.message);}})();" 
-                               class="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-4 rounded text-xs select-none cursor-grab shadow-sm transition-colors">
-                                📥 Descargador Datadis
-                            </a>
-                        </div>
-                    </li>
-                    <li>Accede a la web oficial de <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> e inicia sesión de forma habitual.</li>
-                    <li>
-                        <strong>Si al pulsar el marcador verde de tu navegador no ocurre nada (bloqueo por directiva de seguridad CSP de Datadis):</strong>
-                        <p class="mt-1 font-medium text-gray-800">Copia el siguiente código en tu portapapeles, pulsa <kbd class="bg-white px-1 border rounded shadow-xs font-mono text-[10px]">F12</kbd> dentro de Datadis, pégalo en la pestaña de **"Consola"** y pulsa **Enter**:</p>
-                        <textarea readonly class="w-full mt-2 p-2 font-mono text-[10px] text-gray-700 bg-gray-100 rounded border border-gray-300 h-20 focus:outline-none" onclick="this.select();">javascript:(async function(){try{let t='';for(let i=0;i<sessionStorage.length;i++){const k=sessionStorage.key(i),v=sessionStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}if(!t){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k);if(v&&v.includes('eyJ')){if(v.startsWith('{')){try{const p=JSON.parse(v);t=p.token||p.accessToken||p.access_token||v;}catch(e){}}else{t=v;}if(t)break;}}}if(!t){const ck=document.cookie.split(';');for(let i=0;i<ck.length;i++){const c=ck[i].trim(),parts=c.split('='),k=parts[0],v=parts[1];if(v&&v.includes('eyJ')){t=v;break;}}}if(!t){alert('Error: No se detecto sesión activa. Logueate de nuevo.');return;}const fmt=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`,todayStr=fmt(new Date()),prev=new Date();prev.setDate(prev.getDate()-30);const prevStr=fmt(prev),fIni=prompt('Fecha de inicio (YYYY/MM/DD):',prevStr);if(!fIni)return;const fFin=prompt('Fecha de fin (YYYY/MM/DD):',todayStr);if(!fFin)return;const rS=await fetch('https://api.datadis.es/api/v1/supplies',{headers:{'Authorization':`Bearer ${t}`}});const s=await rS.json();if(!s.length){alert('Suministros no encontrados.');return;}const c=s[0].cups;const rC=await fetch(`https://api.datadis.es/api/v1/consumption-data?cups=${c}&startDate=${fIni}&endDate=${fFin}&measurementType=0&pointType=5`,{headers:{'Authorization':`Bearer ${t}`}});const cons=await rC.json();if(!cons.length){alert('Sin lecturas en el periodo.');return;}let csv='Fecha,Hora,Consumo (kWh)\n';cons.forEach(x=>{csv+=`${x.date.replace(/\//g,'-')},${parseInt(x.time.split(':')[0],10)},${x.consumptionKwh}\n`});const b=new Blob([csv],{type:'text/csv;charset=utf-8;'});const l=document.createElement('a');l.href=URL.createObjectURL(b);l.setAttribute('download',`consumo_datadis_${c}.csv`);document.body.appendChild(l);l.click();document.body.removeChild(l);alert('Descarga exitosa.');}catch(e){alert('Error: '+e.message);}})();</textarea>
-                    </li>
-                    <li class="mt-2">Una vez descargado el archivo CSV, arrástralo a la zona **"Archivo CSV Distribuidora"** de esta aplicación.</li>
+                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">¿Qué es Datadis.es y cómo darte de alta?</h4>
+                <p class="text-xs text-gray-700 leading-relaxed mb-2">
+                    Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas (Endesa, Iberdrola, etc.) publican tus curvas de consumo horario reales, con independencia de tu comercializadora.
+                </p>
+                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
+                    <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
+                    <li>Usa tu NIF/NIE como usuario y crea una contraseña; recibirás un correo de confirmación.</li>
+                    <li>Localiza tu CUPS (código de tu punto de suministro) en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
                 </ol>
             </div>
 
             <!-- Panel de Descarga Directa vía Proxy -->
+
+            <!-- Panel de Descarga Directa vía Proxy -->
             <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
-                <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Alternativa: Descarga directa (sin bookmarklet)</h4>
+                <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
                 <p class="text-xs text-gray-600 mb-3">
                     Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la API oficial a través de un proxy propio y carga los datos automáticamente. Tus credenciales solo se usan para esta petición, no se guardan en la app.
                 </p>
