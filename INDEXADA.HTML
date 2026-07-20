@@ -742,9 +742,9 @@
                     return;
                 }
 
-                let csv = 'Fecha,Hora,Consumo (kWh)\n';
+               let csv = 'Fecha,Hora,Consumo (kWh)\n';
                 data.consumptionData.forEach((x) => {
-                    csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
+                        csv += `${x.date},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
                 });
 
                 // Guardar para posibilitar la exportación del archivo
@@ -852,7 +852,7 @@
             });
         }
 
-        async function processData(parsedRows) {
+async function processData(parsedRows) {
             const mode = rateMode.value;
 
             try {
@@ -866,14 +866,19 @@
                     return;
                 }
        
+                // --- CAMBIO: Autodetección de rango de horas (1-24 vs 0-23) ---
+                const hoursList = parsedRows.map(r => parseInt(r[colHora], 10)).filter(h => !isNaN(h));
+                const isOneBased = hoursList.includes(24) || !hoursList.includes(0);
+
                 // 1. Estructurar y sanitizar todos los datos
                 let cleanData = parsedRows.map(row => {
                     let rawDate = row[colFecha];
                     if (!rawDate) return null;
 
-                    rawDate = rawDate.trim().split(' ')[0];
+                    // --- CAMBIO: Truncar posibles sufijos ISO con "T" o espacios ---
+                    rawDate = rawDate.trim().split(/[ T]/)[0];
 
-                    let parts = rawDate.split(/[-/]/);
+                    let parts = rawDate.split(/[-/]/).map(p => p.trim());
                     let formattedDate = rawDate;
                     if (parts.length === 3) {
                         if (parts[2].length === 4) {
@@ -885,7 +890,14 @@
 
                     let hora = parseInt(row[colHora], 10);
                     if (isNaN(hora)) return null;
-                    if (hora === 24) hora = 0; 
+                    
+                    // --- CAMBIO: Normalización de hora al estándar 0-23 de REE y tramos ---
+                    if (isOneBased) {
+                        hora = hora - 1;
+                        if (hora < 0) hora = 23; 
+                    } else {
+                        if (hora === 24) hora = 0;
+                    }
 
                     let consumoRaw = row[colConsumo] ? String(row[colConsumo]).replace(',', '.') : '0';
                     let consumo = parseFloat(consumoRaw);
