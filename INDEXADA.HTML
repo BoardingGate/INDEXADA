@@ -380,7 +380,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Punta -->
                                 <div class="p-3 bg-red-50/50 rounded-xl border border-red-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-red-800 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
+                                     <span id="p1TimeTitle" class="font-bold text-red-800 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-500">Consumo:</span>
@@ -394,7 +394,7 @@
                                 </div>
                                 <!-- P2 Llano -->
                                 <div class="p-3 bg-yellow-50/50 rounded-xl border border-yellow-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-yellow-800 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
+                                     <span id="p2TimeTitle" class="font-bold text-yellow-800 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-500">Consumo:</span>
@@ -408,7 +408,7 @@
                                 </div>
                                 <!-- P3 Valle -->
                                 <div class="p-3 bg-green-50/50 rounded-xl border border-green-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-green-800 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
+                                   <span id="p3TimeTitle" class="font-bold text-green-800 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-500">Consumo:</span>
@@ -445,8 +445,8 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Alto -->
                                 <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-rose-800 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                      <span id="p1PriceTitle" class="font-bold text-rose-800 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>                  
+                                      <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-500">Consumo:</span>
                                             <span id="p1KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
@@ -459,7 +459,7 @@
                                 </div>
                                 <!-- P2 Medio -->
                                 <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-amber-800 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
+                                    <span id="p2PriceTitle" class="font-bold text-amber-800 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-500">Consumo:</span>
@@ -473,7 +473,7 @@
                                 </div>
                                 <!-- P3 Bajo -->
                                 <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-emerald-800 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
+                                    <span id="p3PriceTitle" class="font-bold text-emerald-800 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-500">Consumo:</span>
@@ -1143,6 +1143,9 @@ async function processData(parsedRows) {
             let totalCostPvpc = 0;
             let totalCostManual = 0;
 
+             let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
+            let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
+
             // Inicialización de variables para registrar el precio mínimo y máximo
             let minPrice = Infinity;
             let maxPrice = -Infinity;
@@ -1211,30 +1214,36 @@ async function processData(parsedRows) {
                     itemSlot = 'P3';
                 }
 
-                if (itemSlot === 'P1') {
+               if (itemSlot === 'P1') {
                     p1KwhTime += item.consumo;
                     p1CostTime += item.costeManual; 
+                    p1TimeHours++; // Incrementa horas punta
                 } else if (itemSlot === 'P2') {
                     p2KwhTime += item.consumo;
                     p2CostTime += item.costeManual; 
+                    p2TimeHours++; // Incrementa horas llano
                 } else {
                     p3KwhTime += item.consumo;
                     p3CostTime += item.costeManual; 
+                    p3TimeHours++; // Incrementa horas valle
                 }
 
                 // 2. CLASIFICACIÓN POR COSTE REAL (PVPC)
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-                if (item.precioPvpc >= pvpcHigh) {
+               if (item.precioPvpc >= pvpcHigh) {
                     p1KwhPrice += item.consumo;
                     p1CostPrice += item.costePvpc; 
+                    p1PriceHours++; // Incrementa horas de coste alto
                 } else if (item.precioPvpc <= pvpcLow) {
                     p3KwhPrice += item.consumo;
                     p3CostPrice += item.costePvpc; 
+                    p3PriceHours++; // Incrementa horas de coste bajo
                 } else {
                     p2KwhPrice += item.consumo;
                     p2CostPrice += item.costePvpc; 
+                    p2PriceHours++; // Incrementa horas de coste medio
                 }
 
                 if (item.consumo > maxPeakHourly) {
@@ -1386,6 +1395,22 @@ async function processData(parsedRows) {
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+
+            // Inyección dinámica de horas en los títulos de cada tramo
+            const p1TimeTitleEl = document.getElementById('p1TimeTitle');
+            const p2TimeTitleEl = document.getElementById('p2TimeTitle');
+            const p3TimeTitleEl = document.getElementById('p3TimeTitle');
+            const p1PriceTitleEl = document.getElementById('p1PriceTitle');
+            const p2PriceTitleEl = document.getElementById('p2PriceTitle');
+            const p3PriceTitleEl = document.getElementById('p3PriceTitle');
+
+            if (p1TimeTitleEl) p1TimeTitleEl.textContent = `P1 (Horas Punta) [${p1TimeHours} h]`;
+            if (p2TimeTitleEl) p2TimeTitleEl.textContent = `P2 (Horas Llano) [${p2TimeHours} h]`;
+            if (p3TimeTitleEl) p3TimeTitleEl.textContent = `P3 (Horas Valle) [${p3TimeHours} h]`;
+            
+            if (p1PriceTitleEl) p1PriceTitleEl.textContent = `Coste Alto (Precio ≥ Umbral Caro) [${p1PriceHours} h]`;
+            if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Precios Intermedios) [${p2PriceHours} h]`;
+            if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Precio ≤ Umbral Barato) [${p3PriceHours} h]`;
 
             // Porcentajes e Inyecciones de Bloque 1 (Tarifa fija manual)
             const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
