@@ -868,68 +868,9 @@
             });
         }
 
-async function processData(parsedRows) {
-            const mode = rateMode.value;
 
-            try {
-                const firstRow = parsedRows[0];
-                const colFecha = Object.keys(firstRow).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
-                const colHora = Object.keys(firstRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
-                const colConsumo = Object.keys(firstRow).find(k => k.toLowerCase().includes('consum') || k.toLowerCase().includes('val') || k.toLowerCase().includes('activa'));
-
-                if (!colFecha || !colHora || !colConsumo) {
-                    showStatus("Columnas no identificadas. Asegúrese de que el CSV contenga campos de Fecha, Hora y Consumo.", "error");
-                    return;
-                }
-       
-                // --- CAMBIO: Autodetección de rango de horas (1-24 vs 0-23) ---
-                const hoursList = parsedRows.map(r => parseInt(r[colHora], 10)).filter(h => !isNaN(h));
-                const isOneBased = hoursList.includes(24) || !hoursList.includes(0);
-
-                // 1. Estructurar y sanitizar todos los datos
-                let cleanData = parsedRows.map(row => {
-                    let rawDate = row[colFecha];
-                    if (!rawDate) return null;
-
-                    // --- CAMBIO: Truncar posibles sufijos ISO con "T" o espacios ---
-                    rawDate = rawDate.trim().split(/[ T]/)[0];
-
-                    let parts = rawDate.split(/[-/]/).map(p => p.trim());
-                    let formattedDate = rawDate;
-                    if (parts.length === 3) {
-                        if (parts[2].length === 4) {
-                            formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        } else if (parts[0].length === 4) {
-                            formattedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-                        }
-                    }
-
-                    let hora = parseInt(row[colHora], 10);
-                    if (isNaN(hora)) return null;
+                
                     
-                    // --- CAMBIO: Normalización de hora al estándar 0-23 de REE y tramos ---
-                    if (isOneBased) {
-                        hora = hora - 1;
-                        if (hora < 0) hora = 23; 
-                    } else {
-                        if (hora === 24) hora = 0;
-                    }
-
-                    let consumoRaw = row[colConsumo] ? String(row[colConsumo]).replace(',', '.') : '0';
-                    let consumo = parseFloat(consumoRaw);
-                    if (isNaN(consumo)) return null;
-
-                    return {
-                        fechaStr: formattedDate,
-                        hora: hora,
-                        consumo: consumo
-                    };
-                }).filter(item => item !== null);
-
-                if (cleanData.length === 0) {
-                    showStatus("No se encontraron registros válidos en el archivo.", "error");
-                    return;
-                }
 
                 // Descargar precios oficiales PVPC de REE
                 const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
@@ -1049,11 +990,206 @@ async function processData(parsedRows) {
         }
 
         // --- OBTENCIÓN DE PRECIOS OFICIALES PVPC DE REE ---
+        async function processData(parsedRows) {
+            const mode = rateMode.value;
+
+            try {
+                const firstRow = parsedRows[0];
+                const colFecha = Object.keys(firstRow).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
+                const colHora = Object.keys(firstRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
+                const colConsumo = Object.keys(firstRow).find(k => k.toLowerCase().includes('consum') || k.toLowerCase().includes('val') || k.toLowerCase().includes('activa'));
+
+                if (!colFecha || !colHora || !colConsumo) {
+                    showStatus("Columnas no identificadas. Asegúrese de que el CSV contenga campos de Fecha, Hora y Consumo.", "error");
+                    return;
+                }
+       
+                // Autodetección de rango de horas (1-24 vs 0-23)
+                const hoursList = parsedRows.map(r => parseInt(r[colHora], 10)).filter(h => !isNaN(h));
+                const isOneBased = hoursList.includes(24) || !hoursList.includes(0);
+
+                // 1. Estructurar, sanitizar y normalizar robustamente todos los datos
+                let cleanData = parsedRows.map(row => {
+                    let rawDate = row[colFecha];
+                    if (!rawDate) return null;
+
+                    // Truncar posibles sufijos ISO con "T" o espacios
+                    rawDate = rawDate.trim().split(/[ T]/)[0];
+
+                    // Separar por guiones, barras o puntos
+                    let parts = rawDate.split(/[-/.]/).map(p => p.trim());
+                    let formattedDate = "";
+
+                    if (parts.length === 3) {
+                        let year = parts[2];
+                        let month = parts[1].padStart(2, '0');
+                        let day = parts[0].padStart(2, '0');
+
+                        // Si el año está al principio (formato AAAA-MM-DD)
+                        if (parts[0].length === 4 || (parts[0].length === 2 && parseInt(parts[0], 10) > 31)) {
+                            year = parts[0];
+                            month = parts[1].padStart(2, '0');
+                            day = parts[2].padStart(2, '0');
+                        }
+
+                        // Corregir años de 2 dígitos (ej: "24" -> "2024")
+                        if (year.length === 2) {
+                            year = "20" + year;
+                        }
+
+                        formattedDate = `${year}-${month}-${day}`;
+                    } else {
+                        formattedDate = rawDate; // Fallback
+                    }
+
+                    let hora = parseInt(row[colHora], 10);
+                    if (isNaN(hora)) return null;
+                    
+                    // Normalización de hora al estándar 0-23 de REE y tramos
+                    if (isOneBased) {
+                        hora = hora - 1;
+                        if (hora < 0) hora = 23; 
+                    } else {
+                        if (hora === 24) hora = 0;
+                    }
+
+                    let consumoRaw = row[colConsumo] ? String(row[colConsumo]).replace(',', '.') : '0';
+                    let consumo = parseFloat(consumoRaw);
+                    if (isNaN(consumo)) return null;
+
+                    return {
+                        fechaStr: formattedDate,
+                        hora: hora,
+                        consumo: consumo
+                    };
+                }).filter(item => item !== null && item.fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)); // Filtrar solo fechas válidas AAAA-MM-DD
+
+                if (cleanData.length === 0) {
+                    showStatus("No se encontraron registros de fecha válidos en el archivo.", "error");
+                    return;
+                }
+
+                // Descargar precios oficiales PVPC de REE
+                const fechas = cleanData.map(d => d.fechaStr);
+                const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
+                const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
+
+                showStatus(`Conectando con Red Eléctrica de España para el periodo ${fechaInicio} al ${fechaFin}...`, "info");
+                const preciosMap = await fetchPreciosPVPC(fechaInicio, fechaFin);
+
+                // Leer parámetros de la tarifa manual de tramos
+                const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+                const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+                const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+                const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
+                const useWeekendValle = document.getElementById('weekendValle').checked;
+                const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
+
+                // 2. Calcular los costes simulados
+                const pricedData = cleanData.map(item => {
+                    const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
+                    const precioPvpc = preciosMap ? (preciosMap[key] || 0) : 0;
+                    const costePvpc = item.consumo * precioPvpc;
+
+                    let precioManual = priceValle;
+                    const dateParts = item.fechaStr.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayOfWeek = dateObj.getDay(); 
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isHoliday = holidays.includes(item.fechaStr);
+
+                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                        precioManual = priceValle;
+                    } else {
+                        if (hoursPunta.includes(item.hora)) {
+                            precioManual = pricePunta;
+                        } else if (hoursLlano.includes(item.hora)) {
+                            precioManual = priceLlano;
+                        } else {
+                            precioManual = priceValle;
+                        }
+                    }
+                    const costeManual = item.consumo * precioManual;
+
+                    const precioActivo = (mode === 'pvpc') ? precioPvpc : precioManual;
+                    const costeActivo = (mode === 'pvpc') ? costePvpc : costeManual;
+
+                    return {
+                        ...item,
+                        precioPvpc: precioPvpc,
+                        costePvpc: costePvpc,
+                        precioManual: precioManual,
+                        costeManual: costeManual,
+                        precio: precioActivo,
+                        coste: costeActivo
+                    };
+                });
+
+                // 3. Construcción del mapa de días del calendario
+                window.allAvailableDays = {};
+                pricedData.forEach(item => {
+                    if (!window.allAvailableDays[item.fechaStr]) {
+                        window.allAvailableDays[item.fechaStr] = { kwh: 0, cost: 0 };
+                    }
+                    window.allAvailableDays[item.fechaStr].kwh += item.consumo;
+                    window.allAvailableDays[item.fechaStr].cost += item.coste;
+                });
+
+                // 4. Aplicar filtros
+                const startDateVal = filterStartDate.value;
+                const endDateVal = filterEndDate.value;
+                const startHourVal = filterStartHour.value;
+                const endHourVal = filterEndHour.value;
+
+                let filteredData = pricedData.filter(item => {
+                    const hasCustomCalendar = (window.calendarSelectedDates && window.calendarSelectedDates.size > 0);
+                    
+                    if (hasCustomCalendar) {
+                        if (!window.calendarSelectedDates.has(item.fechaStr)) return false;
+                    } else {
+                        if (startDateVal && item.fechaStr < startDateVal) return false;
+                        if (endDateVal && item.fechaStr > endDateVal) return false;
+                    }
+
+                    // Filtrado Opcional por Rango Horario
+                    if (startHourVal !== "" && endHourVal !== "") {
+                        const startH = parseInt(startHourVal, 10);
+                        const endH = parseInt(endHourVal, 10);
+                        if (startH <= endH) {
+                            if (item.hora < startH || item.hora > endH) return false;
+                        } else {
+                            if (item.hora < startH && item.hora > endH) return false;
+                        }
+                    } else if (startHourVal !== "") {
+                        if (item.hora < parseInt(startHourVal, 10)) return false;
+                    } else if (endHourVal !== "") {
+                        if (item.hora > parseInt(endHourVal, 10)) return false;
+                    }
+                    
+                    return true;
+                });
+
+                if (filteredData.length === 0) {
+                    showStatus("Ningún registro coincide con los filtros temporales especificados.", "error");
+                    return;
+                }
+
+                showStatus("Procesamiento finalizado con éxito.", "success");
+                renderResultsAndCharts(filteredData);
+
+            } catch (err) {
+                showStatus("Error al procesar los datos: " + err.message, "error");
+                console.error(err);
+            }
+        }
+
         async function fetchPreciosPVPC(inicio, fin) {
             const startDate = new Date(inicio);
             const endDate = new Date(fin);
             
-            // Segmentación del rango de fechas en bloques de máximo 30 días para no saturar la API pública de REE (límite 31 días)
+            // Segmentación en bloques de máximo 30 días para la API de REE
             const chunks = [];
             let currentStart = new Date(startDate);
             
@@ -1076,27 +1212,32 @@ async function processData(parsedRows) {
             const preciosMap = {};
             
             try {
-                // Descargas en paralelo utilizando Promise.all
                 const promises = chunks.map(async (chunk) => {
                     const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
                     const response = await fetch(url);
                     if (!response.ok) {
-                        throw new Error(`REE respondió con código: ${response.status} para el bloque ${chunk.start} - ${chunk.end}`);
+                        throw new Error(`Código de respuesta REE: ${response.status}`);
                     }
                     const data = await response.json();
+                    
+                    if (!data.included) {
+                        return; // Omitir si este fragmento carece de información
+                    }
+
                     const pvpcSeries = data.included.find(series => 
-                        series.type.toLowerCase().includes('pvpc') || 
-                        (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                        series && (
+                            (series.type && series.type.toLowerCase().includes('pvpc')) || 
+                            (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                        )
                     );
                     
                     if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
                         pvpcSeries.attributes.values.forEach(v => {
                             if (!v.datetime) return;
-                            // Se extrae la fecha y hora directamente del formato de texto para mitigar desajustes por husos horarios locales
                             const datePart = v.datetime.substring(0, 10); // YYYY-MM-DD
                             const hourPart = parseInt(v.datetime.substring(11, 13), 10); // HH
                             const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
-                            preciosMap[key] = v.value / 1000.0;
+                            preciosMap[key] = v.value / 1000.0; // Conversión a €/kWh
                         });
                     }
                 });
