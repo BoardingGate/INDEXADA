@@ -15,9 +15,21 @@
 
     <div class="container mx-auto px-4 py-8 max-w-5xl">
         <!-- Cabecera -->
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-blue-600">Analizador de Consumo Eléctrico</h1>
-            <p class="text-gray-600 mt-2">Analiza consumos, costes de potencia y energía importando lecturas de tu distribuidora o de Datadis.</p>
+        <header class="mb-8 text-center max-w-xl mx-auto">
+            <!-- Etiqueta BoardingGate con colores diferenciados y tamaño ligeramente mayor -->
+            <span class="text-[13px] font-bold tracking-wider bg-blue-50/80 px-3 py-0.5 rounded-full inline-flex items-center mb-2">
+                <span class="text-slate-900">Boarding</span>
+                <span class="text-blue-500 ml-0.7">Gate</span>
+            </span>
+            
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-gray-950">
+                Analizador de <span class="text-blue-600">Consumo Eléctrico</span>
+            </h1>
+            
+            <!-- Leyenda final con tamaño de letra más pequeño -->
+            <p class="text-[11px] sm:text-xs text-gray-500 mt-1 leading-relaxed max-w-md mx-auto">
+                Analiza consumos de tu punto de suministro eléctrico importando las lecturas de tu Distribuidora
+            </p>
         </header>
 
         <!-- Panel de Configuración General -->
@@ -32,17 +44,17 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">2. Umbral de Consumo (kWh)</label>
                 <input type="number" id="thresholdInput" step="0.1" value="1.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">Filtrar horas que superen este valor.</p>
+                <p class="text-xs text-gray-500 mt-1">Filtrar horas que superen este valor (detectar consumo coche).</p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">3. Restar por Vivienda (kWh)</label>
                 <input type="number" id="subtractInput" step="0.05" value="0.20" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">Consumo de la casa a deducir en esas horas.</p>
+                <p class="text-xs text-gray-500 mt-1">Consumo casa a deducir en esas horas (útil para aislar las del coche).</p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">4. Carga Diaria si kWh &ge;</label>
                 <input type="number" id="dailyEvThresholdInput" step="1.0" value="15.0" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">Consumo mínimo en 1 día para marcar coche cargado.</p>
+                <p class="text-xs text-gray-500 mt-1">Consumo mínimo para detectar cargó el coche en ese día</p>
             </div>
             <div class="flex flex-col">
                 <label class="block text-sm font-medium text-gray-700 mb-2">5. Archivo CSV Distribuidora</label>
@@ -117,9 +129,15 @@
                         <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
-                <button id="datadisDirectBtn" type="button" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                    ⬇️ Descargar y analizar directamente
-                </button>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                        ⬇️ Descargar y analizar directamente
+                    </button>
+                    <!-- Botón para guardar CSV localmente -->
+                    <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                        💾 Guardar como archivo CSV
+                    </button>
+                </div>
                 <p id="datadisDirectStatus" class="text-xs mt-2"></p>
             </div>
         </div>
@@ -271,15 +289,15 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
                 <div>
-                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mt-2">
+                    <label class="flex items-center space-x-2 text-sm font-medium mt-2">
                         <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
                         <span>Fines de semana completos a precio VALLE</span>
                     </label>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fechas festivas adicionales (YYYY-MM-DD separadas por comas):</label>
+                    <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (YYYY-MM-DD separadas por comas):</label>
                     <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="2024-01-01,2024-01-06,2024-05-01,2024-08-15,2024-10-12,2024-11-01,2024-12-06,2024-12-08,2024-12-25">
                 </div>
             </div>
@@ -292,7 +310,7 @@
             </button>
         </div>
 
-        <!-- Mensajes de Estado -->
+        <!-- Messages de Estado -->
         <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center"></div>
 
         <!-- Resultados -->
@@ -315,10 +333,12 @@
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
                     <p id="avgDailyKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
+                    <p id="minMaxDailyKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">Mín: 0.00 kWh<br>Máx: 0.00 kWh</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-pink-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Precio Medio kWh</h3>
                     <p id="avgPriceKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00000 €</p>
+                    <p id="minMaxPriceKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">Mín: 0.00000 €/kWh<br>Máx: 0.00000 €/kWh</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-red-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Pico Máx. Horario</h3>
@@ -330,7 +350,7 @@
                 </div>
             </div>
 
-            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente) -->
+            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente, con mayor altura) -->
             <div class="space-y-6 mb-8">
 
                 <!-- PANEL: Patrón de Consumo (Doble Clasificación con Comparación) -->
@@ -348,44 +368,44 @@
                             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario (Tarifa Fija por Tramos introducida por el usuario)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- P1 Punta -->
-                                <div class="p-3 bg-red-50/50 rounded-xl border border-red-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-red-800 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
+                                <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p1TimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
-                                            <span class="text-gray-500">Consumo:</span>
-                                            <span id="p1KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p1KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-red-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
-                                            <span id="p1CostTimeText" class="text-red-700">0.00 € (0.0%)</span>
+                                        <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                            <span id="p1CostTimeText" class="text-red-800">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- P2 Llano -->
-                                <div class="p-3 bg-yellow-50/50 rounded-xl border border-yellow-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-yellow-800 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
+                                <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p2TimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
-                                            <span class="text-gray-500">Consumo:</span>
-                                            <span id="p2KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p2KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-yellow-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
-                                            <span id="p2CostTimeText" class="text-yellow-700">0.00 € (0.0%)</span>
+                                        <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                            <span id="p2CostTimeText" class="text-amber-800">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- P3 Valle -->
-                                <div class="p-3 bg-green-50/50 rounded-xl border border-green-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-green-800 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
+                                <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p3TimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
-                                            <span class="text-gray-500">Consumo:</span>
-                                            <span id="p3KwhTimeText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p3KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-green-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste Tarifa Manual:</span>
-                                            <span id="p3CostTimeText" class="text-green-700">0.00 € (0.0%)</span>
+                                        <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                            <span id="p3CostTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
                                 </div>
@@ -412,45 +432,45 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <!-- P1 Alto -->
-                                <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-rose-800 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
+                                <!-- P1 Alto (Caro) -->
+                                <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
-                                            <span class="text-gray-500">Consumo:</span>
-                                            <span id="p1KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p1KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-rose-200 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste PVPC:</span>
-                                            <span id="p1CostPriceText" class="text-rose-700">0.00 € (0.0%)</span>
+                                        <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste PVPC:</span>
+                                            <span id="p1CostPriceText" class="text-red-800">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
                                 </div>
                                 <!-- P2 Medio -->
-                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-amber-800 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
+                                <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p2PriceTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
-                                            <span class="text-gray-500">Consumo:</span>
-                                            <span id="p2KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p2KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-amber-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste PVPC:</span>
-                                            <span id="p2CostPriceText" class="text-amber-700">0.00 € (0.0%)</span>
+                                        <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste PVPC:</span>
+                                            <span id="p2CostPriceText" class="text-amber-800">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P3 Bajo -->
-                                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col justify-between shadow-xs">
-                                    <span class="font-bold text-emerald-800 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
+                                <!-- P3 Bajo (Barato) -->
+                                <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p3PriceTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
-                                            <span class="text-gray-500">Consumo:</span>
-                                            <span id="p3KwhPriceText" class="font-bold text-gray-900">0.00 kWh (0.0%)</span>
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p3KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
                                         </div>
-                                        <div class="flex justify-between border-t border-emerald-100 pt-1 font-semibold flex-col">
-                                            <span class="text-gray-500">Coste PVPC:</span>
-                                            <span id="p3CostPriceText" class="text-green-700">0.00 € (0.0%)</span>
+                                        <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste PVPC:</span>
+                                            <span id="p3CostPriceText" class="text-emerald-800">0.00 € (0.0%)</span>
                                         </div>
                                     </div>
                                 </div>
@@ -489,7 +509,7 @@
                 <!-- 1. Evolución Cronológica Diaria -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
-                    <div class="relative h-80">
+                    <div class="relative h-[450px]">
                         <canvas id="chartDaily"></canvas>
                     </div>
                 </div>
@@ -497,7 +517,7 @@
                 <!-- 2. Acumulado por Día de la Semana -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
-                    <div class="relative h-80">
+                    <div class="relative h-[450px]">
                         <canvas id="chartDayOfWeek"></canvas>
                     </div>
                 </div>
@@ -505,7 +525,7 @@
                 <!-- 3. Perfil Horario de 24 horas -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
-                    <div class="relative h-96">
+                    <div class="relative h-[500px]">
                         <canvas id="chartHourly"></canvas>
                     </div>
                 </div>
@@ -579,13 +599,17 @@
                     </a>
                 </div>
             </div>
-            <p class="text-[10px] text-gray-400 mt-8">Analizador de Consumo Eléctrico • Proyecto libre y de código abierto</p>
+            <p class="text-[10px] text-gray-400 mt-8">
+                Analizador de Consumo Eléctrico • Proyecto libre y de código abierto • Contacto: 
+                <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
+            </p>
         </footer>
     </div>
 
     <script>
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
+        window.lastDatadisCsv = null; // Almacena el último CSV generado de Datadis
         window.chartInstance1 = null;
         window.chartInstance2 = null;
         window.chartInstance3 = null;
@@ -633,6 +657,9 @@
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
 
+        const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
+        const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
+
         // --- GESTIÓN DE ARRASTRAR Y SOLTAR (DRAG & DROP) ---
         dropZone.addEventListener('click', () => csvInput.click());
 
@@ -673,7 +700,7 @@
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
         function toDatadisDate(isoDate) {
-            // Convierte YYYY-MM-DD (input date) a YYYY/MM (formato esperado por Datadis para la API privada)
+            // Convierte YYYY-MM-DD a YYYY/MM (formato privado esperado por Datadis)
             if (!isoDate) return '';
             const parts = isoDate.split('-');
             return `${parts[0]}/${parts[1]}`;
@@ -681,6 +708,7 @@
 
         async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
+            const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
@@ -695,6 +723,8 @@
 
             statusEl.textContent = '⏳ Conectando con Datadis...';
             statusEl.className = 'text-xs mt-2 text-gray-600';
+            exportBtn.classList.add('hidden');
+            window.lastDatadisCsv = null;
 
             try {
                 const resp = await fetch(DATADIS_PROXY_URL, {
@@ -719,8 +749,11 @@
 
                 let csv = 'Fecha,Hora,Consumo (kWh)\n';
                 data.consumptionData.forEach((x) => {
-                    csv += `${x.date.replace(/\//g, '-')},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
+                    csv += `${x.date},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionkwh ?? x.consumptionKwh}\n`;
                 });
+
+                // Guardar para posibilitar la exportación del archivo
+                window.lastDatadisCsv = csv;
 
                 Papa.parse(csv, {
                     header: true,
@@ -728,7 +761,7 @@
                     complete: (results) => {
                         window.rawCsvData = results.data;
 
-                        // Se limpian selecciones previas del calendario para dar paso a la nueva descarga
+                        // Se limpian selecciones previas del calendario
                         if (window.calendarSelectedDates) {
                             window.calendarSelectedDates.clear();
                         }
@@ -742,6 +775,8 @@
 
                         statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas del CUPS ${data.cups}.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
+                        exportBtn.classList.remove('hidden'); // Mostrar botón de descarga del CSV
+                        
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
                         fileNameSpan.textContent = `Datadis API (CUPS ${data.cups})`;
@@ -758,6 +793,26 @@
         }
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
+
+        // Exportar el archivo CSV descargado para guardarlo localmente
+        document.getElementById('datadisExportBtn').addEventListener('click', () => {
+            if (!window.lastDatadisCsv) return;
+            
+            const cupsVal = document.getElementById('datadisCups').value.trim() || 'cups_detectado';
+            const startVal = document.getElementById('datadisStart').value || 'fecha';
+            const endVal = document.getElementById('datadisEnd').value || 'fecha';
+            const fileName = `consumo_datadis_${cupsVal}_${startVal}_a_${endVal}.csv`;
+
+            const blob = new Blob([window.lastDatadisCsv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const tempLink = document.createElement('a');
+            tempLink.href = url;
+            tempLink.setAttribute('download', fileName);
+            tempLink.style.visibility = 'hidden';
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+        });
 
         // Por defecto, proponer los últimos 30 días si no hay guardados
         (function initDatadisDefaultDates() {
@@ -816,26 +871,54 @@
                     return;
                 }
        
-                // 1. Estructurar y sanitizar todos los datos
+                // Autodetección de rango de horas (1-24 vs 0-23)
+                const hoursList = parsedRows.map(r => parseInt(r[colHora], 10)).filter(h => !isNaN(h));
+                const isOneBased = hoursList.includes(24) || !hoursList.includes(0);
+
+                // 1. Estructurar, sanitizar y normalizar robustamente todos los datos
                 let cleanData = parsedRows.map(row => {
                     let rawDate = row[colFecha];
                     if (!rawDate) return null;
 
-                    rawDate = rawDate.trim().split(' ')[0];
+                    // Truncar posibles sufijos ISO con "T" o espacios
+                    rawDate = rawDate.trim().split(/[ T]/)[0];
 
-                    let parts = rawDate.split(/[-/]/);
-                    let formattedDate = rawDate;
+                    // Separar por guiones, barras o puntos
+                    let parts = rawDate.split(/[-/.]/).map(p => p.trim());
+                    let formattedDate = "";
+
                     if (parts.length === 3) {
-                        if (parts[2].length === 4) {
-                            formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        } else if (parts[0].length === 4) {
-                            formattedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                        let year = parts[2];
+                        let month = parts[1].padStart(2, '0');
+                        let day = parts[0].padStart(2, '0');
+
+                        // Si el año está al principio (formato AAAA-MM-DD)
+                        if (parts[0].length === 4 || (parts[0].length === 2 && parseInt(parts[0], 10) > 31)) {
+                            year = parts[0];
+                            month = parts[1].padStart(2, '0');
+                            day = parts[2].padStart(2, '0');
                         }
+
+                        // Corregir años de 2 dígitos (ej: "24" -> "2024")
+                        if (year.length === 2) {
+                            year = "20" + year;
+                        }
+
+                        formattedDate = `${year}-${month}-${day}`;
+                    } else {
+                        formattedDate = rawDate; // Fallback
                     }
 
                     let hora = parseInt(row[colHora], 10);
                     if (isNaN(hora)) return null;
-                    if (hora === 24) hora = 0; 
+                    
+                    // Normalización de hora al estándar 0-23 de REE y tramos
+                    if (isOneBased) {
+                        hora = hora - 1;
+                        if (hora < 0) hora = 23; 
+                    } else {
+                        if (hora === 24) hora = 0;
+                    }
 
                     let consumoRaw = row[colConsumo] ? String(row[colConsumo]).replace(',', '.') : '0';
                     let consumo = parseFloat(consumoRaw);
@@ -846,19 +929,19 @@
                         hora: hora,
                         consumo: consumo
                     };
-                }).filter(item => item !== null);
+                }).filter(item => item !== null && item.fechaStr.match(/^\d{4}-\d{2}-\d{2}$/)); // Filtrar solo fechas válidas AAAA-MM-DD
 
                 if (cleanData.length === 0) {
-                    showStatus("No se encontraron registros válidos en el archivo.", "error");
+                    showStatus("No se encontraron registros de fecha válidos en el archivo.", "error");
                     return;
                 }
 
                 // Descargar precios oficiales PVPC de REE
-                const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
+                const fechas = cleanData.map(d => d.fechaStr);
                 const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
                 const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
 
-                showStatus("Conectando con la base de Datos Públicos oficiales de Red Eléctrica de España...", "info");
+                showStatus(`Conectando con Red Eléctrica de España para el periodo ${fechaInicio} al ${fechaFin}...`, "info");
                 const preciosMap = await fetchPreciosPVPC(fechaInicio, fechaFin);
 
                 // Leer parámetros de la tarifa manual de tramos
@@ -944,7 +1027,6 @@
                         if (startH <= endH) {
                             if (item.hora < startH || item.hora > endH) return false;
                         } else {
-                            // Rango que cruza la medianoche (Ej: De 22:00 a 06:00)
                             if (item.hora < startH && item.hora > endH) return false;
                         }
                     } else if (startHourVal !== "") {
@@ -961,11 +1043,11 @@
                     return;
                 }
 
-                showStatus("Procesamiento finalizado.", "success");
+                showStatus("Procesamiento finalizado con éxito.", "success");
                 renderResultsAndCharts(filteredData);
 
             } catch (err) {
-                showStatus("Error al procesar: " + err.message, "error");
+                showStatus("Error al procesar los datos: " + err.message, "error");
                 console.error(err);
             }
         }
@@ -975,7 +1057,7 @@
             const startDate = new Date(inicio);
             const endDate = new Date(fin);
             
-            // Segmentación del rango de fechas en bloques de máximo 30 días para no saturar la API pública de REE (límite 31 días)
+            // Segmentación en bloques de máximo 30 días para la API de REE
             const chunks = [];
             let currentStart = new Date(startDate);
             
@@ -998,27 +1080,32 @@
             const preciosMap = {};
             
             try {
-                // Descargas en paralelo utilizando Promise.all
                 const promises = chunks.map(async (chunk) => {
                     const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
                     const response = await fetch(url);
                     if (!response.ok) {
-                        throw new Error(`REE respondió con código: ${response.status} para el bloque ${chunk.start} - ${chunk.end}`);
+                        throw new Error(`Código de respuesta REE: ${response.status}`);
                     }
                     const data = await response.json();
+                    
+                    if (!data.included) {
+                        return; // Omitir si este fragmento carece de información
+                    }
+
                     const pvpcSeries = data.included.find(series => 
-                        series.type.toLowerCase().includes('pvpc') || 
-                        (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                        series && (
+                            (series.type && series.type.toLowerCase().includes('pvpc')) || 
+                            (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
+                        )
                     );
                     
                     if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
                         pvpcSeries.attributes.values.forEach(v => {
                             if (!v.datetime) return;
-                            // Se extrae la fecha y hora directamente del formato de texto para mitigar desajustes por husos horarios locales
                             const datePart = v.datetime.substring(0, 10); // YYYY-MM-DD
                             const hourPart = parseInt(v.datetime.substring(11, 13), 10); // HH
                             const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
-                            preciosMap[key] = v.value / 1000.0;
+                            preciosMap[key] = v.value / 1000.0; // Conversión a €/kWh
                         });
                     }
                 });
@@ -1037,6 +1124,10 @@
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
+
+            // Elementos del DOM para los nuevos rangos
+            const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
+            const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
 
             let totalKwh = 0;
             let totalCost = 0;
@@ -1060,6 +1151,14 @@
 
             let totalCostPvpc = 0;
             let totalCostManual = 0;
+
+            // Inicialización de variables para registrar el precio mínimo y máximo
+            let minPrice = Infinity;
+            let maxPrice = -Infinity;
+
+            // Contadores de horas añadidos
+            let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
+            let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
 
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
@@ -1094,6 +1193,10 @@
                 totalCostPvpc += item.costePvpc;
                 totalCostManual += item.costeManual;
 
+                // Registro del precio mínimo y máximo detectado por hora
+                if (item.precio < minPrice) minPrice = item.precio;
+                if (item.precio > maxPrice) maxPrice = item.precio;
+
                 const dateParts = item.fechaStr.split('-');
                 const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const dayOfWeek = dateObj.getDay(); 
@@ -1124,12 +1227,15 @@
                 if (itemSlot === 'P1') {
                     p1KwhTime += item.consumo;
                     p1CostTime += item.costeManual; 
+                    p1TimeHours++; // Contador de horas
                 } else if (itemSlot === 'P2') {
                     p2KwhTime += item.consumo;
                     p2CostTime += item.costeManual; 
+                    p2TimeHours++; // Contador de horas
                 } else {
                     p3KwhTime += item.consumo;
                     p3CostTime += item.costeManual; 
+                    p3TimeHours++; // Contador de horas
                 }
 
                 // 2. CLASIFICACIÓN POR COSTE REAL (PVPC)
@@ -1139,12 +1245,15 @@
                 if (item.precioPvpc >= pvpcHigh) {
                     p1KwhPrice += item.consumo;
                     p1CostPrice += item.costePvpc; 
+                    p1PriceHours++; // Contador de horas
                 } else if (item.precioPvpc <= pvpcLow) {
                     p3KwhPrice += item.consumo;
                     p3CostPrice += item.costePvpc; 
+                    p3PriceHours++; // Contador de horas
                 } else {
                     p2KwhPrice += item.consumo;
                     p2CostPrice += item.costePvpc; 
+                    p2PriceHours++; // Contador de horas
                 }
 
                 if (item.consumo > maxPeakHourly) {
@@ -1225,20 +1334,37 @@
             const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
-            // Actualizar Métricas de Texto en pantalla
+            // Actualizar Métricas de Texto en pantalla (con la nueva media de coste diario)
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
             totalCostEl.innerHTML = `
                 ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                 <span class="text-[10px] text-gray-500 block font-normal mt-1 leading-tight text-left">
                     • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
-                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
+                    • Medio: ${(grandTotalActive / numDays).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
                 </span>
             `;
             
             totalDaysEl.textContent = `${numDays} días`;
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+
+            // --- CÁLCULO DE MÍNIMOS Y MÁXIMOS PARA LOS TARJETONES ---
+            const dailyKwhValues = Object.values(dailyStats).map(d => d.kwh);
+            const minDailyKwh = dailyKwhValues.length > 0 ? Math.min(...dailyKwhValues) : 0;
+            const maxDailyKwh = dailyKwhValues.length > 0 ? Math.max(...dailyKwhValues) : 0;
+
+            const finalMinPrice = minPrice === Infinity ? 0 : minPrice;
+            const finalMaxPrice = maxPrice === -Infinity ? 0 : maxPrice;
+
+            // Inyección con salto de línea (br) para los valores extremos
+            if (minMaxDailyKwhTextEl) {
+                minMaxDailyKwhTextEl.innerHTML = `Mín: ${minDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh<br>Máx: ${maxDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            }
+            if (minMaxPriceKwhTextEl) {
+                minMaxPriceKwhTextEl.innerHTML = `Mín: ${finalMinPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh<br>Máx: ${finalMaxPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+            }
 
             const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
             const avgPowerP2 = countP2 > 0 ? (totalKwhP2 / countP2) : 0;
@@ -1279,6 +1405,22 @@
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
+
+            // Inyección dinámica de horas en los títulos de cada tramo
+            const p1TimeTitleEl = document.getElementById('p1TimeTitle');
+            const p2TimeTitleEl = document.getElementById('p2TimeTitle');
+            const p3TimeTitleEl = document.getElementById('p3TimeTitle');
+            const p1PriceTitleEl = document.getElementById('p1PriceTitle');
+            const p2PriceTitleEl = document.getElementById('p2PriceTitle');
+            const p3PriceTitleEl = document.getElementById('p3PriceTitle');
+
+            if (p1TimeTitleEl) p1TimeTitleEl.textContent = `P1 (Horas Punta) [${p1TimeHours} h]`;
+            if (p2TimeTitleEl) p2TimeTitleEl.textContent = `P2 (Horas Llano) [${p2TimeHours} h]`;
+            if (p3TimeTitleEl) p3TimeTitleEl.textContent = `P3 (Horas Valle) [${p3TimeHours} h]`;
+            
+            if (p1PriceTitleEl) p1PriceTitleEl.textContent = `Coste Alto (Precio ≥ Umbral Caro) [${p1PriceHours} h]`;
+            if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Precios Intermedios) [${p2PriceHours} h]`;
+            if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Precio ≤ Umbral Barato) [${p3PriceHours} h]`;
 
             // Porcentajes e Inyecciones de Bloque 1 (Tarifa fija manual)
             const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
@@ -1523,6 +1665,15 @@
             const kwhData = sortedDates.map(d => stats[d].kwh);
             const costData = sortedDates.map(d => stats[d].cost);
 
+            // Generar etiquetas formateadas solo con "Día/Mes" (DD/MM)
+            const friendlyLabels = sortedDates.map(dateStr => {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}`; // Retorna DD/MM
+                }
+                return dateStr;
+            });
+
             const numDays = sortedDates.length || 1;
             const totalKwh = kwhData.reduce((a, b) => a + b, 0);
             const totalCost = costData.reduce((a, b) => a + b, 0);
@@ -1549,7 +1700,7 @@
             window.chartInstance2 = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: sortedDates,
+                    labels: friendlyLabels, // Uso de etiquetas simplificadas "DD/MM"
                     datasets: [
                         {
                             label: 'Consumo (kWh)',
@@ -1600,6 +1751,17 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                // Muestra la fecha completa en formato YYYY-MM-DD al pasar el ratón
+                                title: function(context) {
+                                    const index = context[0].dataIndex;
+                                    return sortedDates[index] || context[0].label;
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             type: 'linear',
@@ -1772,13 +1934,14 @@
                             borderWidth: 2,
                             fill: false,
                             yAxisID: 'y1',
-                            order: 3
+                            order: 3,
+                            hidden: true 
                         },
                         {
                             label: 'Precio Medio (€/kWh)',
                             data: avgPriceData,
                             type: 'line',
-                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderColor: 'rgba(245, 158, 11, 0.6)',
                             borderWidth: 2,
                             fill: false,
                             yAxisID: 'y2',
@@ -1800,8 +1963,8 @@
                             label: 'Precio Medio Periodo (€/kWh)',
                             data: Array(24).fill(avgPeriodPrice),
                             type: 'line',
-                            borderColor: 'rgba(245, 158, 11, 0.6)',
-                            borderWidth: 1.5,
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 3.5,
                             borderDash: [6, 6],
                             pointRadius: 0,
                             fill: false,
