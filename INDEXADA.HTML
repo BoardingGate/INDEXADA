@@ -1315,14 +1315,15 @@ async function processData(parsedRows) {
             const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
-            // Actualizar Métricas de Texto en pantalla
+           // Actualizar Métricas de Texto en pantalla (con la nueva media de coste diario)
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
             totalCostEl.innerHTML = `
                 ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                 <span class="text-[10px] text-gray-500 block font-normal mt-1 leading-tight text-left">
                     • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
-                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
+                    • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
+                    • Medio: ${(grandTotalActive / numDays).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
                 </span>
             `;
             
