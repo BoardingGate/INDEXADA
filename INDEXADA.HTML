@@ -333,11 +333,16 @@
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
                     <p id="avgDailyKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
+                    <!-- Elemento añadido para el consumo mínimo y máximo diario -->
+                    <p id="minMaxDailyKwhText" class="text-[10px] text-gray-500 mt-1 leading-tight">Mín: 0.00 kWh | Máx: 0.00 kWh</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-pink-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Precio Medio kWh</h3>
                     <p id="avgPriceKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00000 €</p>
-                </div>
+                    <!-- Elemento añadido para el precio mínimo y máximo registrado -->
+                    <p id="minMaxPriceKwhText" class="text-[10px] text-gray-500 mt-1 leading-tight">Mín: 0.00000 € | Máx: 0.00000 €</p>
+                </div>             
+             
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-red-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Pico Máx. Horario</h3>
                     <p id="maxPeakHourlyText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
@@ -654,6 +659,8 @@
         const maxPeakHourlyTextEl = document.getElementById('maxPeakHourlyText');
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
+        const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
+        const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
 
         // --- GESTIÓN DE ARRASTRAR Y SOLTAR (DRAG & DROP) ---
         dropZone.addEventListener('click', () => csvInput.click());
@@ -1095,10 +1102,15 @@ async function processData(parsedRows) {
         }
 
         // --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
+// --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
+
+            // Elementos del DOM para los nuevos rangos
+            const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
+            const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
 
             let totalKwh = 0;
             let totalCost = 0;
@@ -1122,6 +1134,10 @@ async function processData(parsedRows) {
 
             let totalCostPvpc = 0;
             let totalCostManual = 0;
+
+            // Inicialización de variables para registrar el precio mínimo y máximo
+            let minPrice = Infinity;
+            let maxPrice = -Infinity;
 
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
@@ -1155,6 +1171,10 @@ async function processData(parsedRows) {
                 totalCost += item.coste;
                 totalCostPvpc += item.costePvpc;
                 totalCostManual += item.costeManual;
+
+                // Registro del precio mínimo y máximo detectado por hora
+                if (item.precio < minPrice) minPrice = item.precio;
+                if (item.precio > maxPrice) maxPrice = item.precio;
 
                 const dateParts = item.fechaStr.split('-');
                 const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
@@ -1301,6 +1321,21 @@ async function processData(parsedRows) {
             totalDaysEl.textContent = `${numDays} días`;
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+
+            // --- CÁLCULO DE MÍNIMOS Y MÁXIMOS PARA LOS TARJETONES ---
+            const dailyKwhValues = Object.values(dailyStats).map(d => d.kwh);
+            const minDailyKwh = dailyKwhValues.length > 0 ? Math.min(...dailyKwhValues) : 0;
+            const maxDailyKwh = dailyKwhValues.length > 0 ? Math.max(...dailyKwhValues) : 0;
+
+            const finalMinPrice = minPrice === Infinity ? 0 : minPrice;
+            const finalMaxPrice = maxPrice === -Infinity ? 0 : maxPrice;
+
+            if (minMaxDailyKwhTextEl) {
+                minMaxDailyKwhTextEl.textContent = `Mín: ${minDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh | Máx: ${maxDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+            }
+            if (minMaxPriceKwhTextEl) {
+                minMaxPriceKwhTextEl.textContent = `Mín: ${finalMinPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} € | Máx: ${finalMaxPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €`;
+            }
 
             const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
             const avgPowerP2 = countP2 > 0 ? (totalKwhP2 / countP2) : 0;
