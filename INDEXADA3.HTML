@@ -1058,26 +1058,32 @@
         }
 
         async function fetchPreciosPVPC(inicio, fin) {
-            const startDate = new Date(inicio);
-            const endDate = new Date(fin);
+            // Analizar estrictamente las fechas como componentes numéricos individuales
+            const startParts = inicio.split('-').map(Number);
+            const endParts = fin.split('-').map(Number);
+            
+            // Inicializar las fechas en UTC absoluto para aislar el cálculo de la zona horaria del sistema local
+            const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+            const endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
             
             const chunks = [];
-            let currentStart = new Date(startDate);
+            let currentStart = new Date(startDate.getTime());
             
             while (currentStart <= endDate) {
-                let currentEnd = new Date(currentStart);
-                currentEnd.setDate(currentEnd.getDate() + 30);
+                let currentEnd = new Date(currentStart.getTime());
+                // Incrementar fecha en UTC
+                currentEnd.setUTCDate(currentEnd.getUTCDate() + 30);
                 if (currentEnd > endDate) {
-                    currentEnd = new Date(endDate);
+                    currentEnd = new Date(endDate.getTime());
                 }
                 
-                chunks.push({
-                    start: currentStart.toISOString().split('T')[0],
-                    end: currentEnd.toISOString().split('T')[0]
-                });
+                const startStr = currentStart.toISOString().split('T')[0];
+                const endStr = currentEnd.toISOString().split('T')[0];
                 
-                currentStart = new Date(currentEnd);
-                currentStart.setDate(currentStart.getDate() + 1);
+                chunks.push({ start: startStr, end: endStr });
+                
+                currentStart = new Date(currentEnd.getTime());
+                currentStart.setUTCDate(currentStart.getUTCDate() + 1);
             }
             
             const preciosMap = {};
@@ -1095,16 +1101,23 @@
                         return;
                     }
 
-                    const pvpcSeries = data.included.find(series => 
-                        series && (
-                            (series.type && series.type.toLowerCase().includes('pvpc')) || 
-                            (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                        )
-                    );
+                    // Búsqueda exhaustiva de la serie PVPC por su ID oficial 600 o términos clave inalterables de Red Eléctrica
+                    const pvpcSeries = data.included.find(series => {
+                        if (!series) return false;
+                        const type = (series.type || '').toLowerCase();
+                        const title = (series.attributes && series.attributes.title || '').toLowerCase();
+                        const id = String(series.id || '');
+                        return id === '600' || 
+                               type.includes('pvpc') || 
+                               title.includes('pvpc') || 
+                               title.includes('pequeño consumidor') || 
+                               title.includes('voluntario para el');
+                    });
                     
                     if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
                         pvpcSeries.attributes.values.forEach(v => {
                             if (!v.datetime) return;
+                            // Se extrae la fecha y hora directamente del texto ISO retornado por el servidor
                             const datePart = v.datetime.substring(0, 10); 
                             const hourPart = parseInt(v.datetime.substring(11, 13), 10); 
                             const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
@@ -1185,12 +1198,14 @@
                 count: 0
             }));
 
+            // Bucle principal para acumular datos basados en los filtros aplicados
             data.forEach(item => {
                 totalKwh += item.consumo;
                 totalCost += item.coste;
                 totalCostPvpc += item.costePvpc;
                 totalCostManual += item.costeManual;
 
+                // Registro del mínimo y máximo únicamente de los registros válidos
                 if (item.precio < minPrice) minPrice = item.precio;
                 if (item.precio > maxPrice) maxPrice = item.precio;
 
@@ -2197,3 +2212,4 @@
     </script>
 </body>
 </html>
+
