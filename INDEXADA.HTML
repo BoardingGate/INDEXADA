@@ -330,18 +330,26 @@
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Nº de Días</h3>
                     <p id="totalDays" class="text-lg font-bold text-gray-900 mt-2">0 días</p>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
+             <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
                     <p id="avgDailyKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
-                    <!-- Elemento añadido para el consumo mínimo y máximo diario -->
-                    <p id="minMaxDailyKwhText" class="text-[10px] text-gray-500 mt-1 leading-tight">Mín: 0.00 kWh      Máx: 0.00 kWh</p>
+                    <!-- Contenedor modificado para permitir dos líneas con retorno de carro -->
+                    <p id="minMaxDailyKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
+                        Mín: 0.00 kWh<br>
+                        Máx: 0.00 kWh
+                    </p>
                 </div>
+                
+                <!-- Tarjeta 5: Precio Medio kWh -->
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-pink-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Precio Medio kWh</h3>
                     <p id="avgPriceKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00000 €</p>
-                    <!-- Elemento añadido para el precio mínimo y máximo registrado -->
-                    <p id="minMaxPriceKwhText" class="text-[10px] text-gray-500 mt-1 leading-tight">Mín: 0.00000 €     Máx: 0.00000 €</p>
-                </div>             
+                    <!-- Contenedor modificado para permitir dos líneas con retorno de carro -->
+                    <p id="minMaxPriceKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
+                        Mín: 0.00000 €/kWh<br>
+                        Máx: 0.00000 €/kWh
+                    </p>
+                </div>           
              
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-red-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Pico Máx. Horario</h3>
@@ -1330,11 +1338,12 @@ async function processData(parsedRows) {
             const finalMinPrice = minPrice === Infinity ? 0 : minPrice;
             const finalMaxPrice = maxPrice === -Infinity ? 0 : maxPrice;
 
+            // Inyección con salto de línea (br) para los valores extremos
             if (minMaxDailyKwhTextEl) {
-                minMaxDailyKwhTextEl.textContent = `Mín: ${minDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh | Máx: ${maxDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
+                minMaxDailyKwhTextEl.innerHTML = `Mín: ${minDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh<br>Máx: ${maxDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             }
             if (minMaxPriceKwhTextEl) {
-                minMaxPriceKwhTextEl.textContent = `Mín: ${finalMinPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} € | Máx: ${finalMaxPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €`;
+                minMaxPriceKwhTextEl.innerHTML = `Mín: ${finalMinPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh<br>Máx: ${finalMaxPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
             }
 
             const avgPowerP1 = countP1 > 0 ? (totalKwhP1 / countP1) : 0;
