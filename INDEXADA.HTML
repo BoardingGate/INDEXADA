@@ -1157,7 +1157,7 @@ async function fetchPreciosPVPC(inicio, fin) {
         const chunks = [];
         let currentStart = new Date(startDate.getTime());
         
-        // Usamos bloques de 28 días para asegurar que nunca se superen los 30 días de límite estricto de REE
+        // Bloques de 28 días para asegurar que nunca se superen los 30 días de límite de REE por llamada
         while (currentStart <= endDate) {
             let currentEnd = new Date(currentStart.getTime());
             currentEnd.setUTCDate(currentEnd.getUTCDate() + 28);
@@ -1176,14 +1176,15 @@ async function fetchPreciosPVPC(inicio, fin) {
         
         const preciosMap = {};
         
-        // Ejecución secuencial segura
+        // Ejecución secuencial controlada para evitar bloqueos por rate-limiting
         for (const chunk of chunks) {
             try {
-                const url = `https://apidatos.ree.es/es/datos/markets/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
+                // URL oficial corregida con "/mercados/"
+                const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    console.warn(`Fragmento de fecha omitido por REE (${chunk.start} a ${chunk.end}): HTTP ${response.status}`);
+                    console.warn(`Fragmento omitido por REE (${chunk.start} a ${chunk.end}): HTTP ${response.status}`);
                     continue; 
                 }
                 
@@ -1206,35 +1207,27 @@ async function fetchPreciosPVPC(inicio, fin) {
                     pvpcSeries.attributes.values.forEach(v => {
                         if (!v.datetime) return;
                         try {
-                            const d = new Date(v.datetime);
-                            
-                            // Conversión de fecha y hora 100% inmune a desajustes del sistema local y navegadores
-                            const esDateStr = d.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
-                            const esParts = esDateStr.split('/');
-                            const datePart = `${esParts[2]}-${esParts[1].padStart(2, '0')}-${esParts[0].padStart(2, '0')}`;
-                            
-                            const hourStr = d.toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false });
-                            let hourPart = parseInt(hourStr, 10);
-                            if (hourPart === 24) hourPart = 0;
-                            hourPart = hourPart % 24;
+                            // Extracción directa y robusta de fecha y hora local desde la cadena devuelta por REE
+                            const datePart = v.datetime.substring(0, 10); 
+                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); 
 
                             const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
                             preciosMap[key] = v.value / 1000.0; 
                         } catch (e) {
-                            console.error("Error al estructurar elemento de fecha de REE:", v.datetime, e);
+                            console.error("Error al procesar el registro de fecha de REE:", v.datetime, e);
                         }
                     });
                 }
 
-                // Pausa técnica de 100 ms para evitar rate-limits
+                // Espera técnica de 100 ms antes de realizar la siguiente llamada
                 await new Promise(resolve => setTimeout(resolve, 100));
 
             } catch (err) {
-                console.error(`Fallo de conexión en fragmento (${chunk.start} a ${chunk.end}):`, err);
+                console.error(`Fallo de conexión en fragmento REE (${chunk.start} a ${chunk.end}):`, err);
             }
         }
         
-        console.log(`Precios correctamente emparejados en memoria: ${Object.keys(preciosMap).length} horas.`);
+        console.log(`Precios cargados correctamente en memoria: ${Object.keys(preciosMap).length} horas.`);
         return preciosMap;
     }
 
