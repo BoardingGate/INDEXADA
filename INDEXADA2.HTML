@@ -16,7 +16,7 @@
     <div class="container mx-auto px-4 py-8 max-w-5xl">
         <!-- Cabecera -->
         <header class="mb-8 text-center max-w-xl mx-auto">
-            <!-- Etiqueta BoardingGate con colores diferenciados y tamaño ligeramente mayor -->
+            <!-- Etiqueta BoardingGate -->
             <span class="text-[13px] font-bold tracking-wider bg-blue-50/80 px-3 py-0.5 rounded-full inline-flex items-center mb-2">
                 <span class="text-slate-900">Boarding</span>
                 <span class="text-blue-500 ml-0.7">Gate</span>
@@ -26,7 +26,6 @@
                 Analizador de <span class="text-blue-600">Consumo Eléctrico</span>
             </h1>
             
-            <!-- Leyenda final con tamaño de letra más pequeño -->
             <p class="text-[11px] sm:text-xs text-gray-500 mt-1 leading-relaxed max-w-md mx-auto">
                 Analiza consumos de tu punto de suministro eléctrico importando las lecturas de tu Distribuidora
             </p>
@@ -289,15 +288,15 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
                 <div>
-                    <label class="flex items-center space-x-2 text-sm font-medium text-gray-700 mt-2">
+                    <label class="flex items-center space-x-2 text-sm font-medium mt-2">
                         <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
                         <span>Fines de semana completos a precio VALLE</span>
                     </label>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fechas festivas adicionales (YYYY-MM-DD separadas por comas):</label>
+                    <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (YYYY-MM-DD separadas por comas):</label>
                     <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="2024-01-01,2024-01-06,2024-05-01,2024-08-15,2024-10-12,2024-11-01,2024-12-06,2024-12-08,2024-12-25">
                 </div>
             </div>
@@ -330,27 +329,16 @@
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Nº de Días</h3>
                     <p id="totalDays" class="text-lg font-bold text-gray-900 mt-2">0 días</p>
                 </div>
-             <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
+                <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
                     <p id="avgDailyKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
-                    <!-- Contenedor modificado para permitir dos líneas con retorno de carro -->
-                    <p id="minMaxDailyKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
-                        Mín: 0.00 kWh<br>
-                        Máx: 0.00 kWh
-                    </p>
+                    <p id="minMaxDailyKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">Mín: 0.00 kWh<br>Máx: 0.00 kWh</p>
                 </div>
-                
-                <!-- Tarjeta 5: Precio Medio kWh -->
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-pink-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Precio Medio kWh</h3>
                     <p id="avgPriceKwhText" class="text-lg font-bold text-gray-900 mt-2">0.00000 €</p>
-                    <!-- Contenedor modificado para permitir dos líneas con retorno de carro -->
-                    <p id="minMaxPriceKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">
-                        Mín: 0.00000 €/kWh<br>
-                        Máx: 0.00000 €/kWh
-                    </p>
-                </div>           
-             
+                    <p id="minMaxPriceKwhText" class="text-[10px] text-gray-500 mt-1.5 leading-relaxed">Mín: 0.00000 €/kWh<br>Máx: 0.00000 €/kWh</p>
+                </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-red-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Pico Máx. Horario</h3>
                     <p id="maxPeakHourlyText" class="text-lg font-bold text-gray-900 mt-2">0.00 kWh</p>
@@ -361,7 +349,7 @@
                 </div>
             </div>
 
-            <!-- Gráficas del Análisis (Ordenadas y apiladas verticalmente, con mayor altura) -->
+            <!-- Gráficas del Análisis -->
             <div class="space-y-6 mb-8">
 
                 <!-- PANEL: Patrón de Consumo (Doble Clasificación con Comparación) -->
@@ -428,7 +416,6 @@
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
                                 
-                                <!-- Ajuste de Umbrales de Precio para PVPC / Indexado -->
                                 <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
                                     <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
                                     <div>
@@ -488,6 +475,80 @@
                             </div>
                         </div>
 
+                        <!-- Panel de Parámetros de Simulación de Factura Duplicado (Añadido) -->
+<!-- Panel de Parámetros de Simulación de Factura Continuo (Añadido) -->
+                        <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
+                            <!-- Fila Continua PVPC -->
+                            <div>
+                                <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC (Tarifa Indexada)</span>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                        <input type="number" id="discountEnergyPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                        <input type="number" id="discountPowerPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                        <input type="number" id="invoiceAdjustmentsPvpc" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
+                                        <input type="number" id="retailerMarginPvpc" step="0.001" value="0.123" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                        <input type="number" id="electricityTaxPvpc" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
+                                        <input type="number" id="meterRentalPvpc" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                        <input type="number" id="vatRatePvpc" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fila Continua Manual -->
+                            <div class="pt-3 border-t border-emerald-100">
+                                <span class="text-[10px] font-bold text-green-900 uppercase tracking-wider block mb-1.5">2. Parámetros de Factura Manual (Tarifa por Tramos)</span>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                        <input type="number" id="discountEnergyManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                        <input type="number" id="discountPowerManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                        <input type="number" id="invoiceAdjustmentsManual" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
+                                        <input type="number" id="retailerMarginManual" step="0.001" value="0.123" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                        <input type="number" id="electricityTaxManual" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
+                                        <input type="number" id="meterRentalManual" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                        <input type="number" id="vatRateManual" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 3. Comparación Global de Sistemas de Facturación -->
                         <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
                             <div class="text-left">
@@ -501,7 +562,6 @@
                     </div>
                 </div>
 
-                
                 <!-- PANEL: Consumo Diario por Calendario -->
                 <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
@@ -518,7 +578,7 @@
                     </div>
                 </div>
 
-                <!-- 1. Evolución Cronológica Diaria (Aumentado de h-80 a h-[450px]) -->
+                <!-- 1. Evolución Cronológica Diaria -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
                     <div class="relative h-[450px]">
@@ -526,7 +586,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Acumulado por Día de la Semana (Aumentado de h-80 a h-[450px]) -->
+                <!-- 2. Acumulado por Día de la Semana -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
                     <div class="relative h-[450px]">
@@ -534,7 +594,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Perfil Horario de 24 horas (Aumentado de h-96 a h-[500px]) -->
+                <!-- 3. Perfil Horario de 24 horas -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
                     <div class="relative h-[500px]">
@@ -594,7 +654,7 @@
             </div>
         </div>
 
-        <!-- Sección de Referidos (Pie de Página) -->
+    <!-- Sección de Referidos -->
         <footer class="mt-16 border-t border-gray-200 pt-8 pb-4 text-center">
             <div class="bg-gradient-to-r from-purple-950 to-indigo-950 text-white p-6 rounded-2xl shadow-lg max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="text-left md:max-w-xl">
@@ -611,6 +671,17 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Accesos Directos a Utilidades Adicionales (Añadido) -->
+            <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <a href="https://boardinggate.github.io/BGUTIL/index.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                    <span>⚡ Utilidades para vehículo eléctrico</span>
+                </a>
+                <a href="https://boardinggate.github.io/Tesla/tesla.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                    <span>🚗 Navegador de rutas avanzado para Tesla</span>
+                </a>
+            </div>
+
             <p class="text-[10px] text-gray-400 mt-8">
                 Analizador de Consumo Eléctrico • Proyecto libre y de código abierto • Contacto: 
                 <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
@@ -621,7 +692,7 @@
     <script>
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
-        window.lastDatadisCsv = null; // Almacena el último CSV generado de Datadis
+        window.lastDatadisCsv = null; 
         window.chartInstance1 = null;
         window.chartInstance2 = null;
         window.chartInstance3 = null;
@@ -668,6 +739,7 @@
         const maxPeakHourlyTextEl = document.getElementById('maxPeakHourlyText');
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
+
         const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
         const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
 
@@ -711,10 +783,29 @@
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
         function toDatadisDate(isoDate) {
-            // Convierte YYYY-MM-DD (input date) a YYYY/MM (formato esperado por Datadis para la API privada)
             if (!isoDate) return '';
             const parts = isoDate.split('-');
             return `${parts[0]}/${parts[1]}`;
+        }
+
+        // Normalizador auxiliar para convertir cualquier fecha de Datadis a formato DD/MM/YYYY
+        function formatToDistributorDate(rawDate) {
+            if (!rawDate) return '';
+            let clean = rawDate.trim().split(/[ T]/)[0];
+            let parts = clean.split(/[-/.]/).map(p => p.trim());
+            if (parts.length === 3) {
+                let year = parts[0];
+                let month = parts[1];
+                let day = parts[2];
+                // Si el año está al final
+                if (parts[2].length === 4) {
+                    year = parts[2];
+                    month = parts[1];
+                    day = parts[0];
+                }
+                return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+            }
+            return rawDate;
         }
 
         async function descargarDesdeDatadis() {
@@ -758,39 +849,42 @@
                     return;
                 }
 
-               let csv = 'Fecha,Hora,Consumo (kWh)\n';
+                // Homogeneizar salida de Datadis a formato distribuidora oficial (delimitado por PUNTO Y COMA)
+                let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
+                const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
                 data.consumptionData.forEach((x) => {
-                        csv += `${x.date},${parseInt(x.time.split(':')[0], 10)},${x.consumptionKWh ?? x.consumptionKwh}\n`;
+                    const normalizedDate = formatToDistributorDate(x.date);
+                    const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? 0;
+                    const consumoStr = String(consumoValue).replace('.', ',');
+                    csv += `${cupsVal};${normalizedDate};${parseInt(x.time.split(':')[0], 10)};${consumoStr};R\n`;
                 });
 
-                // Guardar para posibilitar la exportación del archivo
                 window.lastDatadisCsv = csv;
 
                 Papa.parse(csv, {
                     header: true,
                     skipEmptyLines: true,
+                    delimiter: ';', // Indicamos punto y coma explícitamente para evitar fragmentación por coma decimal
                     complete: (results) => {
                         window.rawCsvData = results.data;
 
-                        // Se limpian selecciones previas del calendario para dar paso a la nueva descarga
                         if (window.calendarSelectedDates) {
                             window.calendarSelectedDates.clear();
                         }
 
-                        // Se ajustan automáticamente los filtros generales del período a las fechas propuestas
                         document.getElementById('filterStartDate').value = startDate;
                         document.getElementById('filterEndDate').value = endDate;
                         saveConfig();
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas del CUPS ${data.cups}.`;
+                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas de Datadis.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
-                        exportBtn.classList.remove('hidden'); // Mostrar botón de descarga del CSV
+                        exportBtn.classList.remove('hidden');
                         
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
-                        fileNameSpan.textContent = `Datadis API (CUPS ${data.cups})`;
+                        fileNameSpan.textContent = `Datadis API (CUPS ${cupsVal})`;
                     },
                     error: (err) => {
                         statusEl.textContent = '❌ Error al procesar los datos recibidos: ' + err.message;
@@ -805,14 +899,13 @@
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
 
-        // Exportar el archivo CSV descargado para guardarlo localmente
         document.getElementById('datadisExportBtn').addEventListener('click', () => {
             if (!window.lastDatadisCsv) return;
             
             const cupsVal = document.getElementById('datadisCups').value.trim() || 'cups_detectado';
             const startVal = document.getElementById('datadisStart').value || 'fecha';
             const endVal = document.getElementById('datadisEnd').value || 'fecha';
-            const fileName = `consumo_datadis_${cupsVal}_${startVal}_a_${endVal}.csv`;
+            const fileName = `consumo_distribuidora_${cupsVal}_${startVal}_a_${endVal}.csv`;
 
             const blob = new Blob([window.lastDatadisCsv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -825,7 +918,7 @@
             document.body.removeChild(tempLink);
         });
 
-        // Por defecto, proponer los últimos 30 días si no hay guardados
+        // Proponer últimos 30 días por defecto
         (function initDatadisDefaultDates() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
@@ -846,7 +939,6 @@
             const file = files[0];
             if (!file) return;
 
-            // Cambiar visualmente el dropzone para confirmar carga
             dropZonePrompt.classList.add('hidden');
             fileSuccessText.classList.remove('hidden');
             fileNameSpan.textContent = file.name;
@@ -868,7 +960,7 @@
             });
         }
 
-async function processData(parsedRows) {
+        async function processData(parsedRows) {
             const mode = rateMode.value;
 
             try {
@@ -882,32 +974,41 @@ async function processData(parsedRows) {
                     return;
                 }
        
-                // --- CAMBIO: Autodetección de rango de horas (1-24 vs 0-23) ---
                 const hoursList = parsedRows.map(r => parseInt(r[colHora], 10)).filter(h => !isNaN(h));
                 const isOneBased = hoursList.includes(24) || !hoursList.includes(0);
 
-                // 1. Estructurar y sanitizar todos los datos
+                // Normalización de fechas y horas
                 let cleanData = parsedRows.map(row => {
                     let rawDate = row[colFecha];
                     if (!rawDate) return null;
 
-                    // --- CAMBIO: Truncar posibles sufijos ISO con "T" o espacios ---
                     rawDate = rawDate.trim().split(/[ T]/)[0];
+                    let parts = rawDate.split(/[-/.]/).map(p => p.trim());
+                    let formattedDate = "";
 
-                    let parts = rawDate.split(/[-/]/).map(p => p.trim());
-                    let formattedDate = rawDate;
                     if (parts.length === 3) {
-                        if (parts[2].length === 4) {
-                            formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        } else if (parts[0].length === 4) {
-                            formattedDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                        let year = parts[2];
+                        let month = parts[1].padStart(2, '0');
+                        let day = parts[0].padStart(2, '0');
+
+                        if (parts[0].length === 4 || (parts[0].length === 2 && parseInt(parts[0], 10) > 31)) {
+                            year = parts[0];
+                            month = parts[1].padStart(2, '0');
+                            day = parts[2].padStart(2, '0');
                         }
+
+                        if (year.length === 2) {
+                            year = "20" + year;
+                        }
+
+                        formattedDate = `${year}-${month}-${day}`;
+                    } else {
+                        formattedDate = rawDate;
                     }
 
                     let hora = parseInt(row[colHora], 10);
                     if (isNaN(hora)) return null;
                     
-                    // --- CAMBIO: Normalización de hora al estándar 0-23 de REE y tramos ---
                     if (isOneBased) {
                         hora = hora - 1;
                         if (hora < 0) hora = 23; 
@@ -924,22 +1025,20 @@ async function processData(parsedRows) {
                         hora: hora,
                         consumo: consumo
                     };
-                }).filter(item => item !== null);
+                }).filter(item => item !== null && item.fechaStr.match(/^\d{4}-\d{2}-\d{2}$/));
 
                 if (cleanData.length === 0) {
-                    showStatus("No se encontraron registros válidos en el archivo.", "error");
+                    showStatus("No se encontraron registros de fecha válidos en el archivo.", "error");
                     return;
                 }
 
-                // Descargar precios oficiales PVPC de REE
-                const fechas = cleanData.map(d => d.fechaStr).filter(f => f);
+                const fechas = cleanData.map(d => d.fechaStr);
                 const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
                 const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
 
-                showStatus("Conectando con la base de Datos Públicos oficiales de Red Eléctrica de España...", "info");
+                showStatus(`Conectando con Red Eléctrica de España para el periodo ${fechaInicio} al ${fechaFin}...`, "info");
                 const preciosMap = await fetchPreciosPVPC(fechaInicio, fechaFin);
 
-                // Leer parámetros de la tarifa manual de tramos
                 const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                 const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
@@ -949,7 +1048,6 @@ async function processData(parsedRows) {
                 const useWeekendValle = document.getElementById('weekendValle').checked;
                 const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
 
-                // 2. Calcular los costes simulados
                 const pricedData = cleanData.map(item => {
                     const key = `${item.fechaStr}_T${String(item.hora).padStart(2, '0')}`;
                     const precioPvpc = preciosMap ? (preciosMap[key] || 0) : 0;
@@ -989,7 +1087,6 @@ async function processData(parsedRows) {
                     };
                 });
 
-                // 3. Construcción del mapa de días del calendario
                 window.allAvailableDays = {};
                 pricedData.forEach(item => {
                     if (!window.allAvailableDays[item.fechaStr]) {
@@ -999,7 +1096,6 @@ async function processData(parsedRows) {
                     window.allAvailableDays[item.fechaStr].cost += item.coste;
                 });
 
-                // 4. Aplicar filtros
                 const startDateVal = filterStartDate.value;
                 const endDateVal = filterEndDate.value;
                 const startHourVal = filterStartHour.value;
@@ -1015,14 +1111,12 @@ async function processData(parsedRows) {
                         if (endDateVal && item.fechaStr > endDateVal) return false;
                     }
 
-                    // Filtrado Opcional por Rango Horario
                     if (startHourVal !== "" && endHourVal !== "") {
                         const startH = parseInt(startHourVal, 10);
                         const endH = parseInt(endHourVal, 10);
                         if (startH <= endH) {
                             if (item.hora < startH || item.hora > endH) return false;
                         } else {
-                            // Rango que cruza la medianoche (Ej: De 22:00 a 06:00)
                             if (item.hora < startH && item.hora > endH) return false;
                         }
                     } else if (startHourVal !== "") {
@@ -1039,64 +1133,80 @@ async function processData(parsedRows) {
                     return;
                 }
 
-                showStatus("Procesamiento finalizado.", "success");
+                showStatus("Procesamiento finalizado con éxito.", "success");
                 renderResultsAndCharts(filteredData);
 
             } catch (err) {
-                showStatus("Error al procesar: " + err.message, "error");
+                showStatus("Error al procesar los datos: " + err.message, "error");
                 console.error(err);
             }
         }
 
-        // --- OBTENCIÓN DE PRECIOS OFICIALES PVPC DE REE ---
         async function fetchPreciosPVPC(inicio, fin) {
-            const startDate = new Date(inicio);
-            const endDate = new Date(fin);
+            // Analizar estrictamente las fechas como componentes numéricos individuales
+            const startParts = inicio.split('-').map(Number);
+            const endParts = fin.split('-').map(Number);
             
-            // Segmentación del rango de fechas en bloques de máximo 30 días para no saturar la API pública de REE (límite 31 días)
+            // Inicializar las fechas en UTC absoluto para aislar el cálculo de la zona horaria del sistema local
+            const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+            const endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+            
             const chunks = [];
-            let currentStart = new Date(startDate);
+            let currentStart = new Date(startDate.getTime());
             
             while (currentStart <= endDate) {
-                let currentEnd = new Date(currentStart);
-                currentEnd.setDate(currentEnd.getDate() + 30);
+                let currentEnd = new Date(currentStart.getTime());
+                // Incrementar fecha en UTC
+                currentEnd.setUTCDate(currentEnd.getUTCDate() + 30);
                 if (currentEnd > endDate) {
-                    currentEnd = new Date(endDate);
+                    currentEnd = new Date(endDate.getTime());
                 }
                 
-                chunks.push({
-                    start: currentStart.toISOString().split('T')[0],
-                    end: currentEnd.toISOString().split('T')[0]
-                });
+                const startStr = currentStart.toISOString().split('T')[0];
+                const endStr = currentEnd.toISOString().split('T')[0];
                 
-                currentStart = new Date(currentEnd);
-                currentStart.setDate(currentStart.getDate() + 1);
+                chunks.push({ start: startStr, end: endStr });
+                
+                currentStart = new Date(currentEnd.getTime());
+                currentStart.setUTCDate(currentStart.getUTCDate() + 1);
             }
             
             const preciosMap = {};
             
             try {
-                // Descargas en paralelo utilizando Promise.all
                 const promises = chunks.map(async (chunk) => {
                     const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
                     const response = await fetch(url);
                     if (!response.ok) {
-                        throw new Error(`REE respondió con código: ${response.status} para el bloque ${chunk.start} - ${chunk.end}`);
+                        throw new Error(`Código de respuesta REE: ${response.status}`);
                     }
                     const data = await response.json();
-                    const pvpcSeries = data.included.find(series => 
-                        series.type.toLowerCase().includes('pvpc') || 
-                        (series.attributes && series.attributes.title && series.attributes.title.toLowerCase().includes('pvpc'))
-                    );
+                    
+                    if (!data.included) {
+                        return;
+                    }
+
+                    // Búsqueda exhaustiva de la serie PVPC por su ID oficial 600 o términos clave inalterables de Red Eléctrica
+                    const pvpcSeries = data.included.find(series => {
+                        if (!series) return false;
+                        const type = (series.type || '').toLowerCase();
+                        const title = (series.attributes && series.attributes.title || '').toLowerCase();
+                        const id = String(series.id || '');
+                        return id === '600' || 
+                               type.includes('pvpc') || 
+                               title.includes('pvpc') || 
+                               title.includes('pequeño consumidor') || 
+                               title.includes('voluntario para el');
+                    });
                     
                     if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
                         pvpcSeries.attributes.values.forEach(v => {
                             if (!v.datetime) return;
-                            // Se extrae la fecha y hora directamente del formato de texto para mitigar desajustes por husos horarios locales
-                            const datePart = v.datetime.substring(0, 10); // YYYY-MM-DD
-                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); // HH
+                            // Se extrae la fecha y hora directamente del texto ISO retornado por el servidor
+                            const datePart = v.datetime.substring(0, 10); 
+                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); 
                             const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
-                            preciosMap[key] = v.value / 1000.0;
+                            preciosMap[key] = v.value / 1000.0; 
                         });
                     }
                 });
@@ -1110,14 +1220,11 @@ async function processData(parsedRows) {
             }
         }
 
-        // --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
-// --- GESTIÓN DE RENDERIZADO DE RESULTADOS ---
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
 
-            // Elementos del DOM para los nuevos rangos
             const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
             const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
 
@@ -1144,12 +1251,11 @@ async function processData(parsedRows) {
             let totalCostPvpc = 0;
             let totalCostManual = 0;
 
-             let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
-            let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
-
-            // Inicialización de variables para registrar el precio mínimo y máximo
             let minPrice = Infinity;
             let maxPrice = -Infinity;
+
+            let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
+            let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
 
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
@@ -1177,14 +1283,14 @@ async function processData(parsedRows) {
                 count: 0
             }));
 
-            // Bucle principal de datos
+            // Bucle principal para acumular datos basados en los filtros aplicados
             data.forEach(item => {
                 totalKwh += item.consumo;
                 totalCost += item.coste;
                 totalCostPvpc += item.costePvpc;
                 totalCostManual += item.costeManual;
 
-                // Registro del precio mínimo y máximo detectado por hora
+                // Registro del mínimo y máximo únicamente de los registros válidos
                 if (item.precio < minPrice) minPrice = item.precio;
                 if (item.precio > maxPrice) maxPrice = item.precio;
 
@@ -1199,7 +1305,6 @@ async function processData(parsedRows) {
                 const isP2 = isWeekend || isHoliday || (item.hora >= 0 && item.hora < 8);
                 const isP1 = !isP2;
 
-                // 1. CLASIFICACIÓN POR HORARIO
                 let itemSlot = 'P3';
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
@@ -1215,36 +1320,35 @@ async function processData(parsedRows) {
                     itemSlot = 'P3';
                 }
 
-               if (itemSlot === 'P1') {
+                if (itemSlot === 'P1') {
                     p1KwhTime += item.consumo;
                     p1CostTime += item.costeManual; 
-                    p1TimeHours++; // Incrementa horas punta
+                    p1TimeHours++; 
                 } else if (itemSlot === 'P2') {
                     p2KwhTime += item.consumo;
                     p2CostTime += item.costeManual; 
-                    p2TimeHours++; // Incrementa horas llano
+                    p2TimeHours++; 
                 } else {
                     p3KwhTime += item.consumo;
                     p3CostTime += item.costeManual; 
-                    p3TimeHours++; // Incrementa horas valle
+                    p3TimeHours++; 
                 }
 
-                // 2. CLASIFICACIÓN POR COSTE REAL (PVPC)
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-               if (item.precioPvpc >= pvpcHigh) {
+                if (item.precioPvpc >= pvpcHigh) {
                     p1KwhPrice += item.consumo;
                     p1CostPrice += item.costePvpc; 
-                    p1PriceHours++; // Incrementa horas de coste alto
+                    p1PriceHours++; 
                 } else if (item.precioPvpc <= pvpcLow) {
                     p3KwhPrice += item.consumo;
                     p3CostPrice += item.costePvpc; 
-                    p3PriceHours++; // Incrementa horas de coste bajo
+                    p3PriceHours++; 
                 } else {
                     p2KwhPrice += item.consumo;
                     p2CostPrice += item.costePvpc; 
-                    p2PriceHours++; // Incrementa horas de coste medio
+                    p2PriceHours++; 
                 }
 
                 if (item.consumo > maxPeakHourly) {
@@ -1297,7 +1401,6 @@ async function processData(parsedRows) {
                 }
             });
 
-            // --- CÁLCULOS DEL TÉRMINO DE POTENCIA ---
             const sortedDates = Object.keys(dailyStats).sort();
             const numDays = sortedDates.length || 1;
 
@@ -1325,7 +1428,6 @@ async function processData(parsedRows) {
             const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
-           // Actualizar Métricas de Texto en pantalla (con la nueva media de coste diario)
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
             totalCostEl.innerHTML = `
@@ -1341,7 +1443,6 @@ async function processData(parsedRows) {
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
-            // --- CÁLCULO DE MÍNIMOS Y MÁXIMOS PARA LOS TARJETONES ---
             const dailyKwhValues = Object.values(dailyStats).map(d => d.kwh);
             const minDailyKwh = dailyKwhValues.length > 0 ? Math.min(...dailyKwhValues) : 0;
             const maxDailyKwh = dailyKwhValues.length > 0 ? Math.max(...dailyKwhValues) : 0;
@@ -1349,7 +1450,6 @@ async function processData(parsedRows) {
             const finalMinPrice = minPrice === Infinity ? 0 : minPrice;
             const finalMaxPrice = maxPrice === -Infinity ? 0 : maxPrice;
 
-            // Inyección con salto de línea (br) para los valores extremos
             if (minMaxDailyKwhTextEl) {
                 minMaxDailyKwhTextEl.innerHTML = `Mín: ${minDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh<br>Máx: ${maxDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             }
@@ -1397,7 +1497,6 @@ async function processData(parsedRows) {
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            // Inyección dinámica de horas en los títulos de cada tramo
             const p1TimeTitleEl = document.getElementById('p1TimeTitle');
             const p2TimeTitleEl = document.getElementById('p2TimeTitle');
             const p3TimeTitleEl = document.getElementById('p3TimeTitle');
@@ -1413,7 +1512,6 @@ async function processData(parsedRows) {
             if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Precios Intermedios) [${p2PriceHours} h]`;
             if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Precio ≤ Umbral Barato) [${p3PriceHours} h]`;
 
-            // Porcentajes e Inyecciones de Bloque 1 (Tarifa fija manual)
             const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
             const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
             const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
@@ -1439,7 +1537,6 @@ async function processData(parsedRows) {
             document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
 
-            // Porcentajes e Inyecciones de Bloque 2 (Tarifa oficial indexada PVPC)
             const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
             const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
             const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
@@ -1465,24 +1562,65 @@ async function processData(parsedRows) {
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
-            // --- TABLA COMPARATIVA GLOBAL (Energía + Potencia con Diferenciales) ---
-            const grandTotalPvpc = totalCostPvpc + totalPowerCostPvpc;
-            const grandTotalManual = totalCostManual + totalPowerCostManual;
+    
+            // --- CÁLCULOS DE SIMULACIÓN INDEPENDIENTES (AÑADIDOS) ---
+   // --- CÁLCULOS DE SIMULACIÓN E IMPUESTOS (REVISADO) ---
+            const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
+            const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
+            const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
+            const margenComDiarioPvpc = parseFloat(document.getElementById('retailerMarginPvpc').value) || 0;
+            const impElecPvpc = parseFloat(document.getElementById('electricityTaxPvpc').value) || 0;
+            const alqContadorPvpc = parseFloat(document.getElementById('meterRentalPvpc').value) || 0;
+            const tipoIvaPvpc = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
 
-            const diffEnergy = totalCostPvpc - totalCostManual;
-            const diffEnergyPct = totalCostManual > 0 ? (diffEnergy / totalCostManual) * 100 : 0;
-            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%) ${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
-            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+            const descEnergiaManual = parseFloat(document.getElementById('discountEnergyManual').value) || 0;
+            const descPotenciaManual = parseFloat(document.getElementById('discountPowerManual').value) || 0;
+            const ajustesManual = parseFloat(document.getElementById('invoiceAdjustmentsManual').value) || 0;
+            const margenComDiarioManual = parseFloat(document.getElementById('retailerMarginManual').value) || 0;
+            const impElecManual = parseFloat(document.getElementById('electricityTaxManual').value) || 0;
+            const alqContadorManual = parseFloat(document.getElementById('meterRentalManual').value) || 0;
+            const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
 
-            const diffPower = totalPowerCostPvpc - totalPowerCostManual;
-            const diffPowerPct = totalPowerCostManual > 0 ? (diffPower / totalPowerCostManual) * 100 : 0;
-            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%) ${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
-            const diffPowerClass = diffPower < 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold';
+            // 1. Simulación PVPC
+            const margenComTotalPvpc = margenComDiarioPvpc * numDays;
+            const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
+            const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
+            const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotalPvpc + ajustesPvpc;
+            const impElecPvpcVal = baseImpElecPvpc * (impElecPvpc / 100);
+            const baseIvaPvpc = baseImpElecPvpc + impElecPvpcVal + alqContadorPvpc;
+            const ivaPvpcVal = baseIvaPvpc * (tipoIvaPvpc / 100);
+            const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
+            const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
 
-            const diffTotal = grandTotalPvpc - grandTotalManual;
-            const diffTotalPct = grandTotalManual > 0 ? (diffTotal / grandTotalManual) * 100 : 0;
-            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
-            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700 font-bold text-sm' : 'text-rose-700 font-bold text-sm';
+            // 2. Simulación Manual
+            const margenComTotalManual = margenComDiarioManual * numDays;
+            const totalCostManualNeto = totalCostManual * (1 - descEnergiaManual / 100);
+            const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotenciaManual / 100);
+            const baseImpElecManual = totalCostManualNeto + totalPowerCostManualNeto + margenComTotalManual + ajustesManual;
+            const impElecManualVal = baseImpElecManual * (impElecManual / 100);
+            const baseIvaManual = baseImpElecManual + impElecManualVal + alqContadorManual;
+            const ivaManualVal = baseIvaManual * (tipoIvaManual / 100);
+            const grandTotalManualSimulated = baseIvaManual + ivaManualVal;
+            const avgKwhPriceManualSimulated = totalKwh > 0 ? (grandTotalManualSimulated / totalKwh) : 0;
+
+            // --- CÁLCULO DE DESVIACIONES ESPECÍFICAS ---
+            // Desviación en Energía neta
+            const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
+            const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
+            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
+            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+            // Desviación en Potencia neta
+            const diffPower = totalPowerCostPvpcNeto - totalPowerCostManualNeto;
+            const diffPowerPct = totalPowerCostManualNeto > 0 ? (diffPower / totalPowerCostManualNeto) * 100 : 0;
+            const diffPowerClass = diffPower < 0 ? 'text-emerald-700' : 'text-rose-700';
+            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+            // Desviación en Total Factura
+            const diffTotal = grandTotalPvpcSimulated - grandTotalManualSimulated;
+            const diffTotalPct = grandTotalManualSimulated > 0 ? (diffTotal / grandTotalManualSimulated) * 100 : 0;
+            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700' : 'text-rose-700';
+            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
 
             const isPvpcCheaper = diffTotal < 0;
             const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
@@ -1494,7 +1632,7 @@ async function processData(parsedRows) {
                 <div class="w-full">
                     <div class="border-b pb-2 mb-3">
                         <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
-                        <p class="text-[11px] text-gray-500">Desglose integral separando término de consumo de energía y costes de potencia contratada.</p>
+                        <p class="text-[11px] text-gray-500">Desglose integral de conceptos simulados con sus respectivas desviaciones.</p>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
@@ -1503,27 +1641,75 @@ async function processData(parsedRows) {
                                     <th class="py-2">Concepto Facturado</th>
                                     <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
                                     <th class="py-2 text-right">Tarifa Manual (Tramos)</th>
-                                    <th class="py-2 text-right">Diferencia / Desviación</th>
+                                    <th class="py-2 text-right">Desviación / Diferencia</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-gray-100 text-gray-700">
                                 <tr>
-                                    <td class="py-2.5 font-medium text-gray-700">Término de Energía (Consumo de Red)</td>
-                                    <td class="py-2.5 text-right font-mono">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-2.5 text-right font-mono">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-2.5 text-right font-mono ${diffEnergyClass}">${diffEnergyText}</td>
+                                    <td class="py-1.5 font-medium text-gray-500">Término de Energía (Base)</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                </tr>
+                                <tr class="bg-gray-50/50">
+                                    <td class="py-2 font-semibold text-gray-800">Término de Energía (Neto con Descuento)</td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold ${diffEnergyClass} leading-tight">${diffEnergyText}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-2.5 font-medium text-gray-700">Término de Potencia (Coste Fijo del Período)</td>
-                                    <td class="py-2.5 text-right font-mono">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-2.5 text-right font-mono">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-2.5 text-right font-mono ${diffPowerClass}">${diffPowerText}</td>
+                                    <td class="py-1.5 font-medium text-gray-500">Término de Potencia (Base)</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
-                                <tr class="bg-gray-50 font-bold border-t border-gray-300">
-                                    <td class="py-3 text-gray-900 uppercase">Total Facturado Estimado</td>
-                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-3 text-right font-mono text-gray-950">${grandTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-3 text-right font-mono ${diffTotalClass}">${diffTotalText}</td>
+                                <tr class="bg-gray-50/50">
+                                    <td class="py-2 font-semibold text-gray-800">Término de Potencia (Neto con Descuento)</td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalPowerCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalPowerCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaManual}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold ${diffPowerClass} leading-tight">${diffPowerText}</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Margen de Comercialización</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Ajustes manuales</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${ajustesPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${ajustesManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Impuesto Eléctrico / Bono</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Alquiler de Contador</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5 font-medium text-gray-700">IVA Aplicado</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaManual}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                </tr>
+                                <tr class="bg-blue-50/40 font-bold border-t border-b border-blue-100">
+                                    <td class="py-3 text-gray-900 uppercase">Total Factura a Pagar</td>
+                                    <td class="py-3 text-right font-mono text-sm text-blue-900 leading-tight">
+                                        <div>${grandTotalPvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</div>
+                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPricePvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                                    </td>
+                                    <td class="py-3 text-right font-mono text-sm text-blue-900 leading-tight">
+                                        <div>${grandTotalManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</div>
+                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPriceManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                                    </td>
+                                    <td class="py-3 text-right font-mono text-sm font-bold ${diffTotalClass} leading-tight">${diffTotalText}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1535,7 +1721,6 @@ async function processData(parsedRows) {
             `;
             document.getElementById('comparisonBox').innerHTML = comparisonHtml;
 
-            // --- CONSTRUCCIÓN DEL CALENDARIO DINÁMICO ---
             const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
             const startVal = filterStartDate.value;
             const endVal = filterEndDate.value;
@@ -1640,7 +1825,6 @@ async function processData(parsedRows) {
 
             calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs font-semibold">No hay lecturas disponibles para construir el calendario.</p>`;
 
-            // Renderizar gráficos
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
             renderHourlyChart(hourlyStats);
@@ -1656,11 +1840,10 @@ async function processData(parsedRows) {
             const kwhData = sortedDates.map(d => stats[d].kwh);
             const costData = sortedDates.map(d => stats[d].cost);
 
-            // Generar etiquetas formateadas solo con "Día/Mes" (DD/MM)
             const friendlyLabels = sortedDates.map(dateStr => {
                 const parts = dateStr.split('-');
                 if (parts.length === 3) {
-                    return `${parts[2]}/${parts[1]}`; // Retorna DD/MM
+                    return `${parts[2]}/${parts[1]}`; 
                 }
                 return dateStr;
             });
@@ -1691,7 +1874,7 @@ async function processData(parsedRows) {
             window.chartInstance2 = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: friendlyLabels, // Uso de etiquetas simplificadas "DD/MM"
+                    labels: friendlyLabels, 
                     datasets: [
                         {
                             label: 'Consumo (kWh)',
@@ -1745,7 +1928,6 @@ async function processData(parsedRows) {
                     plugins: {
                         tooltip: {
                             callbacks: {
-                                // Muestra la fecha completa en formato YYYY-MM-DD al pasar el ratón
                                 title: function(context) {
                                     const index = context[0].dataIndex;
                                     return sortedDates[index] || context[0].label;
@@ -2034,7 +2216,21 @@ async function processData(parsedRows) {
                 datadisPass: document.getElementById('datadisPass').value,
                 datadisCups: document.getElementById('datadisCups').value,
                 datadisStart: document.getElementById('datadisStart').value,
-                datadisEnd: document.getElementById('datadisEnd').value
+                datadisEnd: document.getElementById('datadisEnd').value,
+                discountEnergyPvpc: document.getElementById('discountEnergyPvpc').value,
+                discountPowerPvpc: document.getElementById('discountPowerPvpc').value,
+                invoiceAdjustmentsPvpc: document.getElementById('invoiceAdjustmentsPvpc').value,
+                retailerMarginPvpc: document.getElementById('retailerMarginPvpc').value,
+                electricityTaxPvpc: document.getElementById('electricityTaxPvpc').value,
+                meterRentalPvpc: document.getElementById('meterRentalPvpc').value,
+                vatRatePvpc: document.getElementById('vatRatePvpc').value,
+                discountEnergyManual: document.getElementById('discountEnergyManual').value,
+                discountPowerManual: document.getElementById('discountPowerManual').value,
+                invoiceAdjustmentsManual: document.getElementById('invoiceAdjustmentsManual').value,
+                retailerMarginManual: document.getElementById('retailerMarginManual').value,
+                electricityTaxManual: document.getElementById('electricityTaxManual').value,
+                meterRentalManual: document.getElementById('meterRentalManual').value,
+                vatRateManual: document.getElementById('vatRateManual').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -2063,6 +2259,21 @@ async function processData(parsedRows) {
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+                if (config.discountEnergyPvpc !== undefined) document.getElementById('discountEnergyPvpc').value = config.discountEnergyPvpc;
+                if (config.discountPowerPvpc !== undefined) document.getElementById('discountPowerPvpc').value = config.discountPowerPvpc;
+                if (config.invoiceAdjustmentsPvpc !== undefined) document.getElementById('invoiceAdjustmentsPvpc').value = config.invoiceAdjustmentsPvpc;
+                if (config.retailerMarginPvpc !== undefined) document.getElementById('retailerMarginPvpc').value = config.retailerMarginPvpc;
+                if (config.electricityTaxPvpc !== undefined) document.getElementById('electricityTaxPvpc').value = config.electricityTaxPvpc;
+                if (config.meterRentalPvpc !== undefined) document.getElementById('meterRentalPvpc').value = config.meterRentalPvpc;
+                if (config.vatRatePvpc !== undefined) document.getElementById('vatRatePvpc').value = config.vatRatePvpc;
+                
+                if (config.discountEnergyManual !== undefined) document.getElementById('discountEnergyManual').value = config.discountEnergyManual;
+                if (config.discountPowerManual !== undefined) document.getElementById('discountPowerManual').value = config.discountPowerManual;
+                if (config.invoiceAdjustmentsManual !== undefined) document.getElementById('invoiceAdjustmentsManual').value = config.invoiceAdjustmentsManual;
+                if (config.retailerMarginManual !== undefined) document.getElementById('retailerMarginManual').value = config.retailerMarginManual;
+                if (config.electricityTaxManual !== undefined) document.getElementById('electricityTaxManual').value = config.electricityTaxManual;
+                if (config.meterRentalManual !== undefined) document.getElementById('meterRentalManual').value = config.meterRentalManual;
+                if (config.vatRateManual !== undefined) document.getElementById('vatRateManual').value = config.vatRateManual;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
@@ -2073,7 +2284,6 @@ async function processData(parsedRows) {
                     if (elLow) elLow.value = config.pvpcLowThreshold;
                 }
                 
-                // Carga de potencias
                 if (config.powerP1 !== undefined) document.getElementById('powerP1').value = config.powerP1;
                 if (config.powerP2 !== undefined) document.getElementById('powerP2').value = config.powerP2;
                 if (config.powerPriceP1Pvpc !== undefined) document.getElementById('powerPriceP1Pvpc').value = config.powerPriceP1Pvpc;
@@ -2081,7 +2291,6 @@ async function processData(parsedRows) {
                 if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
                 if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
 
-                // Carga de datos Datadis
                 if (config.datadisUser !== undefined) document.getElementById('datadisUser').value = config.datadisUser;
                 if (config.datadisPass !== undefined) document.getElementById('datadisPass').value = config.datadisPass;
                 if (config.datadisCups !== undefined) document.getElementById('datadisCups').value = config.datadisCups;
@@ -2109,7 +2318,6 @@ async function processData(parsedRows) {
             }
         }
 
-        // Cambio de selector de tipo de cálculo que dispara el recálculo dinámico directo
         document.getElementById('rateMode').addEventListener('change', () => {
             toggleRatePanels();
             saveConfig();
@@ -2136,7 +2344,6 @@ async function processData(parsedRows) {
             }
         });
 
-        // Botón Recalcular centralizado
         document.getElementById('recalculateBtn').addEventListener('click', () => {
             saveConfig();
             if (window.rawCsvData) {
@@ -2146,7 +2353,6 @@ async function processData(parsedRows) {
             }
         });
 
-        // Observadores de cambios en los inputs para autoguardado rápido y recálculo automático instantáneo
         const inputsToWatch = [
             'thresholdInput', 'subtractInput', 'dailyEvThresholdInput',
             'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
@@ -2154,7 +2360,9 @@ async function processData(parsedRows) {
             'filterStartHour', 'filterEndHour',
             'pvpcHighThreshold', 'pvpcLowThreshold',
             'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual',
-            'datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd'
+            'datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd',
+            'discountEnergyPvpc', 'discountPowerPvpc', 'invoiceAdjustmentsPvpc', 'retailerMarginPvpc', 'electricityTaxPvpc', 'meterRentalPvpc', 'vatRatePvpc',
+            'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual'
         ];
         
         inputsToWatch.forEach(id => {
