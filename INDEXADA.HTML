@@ -1147,98 +1147,102 @@
             }
         }
 
-        async function fetchPreciosPVPC(inicio, fin) {
-            // Analizar estrictamente las fechas como componentes numéricos individuales
-            const startParts = inicio.split('-').map(Number);
-            const endParts = fin.split('-').map(Number);
+     async function fetchPreciosPVPC(inicio, fin) {
+        const startParts = inicio.split('-').map(Number);
+        const endParts = fin.split('-').map(Number);
+        
+        const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+        let endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+        
+        // Limitar fecha máxima al día de mañana por seguridad
+        const hoy = new Date();
+        const mañana = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1));
+        if (endDate > mañana) {
+            endDate = mañana;
+        }
+
+        const chunks = [];
+        let currentStart = new Date(startDate.getTime());
+        
+        while (currentStart <= endDate) {
+            let currentEnd = new Date(currentStart.getTime());
+            currentEnd.setUTCDate(currentEnd.getUTCDate() + 30);
+            if (currentEnd > endDate) {
+                currentEnd = new Date(endDate.getTime());
+            }
             
-            // Inicializar las fechas en UTC absoluto para aislar el cálculo de la zona horaria del sistema local
-            const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
-            const endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+            const startStr = currentStart.toISOString().split('T')[0];
+            const endStr = currentEnd.toISOString().split('T')[0];
             
-            const chunks = [];
-            let currentStart = new Date(startDate.getTime());
+            chunks.push({ start: startStr, end: endStr });
             
-            while (currentStart <= endDate) {
-                let currentEnd = new Date(currentStart.getTime());
-                // Incrementar fecha en UTC
-                currentEnd.setUTCDate(currentEnd.getUTCDate() + 30);
-                if (currentEnd > endDate) {
-                    currentEnd = new Date(endDate.getTime());
+            currentStart = new Date(currentEnd.getTime());
+            currentStart.setUTCDate(currentStart.getUTCDate() + 1);
+        }
+        
+        const preciosMap = {};
+        
+        // EJECUCIÓN SECUENCIAL (Evita el bloqueo 429 de Red Eléctrica al espaciar las consultas)
+        for (const chunk of chunks) {
+            try {
+                const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    console.warn(`Fragmento de fecha omitido por REE (${chunk.start} a ${chunk.end}): HTTP ${response.status}`);
+                    continue; 
                 }
                 
-                const startStr = currentStart.toISOString().split('T')[0];
-                const endStr = currentEnd.toISOString().split('T')[0];
-                
-                chunks.push({ start: startStr, end: endStr });
-                
-                currentStart = new Date(currentEnd.getTime());
-                currentStart.setUTCDate(currentStart.getUTCDate() + 1);
-            }
-            
-            const preciosMap = {};
-            
-            try {
-                const promises = chunks.map(async (chunk) => {
-                    const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`Código de respuesta REE: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    
-                    if (!data.included) {
-                        return;
-                    }
+                const data = await response.json();
+                if (!data.included) continue;
 
-                    // Búsqueda exhaustiva de la serie PVPC por su ID oficial 600 o términos clave inalterables de Red Eléctrica
-                    const pvpcSeries = data.included.find(series => {
-                        if (!series) return false;
-                        const type = (series.type || '').toLowerCase();
-                        const title = (series.attributes && series.attributes.title || '').toLowerCase();
-                        const id = String(series.id || '');
-                        return id === '600' || 
-                               type.includes('pvpc') || 
-                               title.includes('pvpc') || 
-                               title.includes('pequeño consumidor') || 
-                               title.includes('voluntario para el');
-                    });
-                    
-                if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
-                        // Formateadores estrictos para forzar la interpretación en la hora local de España
-                        const optionsDate = { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' };
-                        const optionsHour = { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false };
-                        const formatterDate = new Intl.DateTimeFormat('en-CA', optionsDate); // Retorna YYYY-MM-DD
-                        const formatterHour = new Intl.DateTimeFormat('en-US', optionsHour);
-
-                        pvpcSeries.attributes.values.forEach(v => {
-                            if (!v.datetime) return;
-                            try {
-                                const d = new Date(v.datetime);
-                                const datePart = formatterDate.format(d);
-                                let hourPart = parseInt(formatterHour.format(d), 10);
-                                
-                                // Normalización estándar de hora de 24h a formato 0-23
-                                if (hourPart === 24) hourPart = 0;
-                                hourPart = hourPart % 24;
-
-                                const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
-                                preciosMap[key] = v.value / 1000.0; 
-                            } catch (e) {
-                                console.error("Error al mapear fecha de REE:", v.datetime, e);
-                            }
-                        });
-                    }
+                const pvpcSeries = data.included.find(series => {
+                    if (!series) return false;
+                    const type = (series.type || '').toLowerCase();
+                    const title = (series.attributes && series.attributes.title || '').toLowerCase();
+                    const id = String(series.id || '');
+                    return id === '600' || 
+                           type.includes('pvpc') || 
+                           title.includes('pvpc') || 
+                           title.includes('pequeño consumidor') || 
+                           title.includes('voluntario para el');
                 });
                 
-                await Promise.all(promises);
-                return preciosMap;
-                
-            } catch (error) {
-                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
-                return null;
+                if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
+                    const optionsDate = { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' };
+                    const optionsHour = { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false };
+                    const formatterDate = new Intl.DateTimeFormat('en-CA', optionsDate);
+                    const formatterHour = new Intl.DateTimeFormat('en-US', optionsHour);
+
+                    pvpcSeries.attributes.values.forEach(v => {
+                        if (!v.datetime) return;
+                        try {
+                            const d = new Date(v.datetime);
+                            const datePart = formatterDate.format(d);
+                            let hourPart = parseInt(formatterHour.format(d), 10);
+                            if (hourPart === 24) hourPart = 0;
+                            hourPart = hourPart % 24;
+
+                            const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
+                            preciosMap[key] = v.value / 1000.0; 
+                        } catch (e) {
+                            console.error("Error al interpretar fecha de REE:", v.datetime, e);
+                        }
+                    });
+                }
+
+                // Pequeña pausa artificial de seguridad (100 ms) para evitar ráfagas simultáneas
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+            } catch (err) {
+                console.error(`Fallo en la llamada del fragmento (${chunk.start} a ${chunk.end}):`, err);
             }
         }
+        
+        console.log(`Precios cargados en memoria para emparejar: ${Object.keys(preciosMap).length} horas.`);
+        return preciosMap;
+    }
+
 
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
