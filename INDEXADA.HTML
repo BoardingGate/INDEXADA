@@ -476,83 +476,74 @@
                         </div>
 
                         <!-- Panel de Parámetros de Simulación de Factura Duplicado (Añadido) -->
-                        <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                            <h5 class="font-bold text-emerald-950 text-xs uppercase tracking-wider mb-4 text-center">Parámetros de Simulación de Factura</h5>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Columna PVPC (Tarifa Indexada) -->
-                                <div class="p-4 bg-white rounded-xl border border-blue-100 shadow-xs">
-                                    <h6 class="font-bold text-blue-900 text-xs uppercase tracking-wide mb-3 border-b pb-1.5 flex justify-between">
-                                        <span>Sistema PVPC (Indexada)</span>
-                                        <span class="text-blue-500 font-normal">Precios Oficiales</span>
-                                    </h6>
-                                    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
-                                            <input type="number" id="discountEnergyPvpc" step="0.1" value="0.0" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
-                                            <input type="number" id="discountPowerPvpc" step="0.1" value="0.0" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
-                                            <input type="number" id="invoiceAdjustmentsPvpc" step="0.01" value="0.00" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
-                                            <input type="number" id="retailerMarginPvpc" step="0.001" value="0.123" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
-                                            <input type="number" id="electricityTaxPvpc" step="0.01" value="5.11" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
-                                            <input type="number" id="meterRentalPvpc" step="0.01" value="0.80" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
-                                        <div class="col-span-2 lg:col-span-1">
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
-                                            <input type="number" id="vatRatePvpc" step="1" value="21" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none">
-                                        </div>
+<!-- Panel de Parámetros de Simulación de Factura Continuo (Añadido) -->
+                        <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
+                            <!-- Fila Continua PVPC -->
+                            <div>
+                                <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC (Tarifa Indexada)</span>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                        <input type="number" id="discountEnergyPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                        <input type="number" id="discountPowerPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                        <input type="number" id="invoiceAdjustmentsPvpc" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
+                                        <input type="number" id="retailerMarginPvpc" step="0.001" value="0.123" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                        <input type="number" id="electricityTaxPvpc" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
+                                        <input type="number" id="meterRentalPvpc" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                        <input type="number" id="vatRatePvpc" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Columna Manual (Tarifa por Tramos) -->
-                                <div class="p-4 bg-white rounded-xl border border-green-100 shadow-xs">
-                                    <h6 class="font-bold text-green-900 text-xs uppercase tracking-wide mb-3 border-b pb-1.5 flex justify-between">
-                                        <span>Tarifa Manual (Tramos)</span>
-                                        <span class="text-green-500 font-normal">Precios fijos</span>
-                                    </h6>
-                                    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
-                                            <input type="number" id="discountEnergyManual" step="0.1" value="0.0" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
-                                            <input type="number" id="discountPowerManual" step="0.1" value="0.0" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
-                                            <input type="number" id="invoiceAdjustmentsManual" step="0.01" value="0.00" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
-                                            <input type="number" id="retailerMarginManual" step="0.001" value="0.123" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
-                                            <input type="number" id="electricityTaxManual" step="0.01" value="5.11" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
-                                            <input type="number" id="meterRentalManual" step="0.01" value="0.80" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
-                                        <div class="col-span-2 lg:col-span-1">
-                                            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
-                                            <input type="number" id="vatRateManual" step="1" value="21" class="w-full px-1.5 py-1 border rounded text-xs text-center font-semibold focus:ring-1 focus:ring-green-500 focus:outline-none">
-                                        </div>
+                            <!-- Fila Continua Manual -->
+                            <div class="pt-3 border-t border-emerald-100">
+                                <span class="text-[10px] font-bold text-green-900 uppercase tracking-wider block mb-1.5">2. Parámetros de Factura Manual (Tarifa por Tramos)</span>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                        <input type="number" id="discountEnergyManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                        <input type="number" id="discountPowerManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                        <input type="number" id="invoiceAdjustmentsManual" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
+                                        <input type="number" id="retailerMarginManual" step="0.001" value="0.123" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                        <input type="number" id="electricityTaxManual" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
+                                        <input type="number" id="meterRentalManual" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                        <input type="number" id="vatRateManual" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                     </div>
                                 </div>
                             </div>
@@ -1560,9 +1551,9 @@
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
-        // --- CÁLCULOS DE SIMULACIÓN DE FACTURA (AÑADIDO) ---
- // --- CÁLCULOS DE SIMULACIÓN INDEPENDIENTES (AÑADIDOS) ---
-            // Variables PVPC
+    
+            // --- CÁLCULOS DE SIMULACIÓN INDEPENDIENTES (AÑADIDOS) ---
+   // --- CÁLCULOS DE SIMULACIÓN E IMPUESTOS (REVISADO) ---
             const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
             const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
             const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
@@ -1571,7 +1562,6 @@
             const alqContadorPvpc = parseFloat(document.getElementById('meterRentalPvpc').value) || 0;
             const tipoIvaPvpc = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
 
-            // Variables Manual
             const descEnergiaManual = parseFloat(document.getElementById('discountEnergyManual').value) || 0;
             const descPotenciaManual = parseFloat(document.getElementById('discountPowerManual').value) || 0;
             const ajustesManual = parseFloat(document.getElementById('invoiceAdjustmentsManual').value) || 0;
@@ -1580,7 +1570,7 @@
             const alqContadorManual = parseFloat(document.getElementById('meterRentalManual').value) || 0;
             const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
 
-            // --- Simulación de Factura para PVPC ---
+            // 1. Simulación PVPC
             const margenComTotalPvpc = margenComDiarioPvpc * numDays;
             const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
             const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
@@ -1591,7 +1581,7 @@
             const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
             const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
 
-            // --- Simulación de Factura para Tarifa Manual ---
+            // 2. Simulación Manual
             const margenComTotalManual = margenComDiarioManual * numDays;
             const totalCostManualNeto = totalCostManual * (1 - descEnergiaManual / 100);
             const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotenciaManual / 100);
@@ -1602,11 +1592,24 @@
             const grandTotalManualSimulated = baseIvaManual + ivaManualVal;
             const avgKwhPriceManualSimulated = totalKwh > 0 ? (grandTotalManualSimulated / totalKwh) : 0;
 
-            // Diferencias y desviaciones basadas en el TOTAL SIMULADO
+            // --- CÁLCULO DE DESVIACIONES ESPECÍFICAS ---
+            // Desviación en Energía neta
+            const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
+            const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
+            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
+            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+            // Desviación en Potencia neta
+            const diffPower = totalPowerCostPvpcNeto - totalPowerCostManualNeto;
+            const diffPowerPct = totalPowerCostManualNeto > 0 ? (diffPower / totalPowerCostManualNeto) * 100 : 0;
+            const diffPowerClass = diffPower < 0 ? 'text-emerald-700' : 'text-rose-700';
+            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+            // Desviación en Total Factura
             const diffTotal = grandTotalPvpcSimulated - grandTotalManualSimulated;
             const diffTotalPct = grandTotalManualSimulated > 0 ? (diffTotal / grandTotalManualSimulated) * 100 : 0;
-            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%) ${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}`;
-            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700 font-bold text-xs' : 'text-rose-700 font-bold text-xs';
+            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700' : 'text-rose-700';
+            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
 
             const isPvpcCheaper = diffTotal < 0;
             const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
@@ -1618,7 +1621,7 @@
                 <div class="w-full">
                     <div class="border-b pb-2 mb-3">
                         <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
-                        <p class="text-[11px] text-gray-500">Desglose integral con simulación de factura y condiciones comerciales independientes.</p>
+                        <p class="text-[11px] text-gray-500">Desglose integral de conceptos simulados con sus respectivas desviaciones.</p>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
@@ -1627,68 +1630,75 @@
                                     <th class="py-2">Concepto Facturado</th>
                                     <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
                                     <th class="py-2 text-right">Tarifa Manual (Tramos)</th>
+                                    <th class="py-2 text-right">Desviación / Diferencia</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-600">Término de Energía (Base)</td>
+                                    <td class="py-1.5 font-medium text-gray-500">Término de Energía (Base)</td>
                                     <td class="py-1.5 text-right font-mono text-gray-400">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-400">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr class="bg-gray-50/50">
-                                    <td class="py-1.5 font-semibold text-gray-800">Término de Energía (con Descuento)</td>
-                                    <td class="py-1.5 text-right font-mono font-semibold text-gray-900">${totalCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono font-semibold text-gray-900">${totalCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
+                                    <td class="py-2 font-semibold text-gray-800">Término de Energía (Neto con Descuento)</td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold ${diffEnergyClass} leading-tight">${diffEnergyText}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-600">Término de Potencia (Base)</td>
+                                    <td class="py-1.5 font-medium text-gray-500">Término de Potencia (Base)</td>
                                     <td class="py-1.5 text-right font-mono text-gray-400">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-400">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr class="bg-gray-50/50">
-                                    <td class="py-1.5 font-semibold text-gray-800">Término de Potencia (con Descuento)</td>
-                                    <td class="py-1.5 text-right font-mono font-semibold text-gray-900">${totalPowerCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono font-semibold text-gray-900">${totalPowerCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(-${descPotenciaManual}%)</span></td>
+                                    <td class="py-2 font-semibold text-gray-800">Término de Potencia (Neto con Descuento)</td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalPowerCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalPowerCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaManual}%)</span></td>
+                                    <td class="py-2 text-right font-mono font-semibold ${diffPowerClass} leading-tight">${diffPowerText}</td>
                                 </tr>
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-700">Margen de Comercialización</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Ajustes del Sistema</td>
+                                    <td class="py-1.5 font-medium text-gray-700">Ajustes manuales</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${ajustesPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${ajustesManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-700">Impuesto Eléctrico / Bono</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-700">Alquiler de Contador</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Impuesto sobre el Valor Añadido (IVA)</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[9px] text-gray-400 font-normal">(${tipoIvaManual}%)</span></td>
+                                    <td class="py-1.5 font-medium text-gray-700">IVA Aplicado</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaManual}%)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr class="bg-blue-50/40 font-bold border-t border-b border-blue-100">
                                     <td class="py-3 text-gray-900 uppercase">Total Factura a Pagar</td>
-                                    <td class="py-3 text-right font-mono text-sm text-blue-900">
+                                    <td class="py-3 text-right font-mono text-sm text-blue-900 leading-tight">
                                         <div>${grandTotalPvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</div>
-                                        <div class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPricePvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</div>
+                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPricePvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
                                     </td>
-                                    <td class="py-3 text-right font-mono text-sm text-blue-900">
+                                    <td class="py-3 text-right font-mono text-sm text-blue-900 leading-tight">
                                         <div>${grandTotalManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</div>
-                                        <div class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPriceManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</div>
+                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPriceManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
                                     </td>
-                                </tr>
-                                <tr class="bg-gray-100/50 text-[11px]">
-                                    <td class="py-2 text-gray-600 font-bold">Desviación Global Facturada</td>
-                                    <td colspan="2" class="py-2 text-center font-mono ${diffTotalClass}">${diffTotalText}</td>
+                                    <td class="py-3 text-right font-mono text-sm font-bold ${diffTotalClass} leading-tight">${diffTotalText}</td>
                                 </tr>
                             </tbody>
                         </table>
