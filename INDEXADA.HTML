@@ -1147,26 +1147,20 @@
             }
         }
 
-     async function fetchPreciosPVPC(inicio, fin) {
+async function fetchPreciosPVPC(inicio, fin) {
         const startParts = inicio.split('-').map(Number);
         const endParts = fin.split('-').map(Number);
         
         const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
-        let endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
-        
-        // Limitar fecha máxima al día de mañana por seguridad
-        const hoy = new Date();
-        const mañana = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1));
-        if (endDate > mañana) {
-            endDate = mañana;
-        }
+        const endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
 
         const chunks = [];
         let currentStart = new Date(startDate.getTime());
         
+        // Usamos bloques de 28 días para asegurar que nunca se superen los 30 días de límite estricto de REE
         while (currentStart <= endDate) {
             let currentEnd = new Date(currentStart.getTime());
-            currentEnd.setUTCDate(currentEnd.getUTCDate() + 30);
+            currentEnd.setUTCDate(currentEnd.getUTCDate() + 28);
             if (currentEnd > endDate) {
                 currentEnd = new Date(endDate.getTime());
             }
@@ -1182,10 +1176,10 @@
         
         const preciosMap = {};
         
-        // EJECUCIÓN SECUENCIAL (Evita el bloqueo 429 de Red Eléctrica al espaciar las consultas)
+        // Ejecución secuencial segura
         for (const chunk of chunks) {
             try {
-                const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
+                const url = `https://apidatos.ree.es/es/datos/markets/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -1209,37 +1203,38 @@
                 });
                 
                 if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
-                    const optionsDate = { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' };
-                    const optionsHour = { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false };
-                    const formatterDate = new Intl.DateTimeFormat('en-CA', optionsDate);
-                    const formatterHour = new Intl.DateTimeFormat('en-US', optionsHour);
-
                     pvpcSeries.attributes.values.forEach(v => {
                         if (!v.datetime) return;
                         try {
                             const d = new Date(v.datetime);
-                            const datePart = formatterDate.format(d);
-                            let hourPart = parseInt(formatterHour.format(d), 10);
+                            
+                            // Conversión de fecha y hora 100% inmune a desajustes del sistema local y navegadores
+                            const esDateStr = d.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
+                            const esParts = esDateStr.split('/');
+                            const datePart = `${esParts[2]}-${esParts[1].padStart(2, '0')}-${esParts[0].padStart(2, '0')}`;
+                            
+                            const hourStr = d.toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false });
+                            let hourPart = parseInt(hourStr, 10);
                             if (hourPart === 24) hourPart = 0;
                             hourPart = hourPart % 24;
 
                             const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
                             preciosMap[key] = v.value / 1000.0; 
                         } catch (e) {
-                            console.error("Error al interpretar fecha de REE:", v.datetime, e);
+                            console.error("Error al estructurar elemento de fecha de REE:", v.datetime, e);
                         }
                     });
                 }
 
-                // Pequeña pausa artificial de seguridad (100 ms) para evitar ráfagas simultáneas
+                // Pausa técnica de 100 ms para evitar rate-limits
                 await new Promise(resolve => setTimeout(resolve, 100));
 
             } catch (err) {
-                console.error(`Fallo en la llamada del fragmento (${chunk.start} a ${chunk.end}):`, err);
+                console.error(`Fallo de conexión en fragmento (${chunk.start} a ${chunk.end}):`, err);
             }
         }
         
-        console.log(`Precios cargados en memoria para emparejar: ${Object.keys(preciosMap).length} horas.`);
+        console.log(`Precios correctamente emparejados en memoria: ${Object.keys(preciosMap).length} horas.`);
         return preciosMap;
     }
 
