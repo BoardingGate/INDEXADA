@@ -505,7 +505,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-[10px] font-bold text-gray-600 mb-1">% Tipo IVA</label>
-                                    <input type="number" id="vatRate" step="1" value="10" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                    <input type="number" id="vatRate" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                 </div>
                             </div>
                         </div>
@@ -1513,13 +1513,14 @@
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
         // --- CÁLCULOS DE SIMULACIÓN DE FACTURA (AÑADIDO) ---
-            const descEnergia = parseFloat(document.getElementById('discountEnergy').value) || 0;
+            const margenComDiario = parseFloat(document.getElementById('retailerMargin').value) || 0;
+            const margenComTotal = margenComDiario * numDays;
             const descPotencia = parseFloat(document.getElementById('discountPower').value) || 0;
             const ajustes = parseFloat(document.getElementById('invoiceAdjustments').value) || 0;
             const margenCom = parseFloat(document.getElementById('retailerMargin').value) || 0;
             const impElec = parseFloat(document.getElementById('electricityTax').value) || 0;
             const alqContador = parseFloat(document.getElementById('meterRental').value) || 0;
-            const tipoIva = parseFloat(document.getElementById('vatRate').value) || 0;
+            const tipoIva = parseFloat(document.getElementById('vatRate').value) || 21;
 
             // 1. Descuentos aplicados
             const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergia / 100);
@@ -1528,9 +1529,9 @@
             const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotencia / 100);
             const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotencia / 100);
 
-            // 2. Base de impuesto eléctrico (Términos netos + margen comercializadora + ajustes)
-            const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenCom + ajustes;
-            const baseImpElecManual = totalCostManualNeto + totalPowerCostManualNeto + margenCom + ajustes;
+          // 2. Base de impuesto eléctrico (Términos netos + margen comercializadora total + ajustes)
+            const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotal + ajustes;
+            const baseImpElecManual = totalCostManualNeto + totalPowerCostManualNeto + margenComTotal + ajustes;
 
             // 3. Impuesto eléctrico / bono
             const impElecPvpcVal = baseImpElecPvpc * (impElec / 100);
@@ -1601,10 +1602,10 @@
                                     <td class="py-1.5 text-right font-mono font-semibold text-gray-800">${totalPowerCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Margen Comercializadora</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenCom.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenCom.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                </tr>
+                                    <td class="py-1.5 font-medium text-gray-700">Margen Comercializadora (${margenComDiario.toLocaleString('es-ES', {minimumFractionDigits: 3, maximumFractionDigits: 3})} €/día)</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-850">${margenComTotal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-850">${margenComTotal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                </tr>                               
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-700">Ajustes</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${ajustes.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
