@@ -72,6 +72,29 @@
             </div>
         </div>
 
+        <!-- PANEL: Precios PVPC del Día de Hoy (Gráfica de entrada compacta) -->
+        <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
+            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <h3 id="todayPricesTitle" class="text-md font-bold text-amber-700">Precios de la Luz de Hoy</h3>
+                    <p id="todayPricesSubtitle" class="text-xs text-gray-500 mt-1">Precio regulado horario oficial para planificar tus electrodomésticos y cargas.</p>
+                </div>
+                <div id="todayAvgBadge" class="shrink-0">
+                    <!-- Se carga dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Leyenda compacta -->
+            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500">
+                <!-- Se carga dinámicamente -->
+            </div>
+            
+            <!-- Gráfica compacta -->
+            <div class="relative h-[180px] sm:h-[220px] w-full">
+                <canvas id="todayHourlyPricesChart"></canvas>
+            </div>
+        </div>
+
         <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
        <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -800,6 +823,9 @@
     </div>
 
     <script>
+        window.todayPricesMap = null;
+        window.todayChartInstance = null;
+
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
         window.lastDatadisCsv = null; 
@@ -2527,8 +2553,8 @@ async function fetchPreciosPVPC(inicio, fin) {
             'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual',
             'evEfficiency'
         ];
-        
-        inputsToWatch.forEach(id => {
+
+inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', () => {
@@ -2536,47 +2562,33 @@ async function fetchPreciosPVPC(inicio, fin) {
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
                     }
+                    // NUEVO: Redibujar gráfica de hoy si cambia un límite (como pvpcHighThreshold)
+                    if (window.todayPricesMap) {
+                        const now = new Date();
+                        const yyyy = now.getFullYear();
+                        const mm = String(now.getMonth() + 1).padStart(2, '0');
+                        const dd = String(now.getDate()).padStart(2, '0');
+                        renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
+                    }
                 });
                 el.addEventListener('change', () => {
                     saveConfig();
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
                     }
+                    // NUEVO: Redibujar gráfica de hoy si cambia un límite
+                    if (window.todayPricesMap) {
+                        const now = new Date();
+                        const yyyy = now.getFullYear();
+                        const mm = String(now.getMonth() + 1).padStart(2, '0');
+                        const dd = String(now.getDate()).padStart(2, '0');
+                        renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
+                    }
                 });
             }
         });
 
-        loadConfig();
 
-        window.handleCalendarDayClick = function(dateStr) {
-            if (!window.calendarSelectedDates) {
-                window.calendarSelectedDates = new Set();
-            }
-
-            document.getElementById('filterStartDate').value = '';
-            document.getElementById('filterEndDate').value = '';
-
-            const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
-            if (!hasCustomCalendar && window.allAvailableDays) {
-                Object.keys(window.allAvailableDays).forEach(key => {
-                    if (key !== dateStr) {
-                        window.calendarSelectedDates.add(key);
-                    }
-                });
-            } else {
-                if (window.calendarSelectedDates.has(dateStr)) {
-                    window.calendarSelectedDates.delete(dateStr);
-                } else {
-                    window.calendarSelectedDates.add(dateStr);
-                }
-            }
-            
-            saveConfig(); 
-
-            if (window.rawCsvData) {
-                processData(window.rawCsvData);
-            }
-        };
 
 // --- MÓDULO INTEGRADO DE CONSULTA DE PRECIOS DIARIOS ---
         
@@ -2859,6 +2871,177 @@ async function fetchPreciosPVPC(inicio, fin) {
             });
 
             queryCalendarContainer.innerHTML = calendarHtml;
+        }
+
+
+        // --- INICIALIZACIÓN Y RENDERIZADO DE LA GRÁFICA DE HOY (VISTA DE ENTRADA) ---
+
+        async function initTodayPrices() {
+            const todayLabelEl = document.getElementById('todayPricesTitle');
+            const subtitleEl = document.getElementById('todayPricesSubtitle');
+            
+            // Obtener la fecha local en formato YYYY-MM-DD
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            
+            // Modificar la cabecera con el formato amigable
+            todayLabelEl.textContent = `Precios de la Luz para hoy (${formatFriendlyDate(dateStr)})`;
+
+            try {
+                // Recuperar precios horarios desde REE
+                const prices = await fetchPreciosPVPC(dateStr, dateStr);
+                if (prices && Object.keys(prices).length > 0) {
+                    window.todayPricesMap = prices;
+                    renderTodayPricesChart(dateStr);
+                } else {
+                    subtitleEl.textContent = "⚠️ No se han podido obtener los precios de hoy. Compruebe su conexión o reintente más tarde.";
+                }
+            } catch (err) {
+                subtitleEl.textContent = "⚠️ Error de conexión al cargar precios del día de hoy.";
+                console.error(err);
+            }
+        }
+
+        function renderTodayPricesChart(dateStr) {
+            const canvas = document.getElementById('todayHourlyPricesChart');
+            if (!canvas || !window.todayPricesMap) return;
+
+            const hourlyData = [];
+            for (let h = 0; h < 24; h++) {
+                const key = `${dateStr}_T${String(h).padStart(2, '0')}`;
+                const price = window.todayPricesMap[key];
+                if (price !== undefined) {
+                    hourlyData.push({ hour: h, price: price });
+                }
+            }
+
+            if (hourlyData.length === 0) return;
+
+            const prices = hourlyData.map(d => d.price);
+            const minVal = Math.min(...prices);
+            const maxVal = Math.max(...prices);
+            const avgVal = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+            const minHour = hourlyData.find(d => d.price === minVal)?.hour;
+            const maxHour = hourlyData.find(d => d.price === maxVal)?.hour;
+
+            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+
+            // Renderizar insignias y leyendas en la cabecera
+            document.getElementById('todayAvgBadge').innerHTML = `
+                <span class="bg-blue-600 text-white font-black px-2.5 py-1 rounded-md text-xs sm:text-sm block text-center font-mono">
+                    MEDIA DE HOY: ${avgVal.toFixed(5)} €/kWh
+                </span>
+            `;
+
+            document.getElementById('todayChartLegend').innerHTML = `
+                <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo del día (${minVal.toFixed(4)})</span>
+                <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo del día (${maxVal.toFixed(4)})</span>
+                <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
+                <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
+                <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
+            `;
+
+            // Coloreado idéntico al visor del modal
+            const backgroundColors = hourlyData.map(d => {
+                if (d.hour === minHour) return 'rgba(16, 185, 129, 0.9)';
+                if (d.hour === maxHour) return 'rgba(239, 68, 68, 0.9)';
+                if (d.price >= pvpcHigh) return 'rgba(254, 226, 226, 0.8)';
+                if (d.price <= pvpcLow) return 'rgba(209, 250, 229, 0.8)';
+                return 'rgba(254, 243, 199, 0.8)';
+            });
+
+            const borderColors = hourlyData.map(d => {
+                if (d.hour === minHour) return 'rgb(5, 150, 105)';
+                if (d.hour === maxHour) return 'rgb(220, 38, 38)';
+                if (d.price >= pvpcHigh) return 'rgb(248, 113, 113)';
+                if (d.price <= pvpcLow) return 'rgb(52, 211, 153)';
+                return 'rgb(251, 191, 36)';
+            });
+
+            const labels = hourlyData.map(d => `${String(d.hour).padStart(2, '0')}:00`);
+
+            if (window.todayChartInstance) {
+                window.todayChartInstance.destroy();
+            }
+
+            const barLabelsPlugin = {
+                id: 'barLabelsToday',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    const isSmallScreen = window.innerWidth < 640;
+                    ctx.font = `bold ${isSmallScreen ? '6px' : '8px'} sans-serif`;
+                    ctx.fillStyle = '#1e293b';
+                    
+                    chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                        const val = data.datasets[0].data[index];
+                        if (val !== undefined) {
+                            ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            const ctx = canvas.getContext('2d');
+            window.todayChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Precio (€/kWh)',
+                            data: prices,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 1.5,
+                            order: 2
+                        },
+                        {
+                            label: 'Media de Hoy',
+                            data: Array(24).fill(avgVal),
+                            type: 'line',
+                            borderColor: 'rgba(59, 130, 246, 0.95)',
+                            borderWidth: 1.5,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
+                },
+                plugins: [barLabelsPlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 },
+                                callback: (val) => `${val.toFixed(3)} €`
+                            },
+                            suggestedMax: maxVal * 1.1
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // Abre el visor detallado para la fecha seleccionada
