@@ -3814,14 +3814,14 @@ async function fetchPreciosPVPC(inicio, fin) {
             consumDetailLegend.innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
                     <span class="bg-blue-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Consumo Diario: ${dayTotalKwh.toFixed(2)} kWh
+                        Consumo Dia: ${dayTotalKwh.toFixed(2)} kWh
                     </span>
                     <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Coste Diario Estimado: ${dayTotalCost.toFixed(2)} €
+                        Coste Dia: ${dayTotalCost.toFixed(2)} €
                     </span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-blue-100 border border-blue-200"></span> Consumo Normal</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600 inline-block"></span> Línea de Precios (Derecha, €/kWh)</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600 inline-block"></span> Precio hora</span>
                 </div>
             `;
 
