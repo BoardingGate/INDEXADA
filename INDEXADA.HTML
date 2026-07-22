@@ -746,18 +746,24 @@
                 <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <!-- Contenedor del calendario (con scroll) -->
+          <!-- Contenedor del calendario (con scroll) -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
                 <!-- Leyenda de operaciones -->
                 <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
                     <span class="font-semibold">💡 Operativa:</span>
-                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha.</span>
+                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha. El color de las casillas indica la tendencia del precio medio del día (verde para los más baratos, rojo para los más caros del rango).</span>
                 </div>
+
+                <!-- NUEVO: Fila de Indicadores del Periodo Seleccionado -->
+                <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                    <!-- Se rellenará dinámicamente mediante JavaScript -->
+                </div>
+
                 <div id="queryCalendarContainer" class="space-y-8">
                     <!-- Se renderizarán los meses dinámicamente -->
                 </div>
             </div>
-        </div>
+         </div>
     </div>
 
     <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
@@ -2660,13 +2666,21 @@ async function fetchPreciosPVPC(inicio, fin) {
         }
 
         // Renderiza el calendario dentro del modal de consulta
+      // Renderiza el calendario con cálculos estadísticos y transición de color gradual
         function renderQueryCalendar(startStr, endStr) {
             queryCalendarContainer.innerHTML = "";
-            
-            const startDate = new Date(startStr);
-            const endDate = new Date(endStr);
+            const metricsContainer = document.getElementById('queryPeriodMetrics');
+            metricsContainer.innerHTML = "";
+
+            // 1. Recopilar y organizar la base de datos de precios del periodo seleccionado
+            const allHourlyPrices = [];
+            const dailyStatsList = [];
             const monthsMap = {};
 
+            const startDate = new Date(startStr);
+            const endDate = new Date(endStr);
+
+            // Estructurar la segmentación mensual
             let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
             while (current <= endDate) {
                 const yyyymm = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
@@ -2674,19 +2688,90 @@ async function fetchPreciosPVPC(inicio, fin) {
                 current.setMonth(current.getMonth() + 1);
             }
 
-            // Procesar los datos estructurando el inventario de días
+            // Distribuir días naturales en los meses correspondientes
             let iterDate = new Date(startDate);
-            const limitDate = new Date(endDate);
-            
-            while (iterDate <= limitDate) {
+            while (iterDate <= endDate) {
                 const dateKey = iterDate.toISOString().split('T')[0];
                 const yyyymm = dateKey.substring(0, 7);
                 if (monthsMap[yyyymm]) {
                     monthsMap[yyyymm].push(dateKey);
                 }
+
+                // Recopilar precios de las 24 horas del día
+                const dayPrices = [];
+                for (let h = 0; h < 24; h++) {
+                    const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                    const price = window.queryPricesDb[priceKey];
+                    if (price !== undefined) {
+                        dayPrices.push(price);
+                        allHourlyPrices.push(price);
+                    }
+                }
+
+                if (dayPrices.length > 0) {
+                    dailyStatsList.push({
+                        dateKey: dateKey,
+                        min: Math.min(...dayPrices),
+                        max: Math.max(...dayPrices),
+                        avg: dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length
+                    });
+                }
+
                 iterDate.setDate(iterDate.getDate() + 1);
             }
 
+            if (allHourlyPrices.length === 0) {
+                metricsContainer.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 font-semibold py-2">No hay lecturas cargadas en este rango.</p>`;
+                return;
+            }
+
+            // 2. Cálculo de métricas globales del periodo
+            const globalMin = Math.min(...allHourlyPrices);
+            const globalMax = Math.max(...allHourlyPrices);
+            const globalAvg = allHourlyPrices.reduce((a, b) => a + b, 0) / allHourlyPrices.length;
+
+            const avgOfDailyMins = dailyStatsList.reduce((sum, d) => sum + d.min, 0) / dailyStatsList.length;
+            const avgOfDailyMaxs = dailyStatsList.reduce((sum, d) => sum + d.max, 0) / dailyStatsList.length;
+
+            const dailyAvgValues = dailyStatsList.map(d => d.avg);
+            const minDailyAvg = Math.min(...dailyAvgValues);
+            const maxDailyAvg = Math.max(...dailyAvgValues);
+
+            // Renderizar las 5 tarjetas de métricas agregadas
+            metricsContainer.innerHTML = `
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <span class="text-[9px] text-blue-800 font-extrabold uppercase block leading-none">Precio Medio Periodo</span>
+                    <p class="text-sm font-bold text-blue-950 mt-1 font-mono">${globalAvg.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                    <span class="text-[9px] text-emerald-800 font-extrabold uppercase block leading-none">Precio Mínimo Absoluto</span>
+                    <p class="text-sm font-bold text-emerald-950 mt-1 font-mono">${globalMin.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-rose-50 p-3 rounded-lg border border-rose-200">
+                    <span class="text-[9px] text-rose-800 font-extrabold uppercase block leading-none">Precio Máximo Absoluto</span>
+                    <p class="text-sm font-bold text-rose-950 mt-1 font-mono">${globalMax.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                    <span class="text-[9px] text-emerald-700 font-extrabold uppercase block leading-none">Media de los Mínimos</span>
+                    <p class="text-sm font-semibold text-emerald-900 mt-1 font-mono">${avgOfDailyMins.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                    <span class="text-[9px] text-rose-700 font-extrabold uppercase block leading-none">Media de los Máximos</span>
+                    <p class="text-sm font-semibold text-rose-900 mt-1 font-mono">${avgOfDailyMaxs.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+            `;
+
+            // Función auxiliar para interpolar el color HSL (Verde -> Amarillo -> Rojo)
+            function getTemperatureColor(dayAvg, minAvg, maxAvg) {
+                if (maxAvg === minAvg) return 'rgb(255, 255, 255)';
+                // Normalizar porcentaje entre 0 (más barato) y 1 (más caro)
+                const pct = Math.max(0, Math.min(1, (dayAvg - minAvg) / (maxAvg - minAvg)));
+                // Verde HSL(140, 80%, 93%) -> Rojo HSL(0, 80%, 93%)
+                const hue = 140 - (pct * 140);
+                return `hsl(${hue}, 80%, 93%)`;
+            }
+
+            // 3. Renderizar el Calendario del Periodo
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             let calendarHtml = "";
 
@@ -2699,9 +2784,8 @@ async function fetchPreciosPVPC(inicio, fin) {
                 const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
                 const daysInMonth = new Date(year, monthNum, 0).getDate();
 
-                // Contenedor mensual con bordes definidos y fondo de contraste neutro
                 let monthHtml = `
-                    <div class="border-2 border-gray-300 rounded-xl p-4 bg-gray-100 shadow-sm text-center">
+                    <div class="border-2 border-gray-300 rounded-xl p-4 bg-gray-150 shadow-sm text-center">
                         <h4 class="text-sm font-black text-blue-950 mb-3 text-center uppercase tracking-wide">
                             ${monthNames[monthNum - 1]} ${year}
                         </h4>
@@ -2731,30 +2815,20 @@ async function fetchPreciosPVPC(inicio, fin) {
                         continue;
                     }
 
-                    // Calcular estadísticas de precios diarios
-                    const dayPrices = [];
-                    for (let h = 0; h < 24; h++) {
-                        const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
-                        const price = window.queryPricesDb[priceKey];
-                        if (price !== undefined) {
-                            dayPrices.push(price);
-                        }
-                    }
+                    const dayStats = dailyStatsList.find(d => d.dateKey === dateKey);
 
-                    // Renderizado de las casillas de días válidos con fondo blanco, bordes oscuros y hover destacado
-                    if (dayPrices.length > 0) {
-                        const minPrice = Math.min(...dayPrices);
-                        const maxPrice = Math.max(...dayPrices);
-                        const avgPrice = dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length;
+                    if (dayStats) {
+                        const cellBgColor = getTemperatureColor(dayStats.avg, minDailyAvg, maxDailyAvg);
 
                         monthHtml += `
-                            <div class="bg-white border-2 border-gray-300 hover:border-blue-600 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:shadow transition-all cursor-pointer min-h-[68px]"
+                            <div class="border-2 border-gray-400/80 hover:border-blue-600 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:shadow transition-all cursor-pointer min-h-[68px]"
+                                 style="background-color: ${cellBgColor};"
                                  onclick="openDayDetail('${dateKey}')">
-                                <span class="text-[10px] font-black text-slate-800 bg-slate-100 rounded px-1.5 py-0.5 self-start">${day}</span>
-                                <div class="text-[9px] leading-tight text-right mt-1 font-mono">
-                                    <p class="text-emerald-700 font-bold" title="Mínimo">▼${minPrice.toFixed(4)}</p>
-                                    <p class="text-rose-700 font-bold" title="Máximo">▲${maxPrice.toFixed(4)}</p>
-                                    <p class="text-blue-800 font-extrabold border-t border-gray-300 mt-1 pt-1" title="Media">μ:${avgPrice.toFixed(4)}</p>
+                                <span class="text-[10px] font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-1.5 py-0.5 self-start">${day}</span>
+                                <div class="text-[9px] leading-tight text-right mt-1 font-mono font-bold">
+                                    <p class="text-emerald-800" title="Mínimo">▼${dayStats.min.toFixed(4)}</p>
+                                    <p class="text-rose-800" title="Máximo">▲${dayStats.max.toFixed(4)}</p>
+                                    <p class="text-blue-900 border-t border-gray-400/40 mt-1 pt-1" title="Media">μ:${dayStats.avg.toFixed(4)}</p>
                                 </div>
                             </div>
                         `;
