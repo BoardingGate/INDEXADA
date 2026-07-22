@@ -2940,10 +2940,10 @@ async function fetchPreciosPVPC(inicio, fin) {
             document.getElementById('detailModalLegend').innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
                     <span class="bg-blue-600 text-white font-extrabold px-2 py-0.5 rounded text-xs shrink-0">
-                        Media del día: ${avgVal.toFixed(5)} €/kWh
+                        Media día: ${avgVal.toFixed(5)} €/kWh
                     </span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo del día (${minVal.toFixed(4)})</span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo del día (${maxVal.toFixed(4)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo (${minVal.toFixed(4)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo (${maxVal.toFixed(4)})</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
