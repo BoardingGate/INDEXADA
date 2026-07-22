@@ -31,6 +31,28 @@
             </p>
         </header>
 
+        <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
+            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <h3 id="todayPricesTitle" class="text-md font-bold text-amber-700">Precios de la Luz de Hoy</h3>
+                    <p id="todayPricesSubtitle" class="text-xs text-gray-500 mt-1">Precio regulado oficial (se publican a las 20:30 horas)</p>
+                </div>
+                <div id="todayAvgBadge" class="shrink-0">
+                    <!-- Se carga dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Leyenda compacta -->
+            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500">
+                <!-- Se carga dinámicamente -->
+            </div>
+            
+            <!-- Gráfica compacta -->
+            <div class="relative h-[180px] sm:h-[300px] w-full">
+                <canvas id="todayHourlyPricesChart"></canvas>
+            </div>
+        </div>
+
         <!-- Panel de Configuración General -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
@@ -72,28 +94,6 @@
             </div>
         </div>
 
-        <!-- PANEL: Precios PVPC del Día de Hoy (Gráfica de entrada compacta) -->
-        <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
-            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div>
-                    <h3 id="todayPricesTitle" class="text-md font-bold text-amber-700">Precios de la Luz de Hoy</h3>
-                    <p id="todayPricesSubtitle" class="text-xs text-gray-500 mt-1">Precio regulado oficial (se publican a las 20:30 horas)</p>
-                </div>
-                <div id="todayAvgBadge" class="shrink-0">
-                    <!-- Se carga dinámicamente -->
-                </div>
-            </div>
-            
-            <!-- Leyenda compacta -->
-            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500">
-                <!-- Se carga dinámicamente -->
-            </div>
-            
-            <!-- Gráfica compacta -->
-            <div class="relative h-[180px] sm:h-[300px] w-full">
-                <canvas id="todayHourlyPricesChart"></canvas>
-            </div>
-        </div>
 
         <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
