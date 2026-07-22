@@ -3671,7 +3671,6 @@ async function fetchPreciosPVPC(inicio, fin) {
         window.activeConsumDetailDate = null;
         window.dayConsumChartInstance = null;
 
-        // Listeners de controles del modal de consumo
         closeDayConsumDetailModal.addEventListener('click', () => {
             dayConsumDetailModal.classList.add('hidden');
         });
@@ -3684,7 +3683,6 @@ async function fetchPreciosPVPC(inicio, fin) {
             navigateActiveConsumDay(1);
         });
 
-        // Abre el visor de consumo y formatea la fecha en la cabecera
         window.openDayConsumDetail = function(dateStr) {
             window.activeConsumDetailDate = dateStr;
             consumDetailModalTitle.textContent = `Consumo Horario: ${formatFriendlyDate(dateStr)}`;
@@ -3692,17 +3690,14 @@ async function fetchPreciosPVPC(inicio, fin) {
             renderDayConsumHourlyChart(dateStr);
         };
 
-        // Permite la navegación secuencial día a día en el gráfico de consumos
-        function navigateActiveConsumDay(offset) {
+         function navigateActiveConsumDay(offset) {
             if (!window.activeConsumDetailDate) return;
             const current = new Date(window.activeConsumDetailDate);
             current.setDate(current.getDate() + offset);
             const nextDateStr = current.toISOString().split('T')[0];
 
-            // Validar que tengamos datos de consumo cargados para ese día en el CSV
             const hasData = window.rawCsvData && window.rawCsvData.some(row => {
-                // El CSV procesado tiene un mapeo en window.allAvailableDays
-                return window.allAvailableDays && window.allAvailableDays[nextDateStr] !== undefined;
+                  return window.allAvailableDays && window.allAvailableDays[nextDateStr] !== undefined;
             });
 
             if (hasData) {
@@ -3712,7 +3707,7 @@ async function fetchPreciosPVPC(inicio, fin) {
             }
         }
 
-// Renderiza el perfil horario de consumo (barras) cruzado con el precio de la energía (línea) de un día aislado
+// Renderiza el perfil horario de consumo (barras) cruzado con el precio de la energía (líneas de precio y media) de un día aislado
         function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
@@ -3808,20 +3803,25 @@ async function fetchPreciosPVPC(inicio, fin) {
             }
 
             const avgHourlyConsum = dayTotalKwh / 24;
+            const avgPriceOfThatDay = hourlyPrices.reduce((sum, p) => sum + p, 0) / 24; // Cálculo de la media de precios de hoy
             const threshold = parseFloat(thresholdInput.value) || 0;
 
-            // Actualizar la cabecera resumen con las leyendas de colores de consumo y la nueva línea de precios
+            // Actualizar la cabecera del modal con las insignias (incluyendo la nueva insignia roja de precio medio)
             consumDetailLegend.innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
                     <span class="bg-blue-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Consumo Dia: ${dayTotalKwh.toFixed(2)} kWh
+                        Consumo Diario: ${dayTotalKwh.toFixed(2)} kWh
                     </span>
                     <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Coste Dia: ${dayTotalCost.toFixed(2)} €
+                        Coste Diario Estimado: ${dayTotalCost.toFixed(2)} €
+                    </span>
+                    <span class="bg-rose-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
+                        Precio Medio Diario: ${avgPriceOfThatDay.toFixed(5)} €/kWh
                     </span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-blue-100 border border-blue-200"></span> Consumo Normal</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600 inline-block"></span> Precio hora</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600 inline-block"></span> Curva Precios (Derecha, €/kWh)</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600/40 border border-dashed border-rose-600 inline-block"></span> Precio Medio del Día (Derecha)</span>
                 </div>
             `;
 
@@ -3874,8 +3874,8 @@ async function fetchPreciosPVPC(inicio, fin) {
                             backgroundColor: backgroundColors,
                             borderColor: borderColors,
                             borderWidth: 1.5,
-                            yAxisID: 'y', // Vinculado al eje izquierdo (Consumo)
-                            order: 3
+                            yAxisID: 'y', // Izquierda
+                            order: 4
                         },
                         {
                             label: 'Media de Consumo Horario',
@@ -3886,21 +3886,34 @@ async function fetchPreciosPVPC(inicio, fin) {
                             borderDash: [5, 5],
                             pointRadius: 0,
                             fill: false,
-                            yAxisID: 'y', // Vinculado al eje izquierdo (Consumo)
-                            order: 2
+                            yAxisID: 'y', // Izquierda
+                            order: 3
                         },
                         {
                             label: 'Precio de la Energía (€/kWh)',
                             data: hourlyPrices,
                             type: 'line',
-                            borderColor: 'rgb(225, 29, 72)', // Línea de precio color Rose-600
+                            borderColor: 'rgb(225, 29, 72)', // Carmín
                             backgroundColor: 'rgba(225, 29, 72, 0.1)',
                             borderWidth: 2.5,
                             pointRadius: 3,
                             pointHoverRadius: 6,
                             fill: false,
-                            yAxisID: 'y1', // Vinculado al nuevo eje derecho (Precios)
+                            yAxisID: 'y1', // Derecha
                             order: 1
+                        },
+                        // NUEVO DATASET: Línea horizontal discontinua del precio medio de hoy (rojo tenue)
+                        {
+                            label: 'Precio Medio Diario',
+                            data: Array(24).fill(avgPriceOfThatDay),
+                            type: 'line',
+                            borderColor: 'rgba(225, 29, 72, 0.45)', // Rojo tenue
+                            borderWidth: 1.5,
+                            borderDash: [4, 4], // Línea discontinua
+                            pointRadius: 0,
+                            fill: false,
+                            yAxisID: 'y1', // Derecha
+                            order: 2
                         }
                     ]
                 },
@@ -3927,7 +3940,7 @@ async function fetchPreciosPVPC(inicio, fin) {
                             type: 'linear',
                             display: true,
                             position: 'right',
-                            grid: { drawOnChartArea: false }, // Oculta las líneas de fondo secundarias para no entorpecer la visualización
+                            grid: { drawOnChartArea: false },
                             title: { display: true, text: 'Precio de la Energía (€/kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
                             ticks: {
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
