@@ -716,6 +716,74 @@
         </footer>
     </div>
 
+   <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
+    <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
+            <!-- Cabecera del modal -->
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base flex items-center gap-1.5">
+                        <span>📅 Histórico de Precios PVPC</span>
+                    </h3>
+                    <p class="text-xs text-gray-500">Consulta y navega por los precios de la tarifa regulada oficial</p>
+                </div>
+                <button id="closePriceQueryModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+            
+            <!-- Panel de control temporal -->
+            <div class="p-4 bg-white border-b flex flex-wrap items-end gap-3 shrink-0">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Inicio</label>
+                    <input type="date" id="queryPriceStart" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Fin</label>
+                    <input type="date" id="queryPriceEnd" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button id="fetchQueryPricesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    Consultar Rango
+                </button>
+                <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
+            </div>
+
+            <!-- Contenedor del calendario (con scroll) -->
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <!-- Leyenda de operaciones -->
+                <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
+                    <span class="font-semibold">💡 Operativa:</span>
+                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha.</span>
+                </div>
+                <div id="queryCalendarContainer" class="space-y-8">
+                    <!-- Se renderizarán los meses dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
+    <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden border border-gray-200">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">&larr; Anterior</button>
+                    <h4 id="detailModalDateTitle" class="font-extrabold text-gray-800 text-sm sm:text-base">Fecha</h4>
+                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">Siguiente &rarr;</button>
+                </div>
+                <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Resumen de umbrales activos -->
+                <div id="detailModalLegend" class="mb-4 flex flex-wrap gap-3 text-[11px]"></div>
+                
+                <!-- Área de Gráfico -->
+                <div class="relative h-[400px] w-full">
+                    <canvas id="detailHourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
@@ -2871,75 +2939,6 @@ async function fetchPreciosPVPC(inicio, fin) {
             });
         }
     
-<!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
-    <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
-            <!-- Cabecera del modal -->
-            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
-                <div>
-                    <h3 class="font-bold text-gray-900 text-base flex items-center gap-1.5">
-                        <span>📅 Histórico de Precios PVPC</span>
-                    </h3>
-                    <p class="text-xs text-gray-500">Consulta y navega por los precios de la tarifa regulada oficial</p>
-                </div>
-                <button id="closePriceQueryModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
-            </div>
-            
-            <!-- Panel de control temporal -->
-            <div class="p-4 bg-white border-b flex flex-wrap items-end gap-3 shrink-0">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Inicio</label>
-                    <input type="date" id="queryPriceStart" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Fin</label>
-                    <input type="date" id="queryPriceEnd" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <button id="fetchQueryPricesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
-                    Consultar Rango
-                </button>
-                <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
-            </div>
-
-            <!-- Contenedor del calendario (con scroll) -->
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <!-- Leyenda de operaciones -->
-                <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
-                    <span class="font-semibold">💡 Operativa:</span>
-                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha.</span>
-                </div>
-                <div id="queryCalendarContainer" class="space-y-8">
-                    <!-- Se renderizarán los meses dinámicamente -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
-    <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden border border-gray-200">
-            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">&larr; Anterior</button>
-                    <h4 id="detailModalDateTitle" class="font-extrabold text-gray-800 text-sm sm:text-base">Fecha</h4>
-                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">Siguiente &rarr;</button>
-                </div>
-                <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
-            </div>
-            
-            <div class="p-6">
-                <!-- Resumen de umbrales activos -->
-                <div id="detailModalLegend" class="mb-4 flex flex-wrap gap-3 text-[11px]"></div>
-                
-                <!-- Área de Gráfico -->
-                <div class="relative h-[400px] w-full">
-                    <canvas id="detailHourlyChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
     </script>
 </body>
 </html>
