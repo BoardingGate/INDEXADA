@@ -628,7 +628,6 @@
                     <div class="relative h-[500px]">
                         <canvas id="chartHourly"></canvas>
                     </div>
-                    <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
                 </div>
             </div>
 
@@ -781,8 +780,6 @@
                 <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
                     <!-- Se rellenará dinámicamente mediante JavaScript -->
                 </div>
-
-                <div id="modalAiRecommendation" class="hidden mb-6 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
 
                 <div id="queryCalendarContainer" class="space-y-8">
                     <!-- Se renderizarán los meses dinámicamente -->
@@ -1739,7 +1736,7 @@ async function fetchPreciosPVPC(inicio, fin) {
             const avgFilteredPrice = filteredKwh > 0 ? (filteredCost / filteredKwh) : 0;
             filteredAvgKwhEl.textContent = `${avgFilteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
- 
+            // --- CÁLCULO ESTIMADO DE AUTONOMÍA Y COSTE/KM (AÑADIDO) ---
           // --- CÁLCULO ESTIMADO DE AUTONOMÍA Y COSTE/KM (REVISADO) ---
             const evEfficiency = parseFloat(document.getElementById('evEfficiency').value) || 15.4;
             const evRange = evEfficiency > 0 ? (filteredKwh / evEfficiency) * 100 : 0;
@@ -2116,18 +2113,6 @@ async function fetchPreciosPVPC(inicio, fin) {
             });
 
             calendarGridContainer.innerHTML = calendarHtml || `<p class="text-center text-gray-400 py-4 text-xs font-semibold">No hay lecturas disponibles para construir el calendario.</p>`;
-
-            const mainPricesForAi = data.map(item => {
-                const dateParts = item.fechaStr.split('-');
-                const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
-                return {
-                    hour: item.hora,
-                    price: item.precio,
-                    isWeekend: isWeekend
-                };
-            });
-            updateAiRecommendation(mainPricesForAi, 'mainAiRecommendation');
 
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
@@ -3023,36 +3008,6 @@ async function fetchPreciosPVPC(inicio, fin) {
                 `;
                 calendarHtml += monthHtml;
             });
-
-            // ... (Código existente al final de renderQueryCalendar) ...
-            
-            // COPIAR DESDE AQUÍ: Integración de recomendación de IA en el modal
-            const queryPricesForAi = [];
-            let rDate = new Date(startDate);
-            while (rDate <= endDate) {
-                const dateKey = rDate.toISOString().split('T')[0];
-                const dateParts = dateKey.split('-');
-                const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                const isWeekend = (dObj.getDay() === 0 || dObj.getDay() === 6);
-
-                for (let h = 0; h < 24; h++) {
-                    const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
-                    const price = window.queryPricesDb[priceKey];
-                    if (price !== undefined) {
-                        queryPricesForAi.push({
-                            hour: h,
-                            price: price,
-                            isWeekend: isWeekend
-                        });
-                    }
-                }
-                rDate.setDate(rDate.getDate() + 1);
-            }
-            updateAiRecommendation(queryPricesForAi, 'modalAiRecommendation');
-            // HASTA AQUÍ
-
-            queryCalendarContainer.innerHTML = calendarHtml;
-        }
 
             queryCalendarContainer.innerHTML = calendarHtml;
         }
@@ -3993,114 +3948,6 @@ async function fetchPreciosPVPC(inicio, fin) {
                     }
                 }
             });
-        }
-
-
-    // --- FUNCIÓN DE ANÁLISIS Y GENERACIÓN DE RECOMENDACIONES DE LA IA ---
-        function updateAiRecommendation(pricesArray, targetElementId) {
-            const targetEl = document.getElementById(targetElementId);
-            if (!targetEl) return;
-
-            if (!pricesArray || pricesArray.length === 0) {
-                targetEl.classList.add('hidden');
-                return;
-            }
-
-            const weekdaySum = Array(24).fill(0);
-            const weekdayCount = Array(24).fill(0);
-            const weekendSum = Array(24).fill(0);
-            const weekendCount = Array(24).fill(0);
-
-            pricesArray.forEach(item => {
-                const h = item.hour;
-                const p = item.price;
-                if (item.isWeekend) {
-                    weekendSum[h] += p;
-                    weekendCount[h]++;
-                } else {
-                    weekdaySum[h] += p;
-                    weekdayCount[h]++;
-                }
-            });
-
-            const weekdayAvg = weekdaySum.map((sum, h) => weekdayCount[h] > 0 ? sum / weekdayCount[h] : null);
-            const weekendAvg = weekendSum.map((sum, h) => weekendCount[h] > 0 ? sum / weekendCount[h] : null);
-
-            const weekdaySorted = weekdayAvg.map((avg, h) => ({ h, avg })).filter(x => x.avg !== null).sort((a,b) => a.avg - b.avg);
-            const weekendSorted = weekendAvg.map((avg, h) => ({ h, avg })).filter(x => x.avg !== null).sort((a,b) => a.avg - b.avg);
-
-            if (weekdaySorted.length === 0 && weekendSorted.length === 0) {
-                targetEl.classList.add('hidden');
-                return;
-            }
-
-            function getFormattedRanges(sortedHoursList) {
-                if (sortedHoursList.length === 0) return "N/D";
-                const hours = sortedHoursList.map(x => x.h).sort((a,b) => a - b);
-                const ranges = [];
-                let start = hours[0];
-                let prev = hours[0];
-                for (let i = 1; i <= hours.length; i++) {
-                    if (i < hours.length && hours[i] === prev + 1) {
-                        prev = hours[i];
-                    } else {
-                        if (start === prev) {
-                            ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(start+1).padStart(2,'0')}:00h`);
-                        } else {
-                            ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(prev+1).padStart(2,'0')}:00h`);
-                        }
-                        if (i < hours.length) {
-                            start = hours[i];
-                            prev = hours[i];
-                        }
-                    }
-                }
-                return ranges.join(', ');
-            }
-
-            const getAvgOfList = (list) => list.length > 0 ? list.reduce((sum, x) => sum + x.avg, 0) / list.length : 0;
-
-            // Se extraen las 6 horas de menor precio y las 4 horas de mayor coste
-            const cheapestWD = weekdaySorted.slice(0, 6);
-            const expensiveWD = [...weekdaySorted].reverse().slice(0, 4);
-            const cheapestWE = weekendSorted.slice(0, 6);
-            const expensiveWE = [...weekendSorted].reverse().slice(0, 4);
-
-            const wdCheapestStr = getFormattedRanges(cheapestWD);
-            const wdExpensiveStr = getFormattedRanges(expensiveWD);
-            const weCheapestStr = getFormattedRanges(cheapestWE);
-            const weExpensiveStr = getFormattedRanges(expensiveWE);
-
-            const wdCheapestAvg = getAvgOfList(cheapestWD).toFixed(5);
-            const wdExpensiveAvg = getAvgOfList(expensiveWD).toFixed(5);
-            const weCheapestAvg = getAvgOfList(cheapestWE).toFixed(5);
-            const weExpensiveAvg = getAvgOfList(expensiveWE).toFixed(5);
-
-            targetEl.innerHTML = `
-                <div class="flex items-start gap-2.5">
-                    <span class="text-sm shrink-0">🤖</span>
-                    <div class="flex-1 min-w-0">
-                        <h5 class="font-bold text-blue-900 mb-1 text-xs uppercase tracking-wide">Recomendación de la iA según la tendencia de precios del periodo:</h5>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                            <div>
-                                <span class="font-bold text-gray-800 block mb-1">📅 Lunes a Viernes:</span>
-                                <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
-                                    <li><strong>Horas más económicas:</strong> <span class="text-emerald-700 font-semibold">${wdCheapestStr}</span> (promedio de <span class="font-mono">${wdCheapestAvg} €/kWh</span>). Conveniente para programar consumos pesados o cargas.</li>
-                                    <li><strong>Horas más caras:</strong> <span class="text-rose-700 font-semibold">${wdExpensiveStr}</span> (promedio de <span class="font-mono">${wdExpensiveAvg} €/kWh</span>).</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <span class="font-bold text-gray-800 block mb-1">🏖️ Sábado y Domingo:</span>
-                                <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
-                                    <li><strong>Horas más económicas:</strong> <span class="text-emerald-700 font-semibold">${weCheapestStr}</span> (promedio de <span class="font-mono">${weCheapestAvg} €/kWh</span>).</li>
-                                    <li><strong>Horas más caras:</strong> <span class="text-rose-700 font-semibold">${weExpensiveStr}</span> (promedio de <span class="font-mono">${weExpensiveAvg} €/kWh</span>).</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            targetEl.classList.remove('hidden');
         }
 
     </script>
