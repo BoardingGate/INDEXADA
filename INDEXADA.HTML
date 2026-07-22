@@ -2905,6 +2905,7 @@ async function fetchPreciosPVPC(inicio, fin) {
         }
 
         // Genera la gráfica de barras de 24 horas coloreada de acuerdo con la clasificación del PVPC
+// Genera la gráfica de barras de 24 horas coloreada de acuerdo con la clasificación del PVPC
         function renderDayDetailChart(dateStr) {
             const canvas = document.getElementById('detailHourlyChart');
             if (!canvas) return;
@@ -2981,7 +2982,6 @@ async function fetchPreciosPVPC(inicio, fin) {
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
                     
-                    // Ajustar tamaño del texto dinámicamente si la pantalla es pequeña
                     const isSmallScreen = window.innerWidth < 640;
                     ctx.font = `bold ${isSmallScreen ? '7px' : '9px'} sans-serif`;
                     ctx.fillStyle = '#1e293b';
@@ -3011,7 +3011,7 @@ async function fetchPreciosPVPC(inicio, fin) {
                             order: 2
                         },
                         {
-                            label: `Media: ${avgVal.toFixed(5)} €/kWh`,
+                            label: 'Media del Día',
                             data: Array(24).fill(avgVal),
                             type: 'line',
                             borderColor: 'rgba(59, 130, 246, 0.95)',
@@ -3029,18 +3029,7 @@ async function fetchPreciosPVPC(inicio, fin) {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                boxWidth: 15,
-                                font: {
-                                    size: window.innerWidth < 640 ? 8 : 11
-                                },
-                                // Ocultar el dataset del precio de barra de la leyenda superior para no duplicar datos
-                                filter: function(item) {
-                                    return item.text.includes('Media');
-                                }
-                            }
+                            display: false // Oculta la leyenda interactiva superior por completo
                         }
                     },
                     scales: {
