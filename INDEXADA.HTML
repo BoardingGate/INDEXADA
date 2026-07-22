@@ -766,24 +766,34 @@
          </div>
     </div>
 
-    <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
-    <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden border border-gray-200">
-            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">&larr; Anterior</button>
-                    <h4 id="detailModalDateTitle" class="font-extrabold text-gray-800 text-sm sm:text-base">Fecha</h4>
-                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">Siguiente &rarr;</button>
+<!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas (Optimizado para móviles) -->
+    <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200">
+            <!-- Cabecera adaptativa -->
+            <div class="p-3 sm:p-4 bg-gray-50 border-b flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
+                        &larr; <span class="hidden sm:inline">Anterior</span>
+                    </button>
+                    <h4 id="detailModalDateTitle" class="font-black text-gray-800 text-xs sm:text-sm md:text-base truncate text-center flex-1">
+                        Fecha
+                    </h4>
+                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
+                        <span class="hidden sm:inline">Siguiente</span> &rarr;
+                    </button>
                 </div>
-                <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+                <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 ml-1 leading-none shrink-0">&times;</button>
             </div>
             
-            <div class="p-6">
-                <!-- Resumen de umbrales activos -->
-                <div id="detailModalLegend" class="mb-4 flex flex-wrap gap-3 text-[11px]"></div>
+            <!-- Cuerpo con scroll si la pantalla es muy pequeña -->
+            <div class="p-3 sm:p-6 overflow-y-auto flex-1">
+                <!-- Resumen de umbrales y precio medio del día -->
+                <div id="detailModalLegend" class="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 text-[10px] sm:text-[11px] leading-relaxed">
+                    <!-- Se rellena por JavaScript -->
+                </div>
                 
-                <!-- Área de Gráfico -->
-                <div class="relative h-[400px] w-full">
+                <!-- Área de Gráfico adaptativo -->
+                <div class="relative h-[250px] sm:h-[380px] md:h-[420px] w-full">
                     <canvas id="detailHourlyChart"></canvas>
                 </div>
             </div>
@@ -2853,9 +2863,20 @@ async function fetchPreciosPVPC(inicio, fin) {
         }
 
         // Abre el visor detallado para la fecha seleccionada
+// Formatea una fecha YYYY-MM-DD a "Día de la semana, DD-MM-YYYY"
+        function formatFriendlyDate(dateStr) {
+            const parts = dateStr.split('-');
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const daysOfWeek = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const dayName = daysOfWeek[dateObj.getDay()];
+            return `${dayName}, ${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        // Abre el visor detallado para la fecha seleccionada
         window.openDayDetail = function(dateStr) {
             window.activeDetailDate = dateStr;
-            detailModalDateTitle.textContent = dateStr;
+            // Aplicar el formato amigable con el día de la semana
+            detailModalDateTitle.textContent = formatFriendlyDate(dateStr);
             dayDetailModal.classList.remove('hidden');
             renderDayDetailChart(dateStr);
         };
@@ -2879,7 +2900,7 @@ async function fetchPreciosPVPC(inicio, fin) {
             if (hasAnyData) {
                 openDayDetail(nextDateStr);
             } else {
-                alert(`No hay datos disponibles para la fecha: ${nextDateStr}`);
+                alert(`No hay datos disponibles para la fecha: ${formatFriendlyDate(nextDateStr)}`);
             }
         }
 
@@ -2914,17 +2935,21 @@ async function fetchPreciosPVPC(inicio, fin) {
             const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
             const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-            // Actualizar leyenda del modal según las configuraciones del usuario
+            // Actualizar leyenda del modal incluyendo el precio medio destacado en color azul
             document.getElementById('detailModalLegend').innerHTML = `
-                <span class="font-bold text-gray-700">Rango de tarifas de hoy:</span>
-                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Más barata del día (${minVal.toFixed(4)} €/kWh)</span>
-                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> Más cara del día (${maxVal.toFixed(4)} €/kWh)</span>
-                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
-                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
-                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
+                <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
+                    <span class="bg-blue-600 text-white font-extrabold px-2 py-0.5 rounded text-xs shrink-0">
+                        Media del día: ${avgVal.toFixed(5)} €/kWh
+                    </span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo del día (${minVal.toFixed(4)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo del día (${maxVal.toFixed(4)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
+                </div>
             `;
 
-            // Configurar los colores personalizados de las barras basándose en los criterios
+            // Configurar los colores de las barras
             const backgroundColors = hourlyData.map(d => {
                 if (d.hour === minHour) return 'rgba(16, 185, 129, 0.9)'; // Verde sólido
                 if (d.hour === maxHour) return 'rgba(239, 68, 68, 0.9)';  // Rojo sólido
@@ -2947,7 +2972,7 @@ async function fetchPreciosPVPC(inicio, fin) {
                 window.detailChartInstance.destroy();
             }
 
-            // Plugin personalizado integrado para estampar los precios numéricos sobre cada barra
+            // Plugin para imprimir los precios sobre cada barra
             const barLabelsPlugin = {
                 id: 'barLabels',
                 afterDatasetsDraw(chart) {
@@ -2955,7 +2980,10 @@ async function fetchPreciosPVPC(inicio, fin) {
                     ctx.save();
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
-                    ctx.font = 'bold 8px sans-serif';
+                    
+                    // Ajustar tamaño del texto dinámicamente si la pantalla es pequeña
+                    const isSmallScreen = window.innerWidth < 640;
+                    ctx.font = `bold ${isSmallScreen ? '7px' : '9px'} sans-serif`;
                     ctx.fillStyle = '#1e293b';
                     
                     chart.getDatasetMeta(0).data.forEach((bar, index) => {
@@ -2983,10 +3011,10 @@ async function fetchPreciosPVPC(inicio, fin) {
                             order: 2
                         },
                         {
-                            label: 'Media del Día',
+                            label: `Media: ${avgVal.toFixed(5)} €/kWh`,
                             data: Array(24).fill(avgVal),
                             type: 'line',
-                            borderColor: 'rgba(59, 130, 246, 0.75)',
+                            borderColor: 'rgba(59, 130, 246, 0.95)',
                             borderWidth: 2,
                             borderDash: [5, 5],
                             pointRadius: 0,
@@ -3000,16 +3028,35 @@ async function fetchPreciosPVPC(inicio, fin) {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                boxWidth: 15,
+                                font: {
+                                    size: window.innerWidth < 640 ? 8 : 11
+                                },
+                                // Ocultar el dataset del precio de barra de la leyenda superior para no duplicar datos
+                                filter: function(item) {
+                                    return item.text.includes('Media');
+                                }
+                            }
+                        }
                     },
                     scales: {
                         y: {
                             type: 'linear',
-                            title: { display: true, text: 'Precio (€/kWh)', font: { size: 10 } },
+                            title: { display: true, text: 'Precio (€/kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
                             ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 },
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
                             suggestedMax: maxVal * 1.1
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                            }
                         }
                     }
                 }
