@@ -2663,7 +2663,6 @@ async function fetchPreciosPVPC(inicio, fin) {
         function renderQueryCalendar(startStr, endStr) {
             queryCalendarContainer.innerHTML = "";
             
-            // Agrupar fechas en meses correspondientes
             const startDate = new Date(startStr);
             const endDate = new Date(endStr);
             const monthsMap = {};
@@ -2700,20 +2699,21 @@ async function fetchPreciosPVPC(inicio, fin) {
                 const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
                 const daysInMonth = new Date(year, monthNum, 0).getDate();
 
+                // Contenedor mensual con bordes definidos y fondo de contraste neutro
                 let monthHtml = `
-                    <div class="border border-gray-200 rounded-xl p-4 bg-white shadow-xs">
-                        <h4 class="text-sm font-extrabold text-blue-950 mb-3 text-center uppercase tracking-wide">
+                    <div class="border-2 border-gray-300 rounded-xl p-4 bg-gray-100 shadow-sm text-center">
+                        <h4 class="text-sm font-black text-blue-950 mb-3 text-center uppercase tracking-wide">
                             ${monthNames[monthNum - 1]} ${year}
                         </h4>
-                        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-500 mb-2 border-b pb-1">
+                        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-500 mb-2 border-b pb-1.5 border-gray-300">
                             <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
                         </div>
-                        <div class="grid grid-cols-7 gap-1.5">
+                        <div class="grid grid-cols-7 gap-2">
                 `;
 
                 // Celdas vacías del offset inicial
                 for (let i = 0; i < offset; i++) {
-                    monthHtml += `<div class="bg-gray-50 border border-dashed border-gray-200 rounded-lg min-h-[64px]"></div>`;
+                    monthHtml += `<div class="bg-gray-200/50 border border-dashed border-gray-300 rounded-lg min-h-[68px]"></div>`;
                 }
 
                 // Generar las celdas de cada día del mes
@@ -2723,9 +2723,11 @@ async function fetchPreciosPVPC(inicio, fin) {
 
                     // Filtrar si el día pertenece al rango consultado
                     if (dateKey < startStr || dateKey > endStr) {
-                        monthHtml += `<div class="bg-gray-50 border border-gray-100 rounded-lg p-1.5 flex flex-col justify-start min-h-[64px] opacity-25">
-                            <span class="text-[10px] font-bold text-gray-400">${day}</span>
-                        </div>`;
+                        monthHtml += `
+                            <div class="bg-gray-200/40 border border-gray-200 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-25">
+                                <span class="text-[10px] font-bold text-gray-400 text-left">${day}</span>
+                            </div>
+                        `;
                         continue;
                     }
 
@@ -2739,27 +2741,28 @@ async function fetchPreciosPVPC(inicio, fin) {
                         }
                     }
 
+                    // Renderizado de las casillas de días válidos con fondo blanco, bordes oscuros y hover destacado
                     if (dayPrices.length > 0) {
                         const minPrice = Math.min(...dayPrices);
                         const maxPrice = Math.max(...dayPrices);
                         const avgPrice = dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length;
 
                         monthHtml += `
-                            <div class="bg-gray-50 border border-gray-200 hover:border-blue-500 rounded-lg p-1 flex flex-col justify-between shadow-xs transition-colors cursor-pointer min-h-[64px]"
+                            <div class="bg-white border-2 border-gray-300 hover:border-blue-600 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:shadow transition-all cursor-pointer min-h-[68px]"
                                  onclick="openDayDetail('${dateKey}')">
-                                <span class="text-[10px] font-extrabold text-gray-700 leading-none">${day}</span>
+                                <span class="text-[10px] font-black text-slate-800 bg-slate-100 rounded px-1.5 py-0.5 self-start">${day}</span>
                                 <div class="text-[9px] leading-tight text-right mt-1 font-mono">
-                                    <p class="text-emerald-700 font-semibold" title="Mínimo">▼${minPrice.toFixed(4)}</p>
-                                    <p class="text-rose-700 font-semibold" title="Máximo">▲${maxPrice.toFixed(4)}</p>
-                                    <p class="text-blue-700 font-bold border-t border-gray-200 mt-0.5 pt-0.5" title="Media">μ:${avgPrice.toFixed(4)}</p>
+                                    <p class="text-emerald-700 font-bold" title="Mínimo">▼${minPrice.toFixed(4)}</p>
+                                    <p class="text-rose-700 font-bold" title="Máximo">▲${maxPrice.toFixed(4)}</p>
+                                    <p class="text-blue-800 font-extrabold border-t border-gray-300 mt-1 pt-1" title="Media">μ:${avgPrice.toFixed(4)}</p>
                                 </div>
                             </div>
                         `;
                     } else {
                         monthHtml += `
-                            <div class="bg-gray-50 border border-gray-100 rounded-lg p-1 flex flex-col justify-start min-h-[64px] opacity-40">
-                                <span class="text-[10px] font-semibold text-gray-400">${day}</span>
-                                <span class="text-[8px] text-gray-300 mt-auto text-right">Sin datos</span>
+                            <div class="bg-gray-100 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
+                                <span class="text-[10px] font-semibold text-gray-400 text-left">${day}</span>
+                                <span class="text-[8px] text-gray-400 mt-auto text-right">Sin datos</span>
                             </div>
                         `;
                     }
