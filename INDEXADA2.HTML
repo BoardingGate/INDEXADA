@@ -74,18 +74,23 @@
 
         <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
-            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+       <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                     <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
                         Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
                     </p>
                 </div>
-                <!-- Botón de Registro Oficial -->
-                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
-                    <span>Regístrate en Datadis.es</span>
-                    <span class="text-[10px]">↗</span>
-                </a>
+                <!-- Botones de Acción -->
+                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                        <span>Regístrate en Datadis.es</span>
+                        <span class="text-[10px]">↗</span>
+                    </a>
+                    <button id="consultPricesBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                        <span>📊 Consultar precios diarios</span>
+                    </button>
+                </div>
             </div>
 
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
@@ -495,8 +500,8 @@
                                         <input type="number" id="invoiceAdjustmentsPvpc" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                     </div>
                                     <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
-                                        <input type="number" id="retailerMarginPvpc" step="0.001" value="0.123" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono (€/día)</label>
+                                        <input type="number" id="retailerMarginPvpc" step="0.001" value="0.019" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                     </div>
                                     <div>
                                         <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
@@ -530,8 +535,8 @@
                                         <input type="number" id="invoiceAdjustmentsManual" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                     </div>
                                     <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen (€/día)</label>
-                                        <input type="number" id="retailerMarginManual" step="0.001" value="0.123" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono(€/día)</label>
+                                        <input type="number" id="retailerMarginManual" step="0.001" value="0.142" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
                                     </div>
                                     <div>
                                         <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
@@ -604,6 +609,7 @@
             </div>
 
             <!-- Métricas Filtradas -->
+<!-- Métricas Filtradas con Doble Cálculo Base/Simulado (Añadido) -->
             <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
                 <h3 class="text-lg font-semibold text-yellow-800 mb-4">Análisis de horas que superan el umbral</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -617,7 +623,10 @@
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
-                        <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
+                        <div class="leading-tight">
+                            <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
+                            <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold" title="Coste aislado aplicando los descuentos e impuestos configurados">Simulado: 0.00 €</span>
+                        </div>
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm block">Consumo Medio (Vehículo):</span>
@@ -626,6 +635,24 @@
                     <div>
                         <span class="text-gray-600 text-sm block">Precio Medio (Vehículo):</span>
                         <span id="filteredAvgPrice" class="text-2xl font-bold text-yellow-900 font-mono">0.00000 €/kWh</span>
+                    </div>
+                </div>
+
+                <!-- Sub-sección Autonomía y Doble Coste por Kilómetro (Letra Pequeña) -->
+                <div class="mt-6 pt-4 border-t border-yellow-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-yellow-900">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="font-bold uppercase tracking-wider text-[10px]">Parámetro de Consumo Coche:</span>
+                        <div class="flex items-center gap-1 bg-white border border-yellow-200 px-2 py-0.5 rounded shadow-xs">
+                            <input type="number" id="evEfficiency" step="0.1" value="15.4" class="w-12 text-center font-bold text-yellow-950 focus:outline-none bg-transparent">
+                            <span class="text-[10px] text-gray-400 font-semibold">kWh/100km</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:items-end text-[11px] leading-tight font-medium">
+                        <div>🚗 Kilómetros estimados recorridos: <span id="evRangeResult" class="font-bold text-sm text-yellow-950">0.0 km</span></div>
+                        <div class="mt-1 text-gray-500 text-[10px] flex flex-col sm:items-end gap-0.5">
+                            <div>💰 Coste estimado (Base): <span id="evCostPerKmResult" class="font-bold text-yellow-900 font-mono text-[11px]">0.0000 €/km</span></div>
+                            <div>💰 Coste estimado (Simulado): <span id="evCostPerKmSimulatedResult" class="font-bold text-yellow-950 font-mono text-[11px]">0.0000 €/km</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -683,10 +710,94 @@
             </div>
 
             <p class="text-[10px] text-gray-400 mt-8">
-                Analizador de Consumo Eléctrico • Proyecto libre y de código abierto • Contacto: 
+                Analizador de Consumo Eléctrico •  • Contacto: 
                 <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
             </p>
         </footer>
+    </div>
+
+   <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
+    <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
+            <!-- Cabecera del modal -->
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base flex items-center gap-1.5">
+                        <span>📅 Histórico de Precios PVPC</span>
+                    </h3>
+                    <p class="text-xs text-gray-500">Consulta y navega por los precios de la tarifa regulada oficial</p>
+                </div>
+                <button id="closePriceQueryModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+            
+            <!-- Panel de control temporal -->
+            <div class="p-4 bg-white border-b flex flex-wrap items-end gap-3 shrink-0">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Inicio</label>
+                    <input type="date" id="queryPriceStart" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Fin</label>
+                    <input type="date" id="queryPriceEnd" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button id="fetchQueryPricesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    Consultar Rango
+                </button>
+                <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
+            </div>
+
+          <!-- Contenedor del calendario (con scroll) -->
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <!-- Leyenda de operaciones -->
+                <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
+                    <span class="font-semibold">💡 Operativa:</span>
+                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha. El color de las casillas indica la tendencia del precio medio del día (verde para los más baratos, rojo para los más caros del rango).</span>
+                </div>
+
+                <!-- NUEVO: Fila de Indicadores del Periodo Seleccionado -->
+                <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                    <!-- Se rellenará dinámicamente mediante JavaScript -->
+                </div>
+
+                <div id="queryCalendarContainer" class="space-y-8">
+                    <!-- Se renderizarán los meses dinámicamente -->
+                </div>
+            </div>
+         </div>
+    </div>
+
+<!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas (Optimizado para móviles) -->
+    <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200">
+            <!-- Cabecera adaptativa -->
+            <div class="p-3 sm:p-4 bg-gray-50 border-b flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
+                        &larr; <span class="hidden sm:inline">Anterior</span>
+                    </button>
+                    <h4 id="detailModalDateTitle" class="font-black text-gray-800 text-xs sm:text-sm md:text-base truncate text-center flex-1">
+                        Fecha
+                    </h4>
+                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
+                        <span class="hidden sm:inline">Siguiente</span> &rarr;
+                    </button>
+                </div>
+                <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 ml-1 leading-none shrink-0">&times;</button>
+            </div>
+            
+            <!-- Cuerpo con scroll si la pantalla es muy pequeña -->
+            <div class="p-3 sm:p-6 overflow-y-auto flex-1">
+                <!-- Resumen de umbrales y precio medio del día -->
+                <div id="detailModalLegend" class="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 text-[10px] sm:text-[11px] leading-relaxed">
+                    <!-- Se rellena por JavaScript -->
+                </div>
+                
+                <!-- Área de Gráfico adaptativo -->
+                <div class="relative h-[250px] sm:h-[380px] md:h-[420px] w-full">
+                    <canvas id="detailHourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1038,6 +1149,11 @@
 
                 showStatus(`Conectando con Red Eléctrica de España para el periodo ${fechaInicio} al ${fechaFin}...`, "info");
                 const preciosMap = await fetchPreciosPVPC(fechaInicio, fechaFin);
+                // Validación de precios descargados
+                const totalPreciosDescargados = Object.keys(preciosMap || {}).length;
+                if (totalPreciosDescargados === 0) {
+                    showStatus(`⚠️ No se han podido obtener precios PVPC para el rango ${fechaInicio} a ${fechaFin}. Compruebe si el archivo contiene fechas futuras o si la API de Red Eléctrica tiene problemas de conexión.`, "error");
+                }
 
                 const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
@@ -1142,83 +1258,90 @@
             }
         }
 
-        async function fetchPreciosPVPC(inicio, fin) {
-            // Analizar estrictamente las fechas como componentes numéricos individuales
-            const startParts = inicio.split('-').map(Number);
-            const endParts = fin.split('-').map(Number);
+async function fetchPreciosPVPC(inicio, fin) {
+        const startParts = inicio.split('-').map(Number);
+        const endParts = fin.split('-').map(Number);
+        
+        const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+        const endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+
+        const chunks = [];
+        let currentStart = new Date(startDate.getTime());
+        
+        // Bloques de 28 días para asegurar que nunca se superen los 30 días de límite de REE por llamada
+        while (currentStart <= endDate) {
+            let currentEnd = new Date(currentStart.getTime());
+            currentEnd.setUTCDate(currentEnd.getUTCDate() + 28);
+            if (currentEnd > endDate) {
+                currentEnd = new Date(endDate.getTime());
+            }
             
-            // Inicializar las fechas en UTC absoluto para aislar el cálculo de la zona horaria del sistema local
-            const startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
-            const endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+            const startStr = currentStart.toISOString().split('T')[0];
+            const endStr = currentEnd.toISOString().split('T')[0];
             
-            const chunks = [];
-            let currentStart = new Date(startDate.getTime());
+            chunks.push({ start: startStr, end: endStr });
             
-            while (currentStart <= endDate) {
-                let currentEnd = new Date(currentStart.getTime());
-                // Incrementar fecha en UTC
-                currentEnd.setUTCDate(currentEnd.getUTCDate() + 30);
-                if (currentEnd > endDate) {
-                    currentEnd = new Date(endDate.getTime());
+            currentStart = new Date(currentEnd.getTime());
+            currentStart.setUTCDate(currentStart.getUTCDate() + 1);
+        }
+        
+        const preciosMap = {};
+        
+        // Ejecución secuencial controlada para evitar bloqueos por rate-limiting
+        for (const chunk of chunks) {
+            try {
+                // URL oficial corregida con "/mercados/"
+                const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    console.warn(`Fragmento omitido por REE (${chunk.start} a ${chunk.end}): HTTP ${response.status}`);
+                    continue; 
                 }
                 
-                const startStr = currentStart.toISOString().split('T')[0];
-                const endStr = currentEnd.toISOString().split('T')[0];
-                
-                chunks.push({ start: startStr, end: endStr });
-                
-                currentStart = new Date(currentEnd.getTime());
-                currentStart.setUTCDate(currentStart.getUTCDate() + 1);
-            }
-            
-            const preciosMap = {};
-            
-            try {
-                const promises = chunks.map(async (chunk) => {
-                    const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`Código de respuesta REE: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    
-                    if (!data.included) {
-                        return;
-                    }
+                const data = await response.json();
+                if (!data.included) continue;
 
-                    // Búsqueda exhaustiva de la serie PVPC por su ID oficial 600 o términos clave inalterables de Red Eléctrica
-                    const pvpcSeries = data.included.find(series => {
-                        if (!series) return false;
-                        const type = (series.type || '').toLowerCase();
-                        const title = (series.attributes && series.attributes.title || '').toLowerCase();
-                        const id = String(series.id || '');
-                        return id === '600' || 
-                               type.includes('pvpc') || 
-                               title.includes('pvpc') || 
-                               title.includes('pequeño consumidor') || 
-                               title.includes('voluntario para el');
-                    });
-                    
-                    if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
-                        pvpcSeries.attributes.values.forEach(v => {
-                            if (!v.datetime) return;
-                            // Se extrae la fecha y hora directamente del texto ISO retornado por el servidor
-                            const datePart = v.datetime.substring(0, 10); 
-                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); 
-                            const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
-                            preciosMap[key] = v.value / 1000.0; 
-                        });
-                    }
+                const pvpcSeries = data.included.find(series => {
+                    if (!series) return false;
+                    const type = (series.type || '').toLowerCase();
+                    const title = (series.attributes && series.attributes.title || '').toLowerCase();
+                    const id = String(series.id || '');
+                    return id === '600' || 
+                           type.includes('pvpc') || 
+                           title.includes('pvpc') || 
+                           title.includes('pequeño consumidor') || 
+                           title.includes('voluntario para el');
                 });
                 
-                await Promise.all(promises);
-                return preciosMap;
-                
-            } catch (error) {
-                showStatus("Error al descargar precios oficiales de Red Eléctrica: " + error.message, "error");
-                return null;
+                if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
+                    pvpcSeries.attributes.values.forEach(v => {
+                        if (!v.datetime) return;
+                        try {
+                            // Extracción directa y robusta de fecha y hora local desde la cadena devuelta por REE
+                            const datePart = v.datetime.substring(0, 10); 
+                            const hourPart = parseInt(v.datetime.substring(11, 13), 10); 
+
+                            const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
+                            preciosMap[key] = v.value / 1000.0; 
+                        } catch (e) {
+                            console.error("Error al procesar el registro de fecha de REE:", v.datetime, e);
+                        }
+                    });
+                }
+
+                // Espera técnica de 100 ms antes de realizar la siguiente llamada
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+            } catch (err) {
+                console.error(`Fallo de conexión en fragmento REE (${chunk.start} a ${chunk.end}):`, err);
             }
         }
+        
+        console.log(`Precios cargados correctamente en memoria: ${Object.keys(preciosMap).length} horas.`);
+        return preciosMap;
+    }
+
 
         function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
@@ -1494,6 +1617,44 @@
             const avgFilteredPrice = filteredKwh > 0 ? (filteredCost / filteredKwh) : 0;
             filteredAvgKwhEl.textContent = `${avgFilteredKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             filteredAvgPriceEl.textContent = `${avgFilteredPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+            // --- CÁLCULO ESTIMADO DE AUTONOMÍA Y COSTE/KM (AÑADIDO) ---
+          // --- CÁLCULO ESTIMADO DE AUTONOMÍA Y COSTE/KM (REVISADO) ---
+            const evEfficiency = parseFloat(document.getElementById('evEfficiency').value) || 15.4;
+            const evRange = evEfficiency > 0 ? (filteredKwh / evEfficiency) * 100 : 0;
+            
+            // 1. Coste por kilómetro Base (Precio de energía neto, sin impuestos fijos ni tasas de simulación)
+            const evCostPerKm = evRange > 0 ? (filteredCost / evRange) : 0;
+
+            // 2. Obtener los parámetros de simulación activos para el cálculo aislado
+            const activeMode = rateMode.value;
+            let activeDescEnergia = 0;
+            let activeImpElec = 0;
+            let activeIva = 0;
+
+            if (activeMode === 'pvpc') {
+                activeDescEnergia = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
+                activeImpElec = parseFloat(document.getElementById('electricityTaxPvpc').value) || 0;
+                activeIva = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
+            } else {
+                activeDescEnergia = parseFloat(document.getElementById('discountEnergyManual').value) || 0;
+                activeImpElec = parseFloat(document.getElementById('electricityTaxManual').value) || 0;
+                activeIva = parseFloat(document.getElementById('vatRateManual').value) || 0;
+            }
+
+            // 3. Coste total simulado del coche aislado (Aplicando descuento de energía, impuesto eléctrico e IVA correspondientes)
+            const filteredCostNet = filteredCost * (1 - activeDescEnergia / 100);
+            const filteredCostSimulated = filteredCostNet * (1 + activeImpElec / 100) * (1 + activeIva / 100);
+            
+            // 4. Coste por kilómetro Simulado
+            const evCostPerKmSimulated = evRange > 0 ? (filteredCostSimulated / evRange) : 0;
+
+            // Asignación de valores al DOM
+            document.getElementById('filteredCost').textContent = `${filteredCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+            document.getElementById('filteredCostSimulated').textContent = `Simulado: ${filteredCostSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €`;
+
+            document.getElementById('evRangeResult').textContent = `${evRange.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} km`;
+            document.getElementById('evCostPerKmResult').textContent = `${evCostPerKm.toLocaleString('es-ES', {minimumFractionDigits: 4, maximumFractionDigits: 4})} €/km`;
+            document.getElementById('evCostPerKmSimulatedResult').textContent = `${evCostPerKmSimulated.toLocaleString('es-ES', {minimumFractionDigits: 4, maximumFractionDigits: 4})} €/km`;
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
@@ -1682,7 +1843,7 @@
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Impuesto Eléctrico / Bono</td>
+                                    <td class="py-1.5 font-medium text-gray-700">Impuesto Eléctrico</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${impElecPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${impElecManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
@@ -2230,7 +2391,8 @@
                 retailerMarginManual: document.getElementById('retailerMarginManual').value,
                 electricityTaxManual: document.getElementById('electricityTaxManual').value,
                 meterRentalManual: document.getElementById('meterRentalManual').value,
-                vatRateManual: document.getElementById('vatRateManual').value
+                vatRateManual: document.getElementById('vatRateManual').value,
+                evEfficiency: document.getElementById('evEfficiency').value
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -2274,6 +2436,7 @@
                 if (config.electricityTaxManual !== undefined) document.getElementById('electricityTaxManual').value = config.electricityTaxManual;
                 if (config.meterRentalManual !== undefined) document.getElementById('meterRentalManual').value = config.meterRentalManual;
                 if (config.vatRateManual !== undefined) document.getElementById('vatRateManual').value = config.vatRateManual;
+                if (config.evEfficiency !== undefined) document.getElementById('evEfficiency').value = config.evEfficiency;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
@@ -2362,7 +2525,8 @@
             'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual',
             'datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd',
             'discountEnergyPvpc', 'discountPowerPvpc', 'invoiceAdjustmentsPvpc', 'retailerMarginPvpc', 'electricityTaxPvpc', 'meterRentalPvpc', 'vatRatePvpc',
-            'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual'
+            'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual',
+            'evEfficiency'
         ];
         
         inputsToWatch.forEach(id => {
@@ -2415,6 +2579,479 @@
             }
         };
 
+// --- MÓDULO INTEGRADO DE CONSULTA DE PRECIOS DIARIOS ---
+        
+        // Elementos del DOM del nuevo módulo
+        const consultPricesBtn = document.getElementById('consultPricesBtn');
+        const priceQueryModal = document.getElementById('priceQueryModal');
+        const closePriceQueryModal = document.getElementById('closePriceQueryModal');
+        const queryPriceStart = document.getElementById('queryPriceStart');
+        const queryPriceEnd = document.getElementById('queryPriceEnd');
+        const fetchQueryPricesBtn = document.getElementById('fetchQueryPricesBtn');
+        const queryPricesStatus = document.getElementById('queryPricesStatus');
+        const queryCalendarContainer = document.getElementById('queryCalendarContainer');
+
+        const dayDetailModal = document.getElementById('dayDetailModal');
+        const closeDayDetailModal = document.getElementById('closeDayDetailModal');
+        const detailModalDateTitle = document.getElementById('detailModalDateTitle');
+        const prevDayBtn = document.getElementById('prevDayBtn');
+        const nextDayBtn = document.getElementById('nextDayBtn');
+
+        // Variables de estado del módulo
+        window.queryPricesDb = {}; // Almacenará { "YYYY-MM-DD_THH": precio }
+        window.activeDetailDate = null; // Fecha cargada en el visor de 24 horas
+        window.detailChartInstance = null; // Referencia del Chart.js del modal
+
+        // Establecer el rango por defecto (fecha actual menos 30 días)
+        (function initQueryDates() {
+            const today = new Date();
+            const past30 = new Date();
+            past30.setDate(today.getDate() - 30);
+            
+            const toIso = (d) => d.toISOString().split('T')[0];
+            queryPriceStart.value = toIso(past30);
+            queryPriceEnd.value = toIso(today);
+        })();
+
+        // Abrir y cerrar el modal de consulta
+        consultPricesBtn.addEventListener('click', () => {
+            priceQueryModal.classList.remove('hidden');
+            triggerPricesQuery();
+        });
+
+        closePriceQueryModal.addEventListener('click', () => {
+            priceQueryModal.classList.add('hidden');
+        });
+
+        fetchQueryPricesBtn.addEventListener('click', () => {
+            triggerPricesQuery();
+        });
+
+        closeDayDetailModal.addEventListener('click', () => {
+            dayDetailModal.classList.add('hidden');
+        });
+
+        // Eventos de navegación diaria en el modal de detalle
+        prevDayBtn.addEventListener('click', () => {
+            navigateActiveDay(-1);
+        });
+
+        nextDayBtn.addEventListener('click', () => {
+            navigateActiveDay(1);
+        });
+
+        // Lanza la petición y renderizado del histórico
+        async function triggerPricesQuery() {
+            const startVal = queryPriceStart.value;
+            const endVal = queryPriceEnd.value;
+            
+            if (!startVal || !endVal) {
+                queryPricesStatus.textContent = "⚠️ Rellene ambas fechas.";
+                queryPricesStatus.className = "text-xs text-red-600 self-center ml-2";
+                return;
+            }
+
+            queryPricesStatus.textContent = "⏳ Cargando datos de Red Eléctrica...";
+            queryPricesStatus.className = "text-xs text-gray-500 self-center ml-2";
+
+            try {
+                const preciosMap = await fetchPreciosPVPC(startVal, endVal);
+                if (preciosMap && Object.keys(preciosMap).length > 0) {
+                    // Integrar datos recuperados al almacén persistente
+                    Object.assign(window.queryPricesDb, preciosMap);
+                    
+                    queryPricesStatus.textContent = "✅ Precios cargados.";
+                    queryPricesStatus.className = "text-xs text-emerald-700 self-center ml-2";
+                    
+                    renderQueryCalendar(startVal, endVal);
+                } else {
+                    queryPricesStatus.textContent = "⚠️ No se obtuvieron datos para este periodo.";
+                    queryPricesStatus.className = "text-xs text-amber-700 self-center ml-2";
+                }
+            } catch (err) {
+                queryPricesStatus.textContent = "❌ Error al conectar con REE.";
+                queryPricesStatus.className = "text-xs text-red-700 self-center ml-2";
+                console.error(err);
+            }
+        }
+
+        // Renderiza el calendario dentro del modal de consulta
+      // Renderiza el calendario con cálculos estadísticos y transición de color gradual
+        function renderQueryCalendar(startStr, endStr) {
+            queryCalendarContainer.innerHTML = "";
+            const metricsContainer = document.getElementById('queryPeriodMetrics');
+            metricsContainer.innerHTML = "";
+
+            // 1. Recopilar y organizar la base de datos de precios del periodo seleccionado
+            const allHourlyPrices = [];
+            const dailyStatsList = [];
+            const monthsMap = {};
+
+            const startDate = new Date(startStr);
+            const endDate = new Date(endStr);
+
+            // Estructurar la segmentación mensual
+            let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+            while (current <= endDate) {
+                const yyyymm = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+                monthsMap[yyyymm] = [];
+                current.setMonth(current.getMonth() + 1);
+            }
+
+            // Distribuir días naturales en los meses correspondientes
+            let iterDate = new Date(startDate);
+            while (iterDate <= endDate) {
+                const dateKey = iterDate.toISOString().split('T')[0];
+                const yyyymm = dateKey.substring(0, 7);
+                if (monthsMap[yyyymm]) {
+                    monthsMap[yyyymm].push(dateKey);
+                }
+
+                // Recopilar precios de las 24 horas del día
+                const dayPrices = [];
+                for (let h = 0; h < 24; h++) {
+                    const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                    const price = window.queryPricesDb[priceKey];
+                    if (price !== undefined) {
+                        dayPrices.push(price);
+                        allHourlyPrices.push(price);
+                    }
+                }
+
+                if (dayPrices.length > 0) {
+                    dailyStatsList.push({
+                        dateKey: dateKey,
+                        min: Math.min(...dayPrices),
+                        max: Math.max(...dayPrices),
+                        avg: dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length
+                    });
+                }
+
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+
+            if (allHourlyPrices.length === 0) {
+                metricsContainer.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 font-semibold py-2">No hay lecturas cargadas en este rango.</p>`;
+                return;
+            }
+
+            // 2. Cálculo de métricas globales del periodo
+            const globalMin = Math.min(...allHourlyPrices);
+            const globalMax = Math.max(...allHourlyPrices);
+            const globalAvg = allHourlyPrices.reduce((a, b) => a + b, 0) / allHourlyPrices.length;
+
+            const avgOfDailyMins = dailyStatsList.reduce((sum, d) => sum + d.min, 0) / dailyStatsList.length;
+            const avgOfDailyMaxs = dailyStatsList.reduce((sum, d) => sum + d.max, 0) / dailyStatsList.length;
+
+            const dailyAvgValues = dailyStatsList.map(d => d.avg);
+            const minDailyAvg = Math.min(...dailyAvgValues);
+            const maxDailyAvg = Math.max(...dailyAvgValues);
+
+            // Renderizar las 5 tarjetas de métricas agregadas
+            metricsContainer.innerHTML = `
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <span class="text-[9px] text-blue-800 font-extrabold uppercase block leading-none">Precio Medio Periodo</span>
+                    <p class="text-sm font-bold text-blue-950 mt-1 font-mono">${globalAvg.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                    <span class="text-[9px] text-emerald-800 font-extrabold uppercase block leading-none">Precio Mínimo Absoluto</span>
+                    <p class="text-sm font-bold text-emerald-950 mt-1 font-mono">${globalMin.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-rose-50 p-3 rounded-lg border border-rose-200">
+                    <span class="text-[9px] text-rose-800 font-extrabold uppercase block leading-none">Precio Máximo Absoluto</span>
+                    <p class="text-sm font-bold text-rose-950 mt-1 font-mono">${globalMax.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                    <span class="text-[9px] text-emerald-700 font-extrabold uppercase block leading-none">Media de los Mínimos</span>
+                    <p class="text-sm font-semibold text-emerald-900 mt-1 font-mono">${avgOfDailyMins.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+                <div class="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                    <span class="text-[9px] text-rose-700 font-extrabold uppercase block leading-none">Media de los Máximos</span>
+                    <p class="text-sm font-semibold text-rose-900 mt-1 font-mono">${avgOfDailyMaxs.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                </div>
+            `;
+
+            // Función auxiliar para interpolar el color HSL (Verde -> Amarillo -> Rojo)
+            function getTemperatureColor(dayAvg, minAvg, maxAvg) {
+                if (maxAvg === minAvg) return 'rgb(255, 255, 255)';
+                // Normalizar porcentaje entre 0 (más barato) y 1 (más caro)
+                const pct = Math.max(0, Math.min(1, (dayAvg - minAvg) / (maxAvg - minAvg)));
+                // Verde HSL(140, 80%, 93%) -> Rojo HSL(0, 80%, 93%)
+                const hue = 140 - (pct * 140);
+                return `hsl(${hue}, 80%, 93%)`;
+            }
+
+            // 3. Renderizar el Calendario del Periodo
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            let calendarHtml = "";
+
+            Object.keys(monthsMap).sort().forEach(yyyymm => {
+                if (monthsMap[yyyymm].length === 0) return;
+
+                const [year, monthNum] = yyyymm.split('-').map(Number);
+                const firstDayDate = new Date(year, monthNum - 1, 1);
+                let firstDayOfWeek = firstDayDate.getDay();
+                const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+                let monthHtml = `
+                    <div class="border-2 border-gray-300 rounded-xl p-4 bg-gray-150 shadow-sm text-center">
+                        <h4 class="text-sm font-black text-blue-950 mb-3 text-center uppercase tracking-wide">
+                            ${monthNames[monthNum - 1]} ${year}
+                        </h4>
+                        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-500 mb-2 border-b pb-1.5 border-gray-300">
+                            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-2">
+                `;
+
+                // Celdas vacías del offset inicial
+                for (let i = 0; i < offset; i++) {
+                    monthHtml += `<div class="bg-gray-200/50 border border-dashed border-gray-300 rounded-lg min-h-[68px]"></div>`;
+                }
+
+                // Generar las celdas de cada día del mes
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayStr = String(day).padStart(2, '0');
+                    const dateKey = `${yyyymm}-${dayStr}`;
+
+                    // Filtrar si el día pertenece al rango consultado
+                    if (dateKey < startStr || dateKey > endStr) {
+                        monthHtml += `
+                            <div class="bg-gray-200/40 border border-gray-200 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-25">
+                                <span class="text-[10px] font-bold text-gray-400 text-left">${day}</span>
+                            </div>
+                        `;
+                        continue;
+                    }
+
+                    const dayStats = dailyStatsList.find(d => d.dateKey === dateKey);
+
+                    if (dayStats) {
+                        const cellBgColor = getTemperatureColor(dayStats.avg, minDailyAvg, maxDailyAvg);
+
+                        monthHtml += `
+                            <div class="border-2 border-gray-400/80 hover:border-blue-600 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:shadow transition-all cursor-pointer min-h-[68px]"
+                                 style="background-color: ${cellBgColor};"
+                                 onclick="openDayDetail('${dateKey}')">
+                                <span class="text-[10px] font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-1.5 py-0.5 self-start">${day}</span>
+                                <div class="text-[9px] leading-tight text-right mt-1 font-mono font-bold">
+                                    <p class="text-emerald-800" title="Mínimo">▼${dayStats.min.toFixed(4)}</p>
+                                    <p class="text-rose-800" title="Máximo">▲${dayStats.max.toFixed(4)}</p>
+                                    <p class="text-blue-900 border-t border-gray-400/40 mt-1 pt-1" title="Media">μ:${dayStats.avg.toFixed(4)}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        monthHtml += `
+                            <div class="bg-gray-100 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
+                                <span class="text-[10px] font-semibold text-gray-400 text-left">${day}</span>
+                                <span class="text-[8px] text-gray-400 mt-auto text-right">Sin datos</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                monthHtml += `
+                        </div>
+                    </div>
+                `;
+                calendarHtml += monthHtml;
+            });
+
+            queryCalendarContainer.innerHTML = calendarHtml;
+        }
+
+        // Abre el visor detallado para la fecha seleccionada
+// Formatea una fecha YYYY-MM-DD a "Día de la semana, DD-MM-YYYY"
+        function formatFriendlyDate(dateStr) {
+            const parts = dateStr.split('-');
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const daysOfWeek = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const dayName = daysOfWeek[dateObj.getDay()];
+            return `${dayName}, ${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        // Abre el visor detallado para la fecha seleccionada
+        window.openDayDetail = function(dateStr) {
+            window.activeDetailDate = dateStr;
+            // Aplicar el formato amigable con el día de la semana
+            detailModalDateTitle.textContent = formatFriendlyDate(dateStr);
+            dayDetailModal.classList.remove('hidden');
+            renderDayDetailChart(dateStr);
+        };
+
+        // Permite la navegación secuencial día a día dentro de la gráfica detallada
+        function navigateActiveDay(offset) {
+            if (!window.activeDetailDate) return;
+            const current = new Date(window.activeDetailDate);
+            current.setDate(current.getDate() + offset);
+            const nextDateStr = current.toISOString().split('T')[0];
+            
+            // Validar si disponemos de precios para el día seleccionado antes de avanzar
+            let hasAnyData = false;
+            for (let h = 0; h < 24; h++) {
+                if (window.queryPricesDb[`${nextDateStr}_T${String(h).padStart(2, '0')}`] !== undefined) {
+                    hasAnyData = true;
+                    break;
+                }
+            }
+
+            if (hasAnyData) {
+                openDayDetail(nextDateStr);
+            } else {
+                alert(`No hay datos disponibles para la fecha: ${formatFriendlyDate(nextDateStr)}`);
+            }
+        }
+
+        // Genera la gráfica de barras de 24 horas coloreada de acuerdo con la clasificación del PVPC
+// Genera la gráfica de barras de 24 horas coloreada de acuerdo con la clasificación del PVPC
+        function renderDayDetailChart(dateStr) {
+            const canvas = document.getElementById('detailHourlyChart');
+            if (!canvas) return;
+
+            const hourlyData = [];
+            for (let h = 0; h < 24; h++) {
+                const key = `${dateStr}_T${String(h).padStart(2, '0')}`;
+                const price = window.queryPricesDb[key];
+                if (price !== undefined) {
+                    hourlyData.push({ hour: h, price: price });
+                }
+            }
+
+            if (hourlyData.length === 0) {
+                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+
+            const prices = hourlyData.map(d => d.price);
+            const minVal = Math.min(...prices);
+            const maxVal = Math.max(...prices);
+            const avgVal = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+            const minHour = hourlyData.find(d => d.price === minVal)?.hour;
+            const maxHour = hourlyData.find(d => d.price === maxVal)?.hour;
+
+            // Recuperar límites del PVPC vigentes en la pantalla principal
+            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+
+            // Actualizar leyenda del modal incluyendo el precio medio destacado en color azul
+            document.getElementById('detailModalLegend').innerHTML = `
+                <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
+                    <span class="bg-blue-600 text-white font-extrabold px-2 py-0.5 rounded text-xs shrink-0">
+                        Media día: ${avgVal.toFixed(5)} €/kWh
+                    </span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo (${minVal.toFixed(4)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo (${maxVal.toFixed(4)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
+                </div>
+            `;
+
+            // Configurar los colores de las barras
+            const backgroundColors = hourlyData.map(d => {
+                if (d.hour === minHour) return 'rgba(16, 185, 129, 0.9)'; // Verde sólido
+                if (d.hour === maxHour) return 'rgba(239, 68, 68, 0.9)';  // Rojo sólido
+                if (d.price >= pvpcHigh) return 'rgba(254, 226, 226, 0.8)'; // Caro
+                if (d.price <= pvpcLow) return 'rgba(209, 250, 229, 0.8)';  // Barato
+                return 'rgba(254, 243, 199, 0.8)'; // Medio
+            });
+
+            const borderColors = hourlyData.map(d => {
+                if (d.hour === minHour) return 'rgb(5, 150, 105)';
+                if (d.hour === maxHour) return 'rgb(220, 38, 38)';
+                if (d.price >= pvpcHigh) return 'rgb(248, 113, 113)';
+                if (d.price <= pvpcLow) return 'rgb(52, 211, 153)';
+                return 'rgb(251, 191, 36)';
+            });
+
+            const labels = hourlyData.map(d => `${String(d.hour).padStart(2, '0')}:00`);
+
+            if (window.detailChartInstance) {
+                window.detailChartInstance.destroy();
+            }
+
+            // Plugin para imprimir los precios sobre cada barra
+            const barLabelsPlugin = {
+                id: 'barLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    const isSmallScreen = window.innerWidth < 640;
+                    ctx.font = `bold ${isSmallScreen ? '7px' : '9px'} sans-serif`;
+                    ctx.fillStyle = '#1e293b';
+                    
+                    chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                        const val = data.datasets[0].data[index];
+                        if (val !== undefined) {
+                            ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            const ctx = canvas.getContext('2d');
+            window.detailChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Precio (€/kWh)',
+                            data: prices,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 1.5,
+                            order: 2
+                        },
+                        {
+                            label: 'Media del Día',
+                            data: Array(24).fill(avgVal),
+                            type: 'line',
+                            borderColor: 'rgba(59, 130, 246, 0.95)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
+                },
+                plugins: [barLabelsPlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false // Oculta la leyenda interactiva superior por completo
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            title: { display: true, text: 'Precio (€/kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 },
+                                callback: (val) => `${val.toFixed(3)} €`
+                            },
+                            suggestedMax: maxVal * 1.1
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    
     </script>
 </body>
 </html>
