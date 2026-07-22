@@ -3707,41 +3707,67 @@ async function fetchPreciosPVPC(inicio, fin) {
             }
         }
 
-        // Renderiza el perfil horario de consumo de un día aislado (24 Horas)
+// Renderiza el perfil horario de consumo (barras) cruzado con el precio de la energía (línea) de un día aislado
         function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
-            // Filtrar las lecturas horarias pertenecientes al día seleccionado
-            // Usamos una lógica de filtrado rápida a partir de lo que ya se procesó en la página principal
             const hourlyConsumption = Array.from({ length: 24 }, () => 0);
+            const hourlyPrices = Array.from({ length: 24 }, () => 0);
+            
             let dayTotalKwh = 0;
             let dayTotalCost = 0;
 
-            // Extraemos los datos calculados de consumo horario disponibles en memoria
-            // Para asegurar máxima precisión, leemos directamente del CSV mapeado si existe
+            // Recuperar consumos y costes del almacén en memoria
             if (window.allAvailableDays && window.allAvailableDays[dateStr]) {
                 dayTotalKwh = window.allAvailableDays[dateStr].kwh;
                 dayTotalCost = window.allAvailableDays[dateStr].cost;
             }
 
-            // Mapeamos los consumos a las 24 horas
-            // Buscaremos en el dataset procesado por el script principal reconstruyendo las horas
-            // Esto evita lecturas directas pesadas del CSV sin procesar
-            let validRecordsCount = 0;
-            const threshold = parseFloat(thresholdInput.value) || 0;
+            // Recuperar parámetros de precios manuales por si se encuentra activo el modo manual
+            const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
 
-            // Iteramos sobre las lecturas mapeadas del día
+            // 1. Extraer el consumo de cada hora y calcular el precio aplicado correspondiente
             for (let h = 0; h < 24; h++) {
-                // Buscamos si existe la lectura de esa hora en memoria
+                // Calcular precio de esta hora específica (según la tarifa activa)
+                let precio = priceValle;
+                if (rateMode.value === 'pvpc') {
+                    const priceKey = `${dateStr}_T${String(h).padStart(2, '0')}`;
+                    precio = window.queryPricesDb[priceKey] || 0;
+                } else {
+                    const dateParts = dateStr.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayOfWeek = dateObj.getDay(); 
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const isHoliday = holidaysList.includes(dateStr);
+
+                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                        precio = priceValle;
+                    } else {
+                        if (hoursPunta.includes(h)) {
+                            precio = pricePunta;
+                        } else if (hoursLlano.includes(h)) {
+                            precio = priceLlano;
+                        } else {
+                            precio = priceValle;
+                        }
+                    }
+                }
+                hourlyPrices[h] = precio;
+
+                // Buscar el registro de consumo para esta hora en el CSV
                 const match = window.rawCsvData.find(row => {
-                    // Reutilizamos la lógica del normalizador para comparar la fecha
-                    // Esto permite acoplamiento preciso con cualquier distribuidora
                     const colFecha = Object.keys(row).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
                     const colHora = Object.keys(row).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
                     if (!colFecha || !colHora) return false;
 
-                    // Normalizar fecha de la fila
                     let rawDate = row[colFecha].trim().split(/[ T]/)[0];
                     let parts = rawDate.split(/[-/.]/).map(p => p.trim());
                     let fDate = "";
@@ -3754,9 +3780,7 @@ async function fetchPreciosPVPC(inicio, fin) {
                     }
                     if (fDate !== dateStr) return false;
 
-                    // Normalizar hora de la fila
                     let hora = parseInt(row[colHora], 10);
-                    // Detección de base 1 o 24
                     const isOneBased = window.rawCsvData.some(r => parseInt(r[colHora], 10) === 24);
                     if (isOneBased) {
                         hora = hora - 1;
@@ -3774,14 +3798,14 @@ async function fetchPreciosPVPC(inicio, fin) {
                     const consumo = parseFloat(consumoRaw);
                     if (!isNaN(consumo)) {
                         hourlyConsumption[h] = consumo;
-                        validRecordsCount++;
                     }
                 }
             }
 
             const avgHourlyConsum = dayTotalKwh / 24;
+            const threshold = parseFloat(thresholdInput.value) || 0;
 
-            // Actualizar la cabecera resumen del modal con el subtotal y costes
+            // Actualizar la cabecera resumen con las leyendas de colores de consumo y la nueva línea de precios
             consumDetailLegend.innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
                     <span class="bg-blue-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
@@ -3792,10 +3816,11 @@ async function fetchPreciosPVPC(inicio, fin) {
                     </span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-blue-100 border border-blue-200"></span> Consumo Normal</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600 inline-block"></span> Línea de Precios (Derecha, €/kWh)</span>
                 </div>
             `;
 
-            // Coloreado condicional de barras según el umbral configurado por el usuario
+            // Configurar colores de barras de consumo
             const backgroundColors = hourlyConsumption.map(val => {
                 return val > threshold ? 'rgba(245, 158, 11, 0.65)' : 'rgba(59, 130, 246, 0.3)';
             });
@@ -3810,7 +3835,7 @@ async function fetchPreciosPVPC(inicio, fin) {
                 window.dayConsumChartInstance.destroy();
             }
 
-            // Plugin para escribir el consumo numérico sobre cada barra
+            // Plugin para imprimir los consumos numéricos en la parte superior de cada barra
             const consumLabelsPlugin = {
                 id: 'consumLabels',
                 afterDatasetsDraw(chart) {
@@ -3844,7 +3869,8 @@ async function fetchPreciosPVPC(inicio, fin) {
                             backgroundColor: backgroundColors,
                             borderColor: borderColors,
                             borderWidth: 1.5,
-                            order: 2
+                            yAxisID: 'y', // Vinculado al eje izquierdo (Consumo)
+                            order: 3
                         },
                         {
                             label: 'Media de Consumo Horario',
@@ -3855,6 +3881,20 @@ async function fetchPreciosPVPC(inicio, fin) {
                             borderDash: [5, 5],
                             pointRadius: 0,
                             fill: false,
+                            yAxisID: 'y', // Vinculado al eje izquierdo (Consumo)
+                            order: 2
+                        },
+                        {
+                            label: 'Precio de la Energía (€/kWh)',
+                            data: hourlyPrices,
+                            type: 'line',
+                            borderColor: 'rgb(225, 29, 72)', // Línea de precio color Rose-600
+                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                            borderWidth: 2.5,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            yAxisID: 'y1', // Vinculado al nuevo eje derecho (Precios)
                             order: 1
                         }
                     ]
@@ -3869,6 +3909,8 @@ async function fetchPreciosPVPC(inicio, fin) {
                     scales: {
                         y: {
                             type: 'linear',
+                            display: true,
+                            position: 'left',
                             title: { display: true, text: 'Consumo (kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
                             ticks: {
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
@@ -3876,10 +3918,17 @@ async function fetchPreciosPVPC(inicio, fin) {
                             },
                             suggestedMax: Math.max(...hourlyConsumption) * 1.15
                         },
-                        x: {
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false }, // Oculta las líneas de fondo secundarias para no entorpecer la visualización
+                            title: { display: true, text: 'Precio de la Energía (€/kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
                             ticks: {
-                                font: { size: window.innerWidth < 640 ? 7 : 9 }
-                            }
+                                font: { size: window.innerWidth < 640 ? 7 : 9 },
+                                callback: (val) => `${val.toFixed(3)} €`
+                            },
+                            suggestedMax: Math.max(...hourlyPrices) * 1.15
                         }
                     }
                 }
