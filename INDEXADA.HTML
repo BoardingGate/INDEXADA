@@ -876,6 +876,43 @@
             </div>
         </div>
     </div>
+
+<!-- MODAL: Detalle de Consumo Horario Diario (24 Horas) -->
+    <div id="dayConsumDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200">
+            <!-- Cabecera -->
+            <div class="p-3 sm:p-4 bg-gray-50 border-b flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+                    <button id="prevConsumDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
+                        &larr; <span class="hidden sm:inline">Anterior</span>
+                    </button>
+                    <h4 id="consumDetailModalTitle" class="font-black text-gray-800 text-xs sm:text-sm md:text-base truncate text-center flex-1">
+                        Consumo Diario
+                    </h4>
+                    <button id="nextConsumDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
+                        <span class="hidden sm:inline">Siguiente</span> &rarr;
+                    </button>
+                </div>
+                <button id="closeDayConsumDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 ml-1 leading-none shrink-0">&times;</button>
+            </div>
+            
+            <!-- Cuerpo -->
+            <div class="p-3 sm:p-6 overflow-y-auto flex-1">
+                <!-- Estadísticas resumidas del día -->
+                <div id="consumDetailLegend" class="mb-4 flex flex-wrap gap-2 text-[10px] sm:text-[11px]">
+                    <!-- Rellenado por JS -->
+                </div>
+                
+                <!-- Área de Gráfico -->
+                <div class="relative h-[250px] sm:h-[380px] md:h-[420px] w-full">
+                    <canvas id="dayConsumHourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <script>
         window.todayPricesMap = null;
         window.todayChartInstance = null;
@@ -2039,10 +2076,19 @@ async function fetchPreciosPVPC(inicio, fin) {
                             costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
                         }
 
+                       // Reemplazar la sección de generación de celdas activas dentro del bucle de renderResultsAndCharts:
                         monthHtml += `
                             <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
-                                <span class="${dayLabelClass}">${day}</span>
-                                <div class="text-right mt-1.5">
+                                <!-- Cabecera interna de celda con botón de consumo aislado -->
+                                <div class="flex justify-between items-center w-full shrink-0">
+                                    <span class="${dayLabelClass}">${day}</span>
+                                    <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
+                                            onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
+                                            title="Ver perfil de consumo horario de este día">
+                                        📊
+                                    </button>
+                                </div>
+                                <div class="text-right mt-1.5 w-full">
                                     <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
                                     <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
                                 </div>
@@ -3605,7 +3651,241 @@ async function fetchPreciosPVPC(inicio, fin) {
 
             // 5. Ejecutar la búsqueda de datos automáticamente
             triggerPricesQuery();
-        };        
+        };   
+
+
+    // --- MÓDULO: DETALLE DE CONSUMO HORARIO DIARIO ---
+
+        const dayConsumDetailModal = document.getElementById('dayConsumDetailModal');
+        const closeDayConsumDetailModal = document.getElementById('closeDayConsumDetailModal');
+        const consumDetailModalTitle = document.getElementById('consumDetailModalTitle');
+        const consumDetailLegend = document.getElementById('consumDetailLegend');
+        const prevConsumDayBtn = document.getElementById('prevConsumDayBtn');
+        const nextConsumDayBtn = document.getElementById('nextConsumDayBtn');
+
+        window.activeConsumDetailDate = null;
+        window.dayConsumChartInstance = null;
+
+        // Listeners de controles del modal de consumo
+        closeDayConsumDetailModal.addEventListener('click', () => {
+            dayConsumDetailModal.classList.add('hidden');
+        });
+
+        prevConsumDayBtn.addEventListener('click', () => {
+            navigateActiveConsumDay(-1);
+        });
+
+        nextConsumDayBtn.addEventListener('click', () => {
+            navigateActiveConsumDay(1);
+        });
+
+        // Abre el visor de consumo y formatea la fecha en la cabecera
+        window.openDayConsumDetail = function(dateStr) {
+            window.activeConsumDetailDate = dateStr;
+            consumDetailModalTitle.textContent = `Consumo Horario: ${formatFriendlyDate(dateStr)}`;
+            dayConsumDetailModal.classList.remove('hidden');
+            renderDayConsumHourlyChart(dateStr);
+        };
+
+        // Permite la navegación secuencial día a día en el gráfico de consumos
+        function navigateActiveConsumDay(offset) {
+            if (!window.activeConsumDetailDate) return;
+            const current = new Date(window.activeConsumDetailDate);
+            current.setDate(current.getDate() + offset);
+            const nextDateStr = current.toISOString().split('T')[0];
+
+            // Validar que tengamos datos de consumo cargados para ese día en el CSV
+            const hasData = window.rawCsvData && window.rawCsvData.some(row => {
+                // El CSV procesado tiene un mapeo en window.allAvailableDays
+                return window.allAvailableDays && window.allAvailableDays[nextDateStr] !== undefined;
+            });
+
+            if (hasData) {
+                openDayConsumDetail(nextDateStr);
+            } else {
+                alert(`No hay registros de consumo cargados en el archivo para la fecha: ${formatFriendlyDate(nextDateStr)}`);
+            }
+        }
+
+        // Renderiza el perfil horario de consumo de un día aislado (24 Horas)
+        function renderDayConsumHourlyChart(dateStr) {
+            const canvas = document.getElementById('dayConsumHourlyChart');
+            if (!canvas || !window.rawCsvData) return;
+
+            // Filtrar las lecturas horarias pertenecientes al día seleccionado
+            // Usamos una lógica de filtrado rápida a partir de lo que ya se procesó en la página principal
+            const hourlyConsumption = Array.from({ length: 24 }, () => 0);
+            let dayTotalKwh = 0;
+            let dayTotalCost = 0;
+
+            // Extraemos los datos calculados de consumo horario disponibles en memoria
+            // Para asegurar máxima precisión, leemos directamente del CSV mapeado si existe
+            if (window.allAvailableDays && window.allAvailableDays[dateStr]) {
+                dayTotalKwh = window.allAvailableDays[dateStr].kwh;
+                dayTotalCost = window.allAvailableDays[dateStr].cost;
+            }
+
+            // Mapeamos los consumos a las 24 horas
+            // Buscaremos en el dataset procesado por el script principal reconstruyendo las horas
+            // Esto evita lecturas directas pesadas del CSV sin procesar
+            let validRecordsCount = 0;
+            const threshold = parseFloat(thresholdInput.value) || 0;
+
+            // Iteramos sobre las lecturas mapeadas del día
+            for (let h = 0; h < 24; h++) {
+                // Buscamos si existe la lectura de esa hora en memoria
+                const match = window.rawCsvData.find(row => {
+                    // Reutilizamos la lógica del normalizador para comparar la fecha
+                    // Esto permite acoplamiento preciso con cualquier distribuidora
+                    const colFecha = Object.keys(row).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
+                    const colHora = Object.keys(row).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
+                    if (!colFecha || !colHora) return false;
+
+                    // Normalizar fecha de la fila
+                    let rawDate = row[colFecha].trim().split(/[ T]/)[0];
+                    let parts = rawDate.split(/[-/.]/).map(p => p.trim());
+                    let fDate = "";
+                    if (parts.length === 3) {
+                        let y = parts[2].length === 2 ? "20" + parts[2] : parts[2];
+                        let m = parts[1].padStart(2, '0');
+                        let d = parts[0].padStart(2, '0');
+                        if (parts[0].length === 4) { [y, m, d] = [parts[0], parts[1].padStart(2, '0'), parts[2].padStart(2, '0')]; }
+                        fDate = `${y}-${m}-${d}`;
+                    }
+                    if (fDate !== dateStr) return false;
+
+                    // Normalizar hora de la fila
+                    let hora = parseInt(row[colHora], 10);
+                    // Detección de base 1 o 24
+                    const isOneBased = window.rawCsvData.some(r => parseInt(r[colHora], 10) === 24);
+                    if (isOneBased) {
+                        hora = hora - 1;
+                        if (hora < 0) hora = 23;
+                    } else if (hora === 24) {
+                        hora = 0;
+                    }
+
+                    return hora === h;
+                });
+
+                if (match) {
+                    const colConsumo = Object.keys(match).find(k => k.toLowerCase().includes('consum') || k.toLowerCase().includes('val') || k.toLowerCase().includes('activa'));
+                    const consumoRaw = match[colConsumo] ? String(match[colConsumo]).replace(',', '.') : '0';
+                    const consumo = parseFloat(consumoRaw);
+                    if (!isNaN(consumo)) {
+                        hourlyConsumption[h] = consumo;
+                        validRecordsCount++;
+                    }
+                }
+            }
+
+            const avgHourlyConsum = dayTotalKwh / 24;
+
+            // Actualizar la cabecera resumen del modal con el subtotal y costes
+            consumDetailLegend.innerHTML = `
+                <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
+                    <span class="bg-blue-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
+                        Consumo Diario: ${dayTotalKwh.toFixed(2)} kWh
+                    </span>
+                    <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
+                        Coste Diario Estimado: ${dayTotalCost.toFixed(2)} €
+                    </span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-blue-100 border border-blue-200"></span> Consumo Normal</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
+                </div>
+            `;
+
+            // Coloreado condicional de barras según el umbral configurado por el usuario
+            const backgroundColors = hourlyConsumption.map(val => {
+                return val > threshold ? 'rgba(245, 158, 11, 0.65)' : 'rgba(59, 130, 246, 0.3)';
+            });
+
+            const borderColors = hourlyConsumption.map(val => {
+                return val > threshold ? 'rgb(217, 119, 6)' : 'rgba(59, 130, 246, 0.7)';
+            });
+
+            const labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+
+            if (window.dayConsumChartInstance) {
+                window.dayConsumChartInstance.destroy();
+            }
+
+            // Plugin para escribir el consumo numérico sobre cada barra
+            const consumLabelsPlugin = {
+                id: 'consumLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    const isSmallScreen = window.innerWidth < 640;
+                    ctx.font = `bold ${isSmallScreen ? '6px' : '9px'} sans-serif`;
+                    ctx.fillStyle = '#1e293b';
+
+                    chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                        const val = data.datasets[0].data[index];
+                        if (val !== undefined && val > 0) {
+                            ctx.fillText(val.toFixed(2) + ' kWh', bar.x, bar.y - 3);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            const ctx = canvas.getContext('2d');
+            window.dayConsumChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo (kWh)',
+                            data: hourlyConsumption,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 1.5,
+                            order: 2
+                        },
+                        {
+                            label: 'Media de Consumo Horario',
+                            data: Array(24).fill(avgHourlyConsum),
+                            type: 'line',
+                            borderColor: 'rgba(29, 78, 216, 0.85)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
+                },
+                plugins: [consumLabelsPlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            title: { display: true, text: 'Consumo (kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 },
+                                callback: (val) => `${val.toFixed(2)} kWh`
+                            },
+                            suggestedMax: Math.max(...hourlyConsumption) * 1.15
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
     </script>
 </body>
 </html>
