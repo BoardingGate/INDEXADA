@@ -74,18 +74,23 @@
 
         <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
-            <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+       <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                     <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
                     <p class="text-xs text-gray-500 mt-1">
                         Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
                     </p>
                 </div>
-                <!-- Botón de Registro Oficial -->
-                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
-                    <span>Regístrate en Datadis.es</span>
-                    <span class="text-[10px]">↗</span>
-                </a>
+                <!-- Botones de Acción -->
+                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                        <span>Regístrate en Datadis.es</span>
+                        <span class="text-[10px]">↗</span>
+                    </a>
+                    <button id="consultPricesBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                        <span>📊 Consultar precios diarios</span>
+                    </button>
+                </div>
             </div>
 
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
@@ -2490,6 +2495,453 @@ async function fetchPreciosPVPC(inicio, fin) {
             }
         };
 
+// --- MÓDULO INTEGRADO DE CONSULTA DE PRECIOS DIARIOS ---
+        
+        // Elementos del DOM del nuevo módulo
+        const consultPricesBtn = document.getElementById('consultPricesBtn');
+        const priceQueryModal = document.getElementById('priceQueryModal');
+        const closePriceQueryModal = document.getElementById('closePriceQueryModal');
+        const queryPriceStart = document.getElementById('queryPriceStart');
+        const queryPriceEnd = document.getElementById('queryPriceEnd');
+        const fetchQueryPricesBtn = document.getElementById('fetchQueryPricesBtn');
+        const queryPricesStatus = document.getElementById('queryPricesStatus');
+        const queryCalendarContainer = document.getElementById('queryCalendarContainer');
+
+        const dayDetailModal = document.getElementById('dayDetailModal');
+        const closeDayDetailModal = document.getElementById('closeDayDetailModal');
+        const detailModalDateTitle = document.getElementById('detailModalDateTitle');
+        const prevDayBtn = document.getElementById('prevDayBtn');
+        const nextDayBtn = document.getElementById('nextDayBtn');
+
+        // Variables de estado del módulo
+        window.queryPricesDb = {}; // Almacenará { "YYYY-MM-DD_THH": precio }
+        window.activeDetailDate = null; // Fecha cargada en el visor de 24 horas
+        window.detailChartInstance = null; // Referencia del Chart.js del modal
+
+        // Establecer el rango por defecto (fecha actual menos 30 días)
+        (function initQueryDates() {
+            const today = new Date();
+            const past30 = new Date();
+            past30.setDate(today.getDate() - 30);
+            
+            const toIso = (d) => d.toISOString().split('T')[0];
+            queryPriceStart.value = toIso(past30);
+            queryPriceEnd.value = toIso(today);
+        })();
+
+        // Abrir y cerrar el modal de consulta
+        consultPricesBtn.addEventListener('click', () => {
+            priceQueryModal.classList.remove('hidden');
+            triggerPricesQuery();
+        });
+
+        closePriceQueryModal.addEventListener('click', () => {
+            priceQueryModal.classList.add('hidden');
+        });
+
+        fetchQueryPricesBtn.addEventListener('click', () => {
+            triggerPricesQuery();
+        });
+
+        closeDayDetailModal.addEventListener('click', () => {
+            dayDetailModal.classList.add('hidden');
+        });
+
+        // Eventos de navegación diaria en el modal de detalle
+        prevDayBtn.addEventListener('click', () => {
+            navigateActiveDay(-1);
+        });
+
+        nextDayBtn.addEventListener('click', () => {
+            navigateActiveDay(1);
+        });
+
+        // Lanza la petición y renderizado del histórico
+        async function triggerPricesQuery() {
+            const startVal = queryPriceStart.value;
+            const endVal = queryPriceEnd.value;
+            
+            if (!startVal || !endVal) {
+                queryPricesStatus.textContent = "⚠️ Rellene ambas fechas.";
+                queryPricesStatus.className = "text-xs text-red-600 self-center ml-2";
+                return;
+            }
+
+            queryPricesStatus.textContent = "⏳ Cargando datos de Red Eléctrica...";
+            queryPricesStatus.className = "text-xs text-gray-500 self-center ml-2";
+
+            try {
+                const preciosMap = await fetchPreciosPVPC(startVal, endVal);
+                if (preciosMap && Object.keys(preciosMap).length > 0) {
+                    // Integrar datos recuperados al almacén persistente
+                    Object.assign(window.queryPricesDb, preciosMap);
+                    
+                    queryPricesStatus.textContent = "✅ Precios cargados.";
+                    queryPricesStatus.className = "text-xs text-emerald-700 self-center ml-2";
+                    
+                    renderQueryCalendar(startVal, endVal);
+                } else {
+                    queryPricesStatus.textContent = "⚠️ No se obtuvieron datos para este periodo.";
+                    queryPricesStatus.className = "text-xs text-amber-700 self-center ml-2";
+                }
+            } catch (err) {
+                queryPricesStatus.textContent = "❌ Error al conectar con REE.";
+                queryPricesStatus.className = "text-xs text-red-700 self-center ml-2";
+                console.error(err);
+            }
+        }
+
+        // Renderiza el calendario dentro del modal de consulta
+        function renderQueryCalendar(startStr, endStr) {
+            queryCalendarContainer.innerHTML = "";
+            
+            // Agrupar fechas en meses correspondientes
+            const startDate = new Date(startStr);
+            const endDate = new Date(endStr);
+            const monthsMap = {};
+
+            let current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+            while (current <= endDate) {
+                const yyyymm = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+                monthsMap[yyyymm] = [];
+                current.setMonth(current.getMonth() + 1);
+            }
+
+            // Procesar los datos estructurando el inventario de días
+            let iterDate = new Date(startDate);
+            const limitDate = new Date(endDate);
+            
+            while (iterDate <= limitDate) {
+                const dateKey = iterDate.toISOString().split('T')[0];
+                const yyyymm = dateKey.substring(0, 7);
+                if (monthsMap[yyyymm]) {
+                    monthsMap[yyyymm].push(dateKey);
+                }
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            let calendarHtml = "";
+
+            Object.keys(monthsMap).sort().forEach(yyyymm => {
+                if (monthsMap[yyyymm].length === 0) return;
+
+                const [year, monthNum] = yyyymm.split('-').map(Number);
+                const firstDayDate = new Date(year, monthNum - 1, 1);
+                let firstDayOfWeek = firstDayDate.getDay();
+                const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+
+                let monthHtml = `
+                    <div class="border border-gray-200 rounded-xl p-4 bg-white shadow-xs">
+                        <h4 class="text-sm font-extrabold text-blue-950 mb-3 text-center uppercase tracking-wide">
+                            ${monthNames[monthNum - 1]} ${year}
+                        </h4>
+                        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-gray-500 mb-2 border-b pb-1">
+                            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1.5">
+                `;
+
+                // Celdas vacías del offset inicial
+                for (let i = 0; i < offset; i++) {
+                    monthHtml += `<div class="bg-gray-50 border border-dashed border-gray-200 rounded-lg min-h-[64px]"></div>`;
+                }
+
+                // Generar las celdas de cada día del mes
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayStr = String(day).padStart(2, '0');
+                    const dateKey = `${yyyymm}-${dayStr}`;
+
+                    // Filtrar si el día pertenece al rango consultado
+                    if (dateKey < startStr || dateKey > endStr) {
+                        monthHtml += `<div class="bg-gray-50 border border-gray-100 rounded-lg p-1.5 flex flex-col justify-start min-h-[64px] opacity-25">
+                            <span class="text-[10px] font-bold text-gray-400">${day}</span>
+                        </div>`;
+                        continue;
+                    }
+
+                    // Calcular estadísticas de precios diarios
+                    const dayPrices = [];
+                    for (let h = 0; h < 24; h++) {
+                        const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                        const price = window.queryPricesDb[priceKey];
+                        if (price !== undefined) {
+                            dayPrices.push(price);
+                        }
+                    }
+
+                    if (dayPrices.length > 0) {
+                        const minPrice = Math.min(...dayPrices);
+                        const maxPrice = Math.max(...dayPrices);
+                        const avgPrice = dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length;
+
+                        monthHtml += `
+                            <div class="bg-gray-50 border border-gray-200 hover:border-blue-500 rounded-lg p-1 flex flex-col justify-between shadow-xs transition-colors cursor-pointer min-h-[64px]"
+                                 onclick="openDayDetail('${dateKey}')">
+                                <span class="text-[10px] font-extrabold text-gray-700 leading-none">${day}</span>
+                                <div class="text-[9px] leading-tight text-right mt-1 font-mono">
+                                    <p class="text-emerald-700 font-semibold" title="Mínimo">▼${minPrice.toFixed(4)}</p>
+                                    <p class="text-rose-700 font-semibold" title="Máximo">▲${maxPrice.toFixed(4)}</p>
+                                    <p class="text-blue-700 font-bold border-t border-gray-200 mt-0.5 pt-0.5" title="Media">μ:${avgPrice.toFixed(4)}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        monthHtml += `
+                            <div class="bg-gray-50 border border-gray-100 rounded-lg p-1 flex flex-col justify-start min-h-[64px] opacity-40">
+                                <span class="text-[10px] font-semibold text-gray-400">${day}</span>
+                                <span class="text-[8px] text-gray-300 mt-auto text-right">Sin datos</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                monthHtml += `
+                        </div>
+                    </div>
+                `;
+                calendarHtml += monthHtml;
+            });
+
+            queryCalendarContainer.innerHTML = calendarHtml;
+        }
+
+        // Abre el visor detallado para la fecha seleccionada
+        window.openDayDetail = function(dateStr) {
+            window.activeDetailDate = dateStr;
+            detailModalDateTitle.textContent = dateStr;
+            dayDetailModal.classList.remove('hidden');
+            renderDayDetailChart(dateStr);
+        };
+
+        // Permite la navegación secuencial día a día dentro de la gráfica detallada
+        function navigateActiveDay(offset) {
+            if (!window.activeDetailDate) return;
+            const current = new Date(window.activeDetailDate);
+            current.setDate(current.getDate() + offset);
+            const nextDateStr = current.toISOString().split('T')[0];
+            
+            // Validar si disponemos de precios para el día seleccionado antes de avanzar
+            let hasAnyData = false;
+            for (let h = 0; h < 24; h++) {
+                if (window.queryPricesDb[`${nextDateStr}_T${String(h).padStart(2, '0')}`] !== undefined) {
+                    hasAnyData = true;
+                    break;
+                }
+            }
+
+            if (hasAnyData) {
+                openDayDetail(nextDateStr);
+            } else {
+                alert(`No hay datos disponibles para la fecha: ${nextDateStr}`);
+            }
+        }
+
+        // Genera la gráfica de barras de 24 horas coloreada de acuerdo con la clasificación del PVPC
+        function renderDayDetailChart(dateStr) {
+            const canvas = document.getElementById('detailHourlyChart');
+            if (!canvas) return;
+
+            const hourlyData = [];
+            for (let h = 0; h < 24; h++) {
+                const key = `${dateStr}_T${String(h).padStart(2, '0')}`;
+                const price = window.queryPricesDb[key];
+                if (price !== undefined) {
+                    hourlyData.push({ hour: h, price: price });
+                }
+            }
+
+            if (hourlyData.length === 0) {
+                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+
+            const prices = hourlyData.map(d => d.price);
+            const minVal = Math.min(...prices);
+            const maxVal = Math.max(...prices);
+            const avgVal = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+            const minHour = hourlyData.find(d => d.price === minVal)?.hour;
+            const maxHour = hourlyData.find(d => d.price === maxVal)?.hour;
+
+            // Recuperar límites del PVPC vigentes en la pantalla principal
+            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+
+            // Actualizar leyenda del modal según las configuraciones del usuario
+            document.getElementById('detailModalLegend').innerHTML = `
+                <span class="font-bold text-gray-700">Rango de tarifas de hoy:</span>
+                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Más barata del día (${minVal.toFixed(4)} €/kWh)</span>
+                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> Más cara del día (${maxVal.toFixed(4)} €/kWh)</span>
+                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
+                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
+                <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
+            `;
+
+            // Configurar los colores personalizados de las barras basándose en los criterios
+            const backgroundColors = hourlyData.map(d => {
+                if (d.hour === minHour) return 'rgba(16, 185, 129, 0.9)'; // Verde sólido
+                if (d.hour === maxHour) return 'rgba(239, 68, 68, 0.9)';  // Rojo sólido
+                if (d.price >= pvpcHigh) return 'rgba(254, 226, 226, 0.8)'; // Caro
+                if (d.price <= pvpcLow) return 'rgba(209, 250, 229, 0.8)';  // Barato
+                return 'rgba(254, 243, 199, 0.8)'; // Medio
+            });
+
+            const borderColors = hourlyData.map(d => {
+                if (d.hour === minHour) return 'rgb(5, 150, 105)';
+                if (d.hour === maxHour) return 'rgb(220, 38, 38)';
+                if (d.price >= pvpcHigh) return 'rgb(248, 113, 113)';
+                if (d.price <= pvpcLow) return 'rgb(52, 211, 153)';
+                return 'rgb(251, 191, 36)';
+            });
+
+            const labels = hourlyData.map(d => `${String(d.hour).padStart(2, '0')}:00`);
+
+            if (window.detailChartInstance) {
+                window.detailChartInstance.destroy();
+            }
+
+            // Plugin personalizado integrado para estampar los precios numéricos sobre cada barra
+            const barLabelsPlugin = {
+                id: 'barLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.font = 'bold 8px sans-serif';
+                    ctx.fillStyle = '#1e293b';
+                    
+                    chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                        const val = data.datasets[0].data[index];
+                        if (val !== undefined) {
+                            ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            const ctx = canvas.getContext('2d');
+            window.detailChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Precio (€/kWh)',
+                            data: prices,
+                            backgroundColor: backgroundColors,
+                            borderColor: borderColors,
+                            borderWidth: 1.5,
+                            order: 2
+                        },
+                        {
+                            label: 'Media del Día',
+                            data: Array(24).fill(avgVal),
+                            type: 'line',
+                            borderColor: 'rgba(59, 130, 246, 0.75)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
+                },
+                plugins: [barLabelsPlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            title: { display: true, text: 'Precio (€/kWh)', font: { size: 10 } },
+                            ticks: {
+                                callback: (val) => `${val.toFixed(3)} €`
+                            },
+                            suggestedMax: maxVal * 1.1
+                        }
+                    }
+                }
+            });
+        }
+    
+
+
     </script>
+
+<!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
+    <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
+            <!-- Cabecera del modal -->
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base flex items-center gap-1.5">
+                        <span>📅 Histórico de Precios PVPC</span>
+                    </h3>
+                    <p class="text-xs text-gray-500">Consulta y navega por los precios de la tarifa regulada oficial</p>
+                </div>
+                <button id="closePriceQueryModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+            
+            <!-- Panel de control temporal -->
+            <div class="p-4 bg-white border-b flex flex-wrap items-end gap-3 shrink-0">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Inicio</label>
+                    <input type="date" id="queryPriceStart" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Fin</label>
+                    <input type="date" id="queryPriceEnd" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button id="fetchQueryPricesBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    Consultar Rango
+                </button>
+                <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
+            </div>
+
+            <!-- Contenedor del calendario (con scroll) -->
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <!-- Leyenda de operaciones -->
+                <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
+                    <span class="font-semibold">💡 Operativa:</span>
+                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha.</span>
+                </div>
+                <div id="queryCalendarContainer" class="space-y-8">
+                    <!-- Se renderizarán los meses dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
+    <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden border border-gray-200">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">&larr; Anterior</button>
+                    <h4 id="detailModalDateTitle" class="font-extrabold text-gray-800 text-sm sm:text-base">Fecha</h4>
+                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors">Siguiente &rarr;</button>
+                </div>
+                <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Resumen de umbrales activos -->
+                <div id="detailModalLegend" class="mb-4 flex flex-wrap gap-3 text-[11px]"></div>
+                
+                <!-- Área de Gráfico -->
+                <div class="relative h-[400px] w-full">
+                    <canvas id="detailHourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
