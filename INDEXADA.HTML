@@ -825,7 +825,8 @@
         </div>
     </div>
 
-    <!-- MODAL: Tendencia Anual de Precios PVPC -->
+
+<!-- MODAL: Tendencia Anual de Precios PVPC (Con Gráfica Incorporada) -->
     <div id="annualTrendModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
             <!-- Cabecera -->
@@ -853,8 +854,16 @@
                 <span id="annualTrendStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <!-- Cuerpo del modal (Grilla 3x4) -->
+            <!-- Cuerpo del modal (Gráfica + Grilla 3x4) -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                
+                <!-- NUEVO: Panel de la Gráfica de Barras Anual -->
+                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-xs">
+                    <div class="relative h-[200px] sm:h-[260px] w-full">
+                        <canvas id="annualTrendChart"></canvas>
+                    </div>
+                </div>
+
                 <!-- Leyenda de operaciones -->
                 <div class="mb-4 bg-amber-50 border border-amber-100 rounded-lg p-3 text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
                     <span class="font-semibold">💡 Nota:</span>
@@ -867,10 +876,10 @@
             </div>
         </div>
     </div>
-
     <script>
         window.todayPricesMap = null;
         window.todayChartInstance = null;
+        window.annualChartInstance = null;
 
         // Variables globales de datos y referencias de gráficos
         window.rawCsvData = null;
@@ -3384,7 +3393,7 @@ async function fetchPreciosPVPC(inicio, fin) {
             }
         }
 
-        // Renderizado de las 12 tarjetas de los meses en cuadrícula 3x4
+         // Renderizado de las 12 tarjetas de los meses y la gráfica de barras anual correspondientes
         function renderAnnualTrendGrid(year) {
             annualTrendGrid.innerHTML = "";
             const monthNames = [
@@ -3398,19 +3407,21 @@ async function fetchPreciosPVPC(inicio, fin) {
                 prices: []
             }));
 
+            const allHourlyPrices = [];
+
             // Organizar y agrupar precios del almacén de datos por su respectivo mes
             Object.keys(window.queryPricesDb).forEach(key => {
                 if (key.startsWith(year)) {
-                    // El formato de la clave es YYYY-MM-DD_THH
                     const monthPart = parseInt(key.substring(5, 7), 10) - 1; // Base 0
                     const price = window.queryPricesDb[key];
                     if (price !== undefined && monthPart >= 0 && monthPart < 12) {
                         monthlyData[monthPart].prices.push(price);
+                        allHourlyPrices.push(price);
                     }
                 }
             });
 
-            // Procesar métricas internas de cada mes disponible
+            // Procesar métricas de cada mes
             const calculatedMonths = monthlyData.map(m => {
                 if (m.prices.length === 0) return { ...m, hasData: false };
 
@@ -3427,10 +3438,11 @@ async function fetchPreciosPVPC(inicio, fin) {
                 };
             });
 
-            // Obtener límites de promedios para la escala gradual de color HSL
+            // Obtener límites de promedios para la escala gradual
             const validAvgs = calculatedMonths.filter(m => m.hasData).map(m => m.avg);
             const minMonthAvg = validAvgs.length > 0 ? Math.min(...validAvgs) : 0;
             const maxMonthAvg = validAvgs.length > 0 ? Math.max(...validAvgs) : 0;
+            const yearAvg = allHourlyPrices.length > 0 ? (allHourlyPrices.reduce((sum, p) => sum + p, 0) / allHourlyPrices.length) : 0;
 
             function getTrendColor(avgVal, minAvg, maxAvg) {
                 if (maxAvg === minAvg) return 'rgb(255, 255, 255)';
@@ -3439,7 +3451,105 @@ async function fetchPreciosPVPC(inicio, fin) {
                 return `hsl(${hue}, 80%, 93%)`;
             }
 
-            // Construir e inyectar el HTML de las 12 tarjetas mensuales
+            // --- NUEVO: Construcción de la Gráfica de Barras Anual ---
+            const chartCanvas = document.getElementById('annualTrendChart');
+            if (chartCanvas) {
+                const chartLabels = calculatedMonths.map(m => m.name);
+                const chartAvgs = calculatedMonths.map(m => m.hasData ? m.avg : null);
+                
+                const barBackgrounds = calculatedMonths.map(m => m.hasData ? getTrendColor(m.avg, minMonthAvg, maxMonthAvg) : 'rgba(229, 231, 235, 0.5)');
+                const barBorders = calculatedMonths.map(m => m.hasData ? 'rgba(156, 163, 175, 0.8)' : 'rgba(209, 213, 219, 0.5)');
+
+                if (window.annualChartInstance) {
+                    window.annualChartInstance.destroy();
+                }
+
+                // Plugin para estampar los importes numéricos sobre cada barra mensual
+                const barLabelsTrendPlugin = {
+                    id: 'barLabelsTrend',
+                    afterDatasetsDraw(chart) {
+                        const { ctx, data } = chart;
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        const isSmallScreen = window.innerWidth < 640;
+                        ctx.font = `bold ${isSmallScreen ? '6px' : '9px'} sans-serif`;
+                        ctx.fillStyle = '#334155';
+                        
+                        chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                            const val = data.datasets[0].data[index];
+                            if (val !== null && val !== undefined) {
+                                ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
+                            }
+                        });
+                        ctx.restore();
+                    }
+                };
+
+                const ctx = chartCanvas.getContext('2d');
+                window.annualChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [
+                            {
+                                label: 'Precio Medio Mensual',
+                                data: chartAvgs,
+                                backgroundColor: barBackgrounds,
+                                borderColor: barBorders,
+                                borderWidth: 1.5,
+                                order: 2
+                            },
+                            {
+                                label: `Media del Año (${yearAvg.toFixed(5)} €/kWh)`,
+                                data: Array(12).fill(allHourlyPrices.length > 0 ? yearAvg : null),
+                                type: 'line',
+                                borderColor: 'rgba(59, 130, 246, 0.95)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointRadius: 0,
+                                fill: false,
+                                order: 1
+                            }
+                        ]
+                    },
+                    plugins: [barLabelsTrendPlugin],
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: { size: window.innerWidth < 640 ? 8 : 10 },
+                                    filter: function(item) {
+                                        return item.text.includes('Media del Año');
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                ticks: {
+                                    font: { size: window.innerWidth < 640 ? 7 : 9 },
+                                    callback: (val) => `${val.toFixed(3)} €`
+                                },
+                                suggestedMax: maxMonthAvg * 1.15
+                            },
+                            x: {
+                                ticks: {
+                                    font: { size: window.innerWidth < 640 ? 7 : 9 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Construir e inyectar el HTML de las 12 tarjetas mensuales debajo del gráfico
             let gridHtml = "";
             calculatedMonths.forEach(m => {
                 if (m.hasData) {
