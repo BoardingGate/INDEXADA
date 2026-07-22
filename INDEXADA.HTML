@@ -2554,7 +2554,8 @@ async function fetchPreciosPVPC(inicio, fin) {
             'evEfficiency'
         ];
 
-inputsToWatch.forEach(id => {
+        
+        inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', () => {
@@ -2562,7 +2563,7 @@ inputsToWatch.forEach(id => {
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
                     }
-                    // NUEVO: Redibujar gráfica de hoy si cambia un límite (como pvpcHighThreshold)
+                    // Redibujar gráfica de hoy si cambia un límite (como pvpcHighThreshold)
                     if (window.todayPricesMap) {
                         const now = new Date();
                         const yyyy = now.getFullYear();
@@ -2576,7 +2577,7 @@ inputsToWatch.forEach(id => {
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
                     }
-                    // NUEVO: Redibujar gráfica de hoy si cambia un límite
+                    // Redibujar gráfica de hoy si cambia un límite
                     if (window.todayPricesMap) {
                         const now = new Date();
                         const yyyy = now.getFullYear();
@@ -2588,6 +2589,41 @@ inputsToWatch.forEach(id => {
             }
         });
 
+        // Cargamos la configuración guardada
+        loadConfig();
+
+        // Iniciamos la carga y renderizado de precios del día actual
+        initTodayPrices();
+
+        window.handleCalendarDayClick = function(dateStr) {
+            if (!window.calendarSelectedDates) {
+                window.calendarSelectedDates = new Set();
+            }
+
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+
+            const hasCustomCalendar = (window.calendarSelectedDates.size > 0);
+            if (!hasCustomCalendar && window.allAvailableDays) {
+                Object.keys(window.allAvailableDays).forEach(key => {
+                    if (key !== dateStr) {
+                        window.calendarSelectedDates.add(key);
+                    }
+                });
+            } else {
+                if (window.calendarSelectedDates.has(dateStr)) {
+                    window.calendarSelectedDates.delete(dateStr);
+                } else {
+                    window.calendarSelectedDates.add(dateStr);
+                }
+            }
+            
+            saveConfig(); 
+
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        };
 
 
 // --- MÓDULO INTEGRADO DE CONSULTA DE PRECIOS DIARIOS ---
