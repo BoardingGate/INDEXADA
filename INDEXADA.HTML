@@ -3555,8 +3555,10 @@ async function fetchPreciosPVPC(inicio, fin) {
                 if (m.hasData) {
                     const bgColor = getTrendColor(m.avg, minMonthAvg, maxMonthAvg);
                     gridHtml += `
-                        <div class="border-2 border-gray-300 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow transition-all min-h-[92px]" 
-                             style="background-color: ${bgColor};">
+                        <div class="border-2 border-gray-300 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow hover:scale-[1.01] transition-all min-h-[92px] cursor-pointer" 
+                             style="background-color: ${bgColor};"
+                             onclick="switchToMonthlyCalendar('${year}', ${m.monthIndex})"
+                             title="Clic para abrir el calendario diario detallado de ${m.name}">
                             <h5 class="text-xs font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-2 py-0.5 self-start uppercase tracking-wider">
                                 ${m.name}
                             </h5>
@@ -3579,9 +3581,31 @@ async function fetchPreciosPVPC(inicio, fin) {
                 }
             });
 
-            annualTrendGrid.innerHTML = gridHtml;
+          annualTrendGrid.innerHTML = gridHtml;
         }
-    
+
+
+// Cambia el flujo visual del modal anual al modal del calendario diario para el mes seleccionado
+        window.switchToMonthlyCalendar = function(year, monthIndex) {
+            // 1. Ocultar el modal de tendencia anual
+            annualTrendModal.classList.add('hidden');
+
+            // 2. Calcular el primer y el último día del mes
+            const monthNumStr = String(monthIndex + 1).padStart(2, '0');
+            const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+            const startStr = `${year}-${monthNumStr}-01`;
+            const endStr = `${year}-${monthNumStr}-${String(lastDay).padStart(2, '0')}`;
+
+            // 3. Establecer las fechas en los inputs del modal del calendario diario
+            queryPriceStart.value = startStr;
+            queryPriceEnd.value = endStr;
+
+            // 4. Mostrar el modal del calendario diario
+            priceQueryModal.classList.remove('hidden');
+
+            // 5. Ejecutar la búsqueda de datos automáticamente
+            triggerPricesQuery();
+        };        
     </script>
 </body>
 </html>
