@@ -1263,9 +1263,14 @@
                 const fechas = cleanData.map(d => d.fechaStr);
                 const fechaInicio = fechas.reduce((a, b) => a < b ? a : b);
                 const fechaFin = fechas.reduce((a, b) => a > b ? a : b);
-
                 showStatus(`Conectando con Red Eléctrica de España para el periodo ${fechaInicio} al ${fechaFin}...`, "info");
                 const preciosMap = await fetchPreciosPVPC(fechaInicio, fechaFin);
+                
+               
+                if (preciosMap) {
+                    Object.assign(window.queryPricesDb, preciosMap);
+                }
+                
                 // Validación de precios descargados
                 const totalPreciosDescargados = Object.keys(preciosMap || {}).length;
                 if (totalPreciosDescargados === 0) {
