@@ -1865,12 +1865,17 @@ async function fetchPreciosPVPC(inicio, fin) {
             const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
 
             // 1. Simulación PVPC
+// 1. Simulación PVPC
             const margenComTotalPvpc = margenComDiarioPvpc * numDays;
             const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
             const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
             const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotalPvpc + ajustesPvpc;
             const impElecPvpcVal = baseImpElecPvpc * (impElecPvpc / 100);
-            const baseIvaPvpc = baseImpElecPvpc + impElecPvpcVal + alqContadorPvpc;
+            
+            // CÁLCULO PRORRATEADO DEL ALQUILER (Base 30 días)
+            const alqContadorTotalPvpc = (alqContadorPvpc / 30) * numDays;
+            
+            const baseIvaPvpc = baseImpElecPvpc + impElecPvpcVal + alqContadorTotalPvpc;
             const ivaPvpcVal = baseIvaPvpc * (tipoIvaPvpc / 100);
             const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
             const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
@@ -1881,11 +1886,14 @@ async function fetchPreciosPVPC(inicio, fin) {
             const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotenciaManual / 100);
             const baseImpElecManual = totalCostManualNeto + totalPowerCostManualNeto + margenComTotalManual + ajustesManual;
             const impElecManualVal = baseImpElecManual * (impElecManual / 100);
-            const baseIvaManual = baseImpElecManual + impElecManualVal + alqContadorManual;
+            
+            // CÁLCULO PRORRATEADO DEL ALQUILER (Base 30 días)
+            const alqContadorTotalManual = (alqContadorManual / 30) * numDays;
+            
+            const baseIvaManual = baseImpElecManual + impElecManualVal + alqContadorTotalManual;
             const ivaManualVal = baseIvaManual * (tipoIvaManual / 100);
             const grandTotalManualSimulated = baseIvaManual + ivaManualVal;
             const avgKwhPriceManualSimulated = totalKwh > 0 ? (grandTotalManualSimulated / totalKwh) : 0;
-
             // --- CÁLCULO DE DESVIACIONES ESPECÍFICAS ---
             // Desviación en Energía neta
             const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
@@ -1970,12 +1978,14 @@ async function fetchPreciosPVPC(inicio, fin) {
                                     <td class="py-1.5 text-right font-mono text-gray-800">${impElecManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Alquiler de Contador</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 font-medium text-gray-700">Alquiler de Contador (Prorrateado)</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${alqContadorPvpc.toFixed(2)} €/mes)</span></td>
+                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${alqContadorManual.toFixed(2)} €/mes)</span></td>
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
+                          
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-700">IVA Aplicado</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${ivaPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
