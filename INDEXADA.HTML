@@ -503,6 +503,56 @@
                             </div>
                         </div>
 
+                        <!-- NUEVO: 3. Clasificación por Tramos Horarios Oficiales 2.0TD con coste PVPC real -->
+                        <div class="pt-4 border-t border-gray-100 mt-4">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD (Consumo en Horas Punta, Llano y Valle valorado a PVPC)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- P1 Punta PVPC -->
+                                <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta (Horas Punta oficial @ PVPC)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p1KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste PVPC Real:</span>
+                                            <span id="p1CostIndexedTimeText" class="text-red-800">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- P2 Llano PVPC -->
+                                <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano (Horas Llano oficial @ PVPC)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p2KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste PVPC Real:</span>
+                                            <span id="p2CostIndexedTimeText" class="text-amber-800">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- P3 Valle PVPC -->
+                                <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
+                                    <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle (Horas Valle oficial @ PVPC)</span>
+                                    <div class="mt-2 flex flex-col gap-1 text-xs">
+                                        <div class="flex justify-between font-medium">
+                                            <span class="text-gray-600">Consumo:</span>
+                                            <span id="p3KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        </div>
+                                        <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
+                                            <span class="text-gray-600">Coste PVPC Real:</span>
+                                            <span id="p3CostIndexedTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
                         <!-- Panel de Parámetros de Simulación de Factura Duplicado (Añadido) -->
 <!-- Panel de Parámetros de Simulación de Factura Continuo (Añadido) -->
                         <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
@@ -1476,6 +1526,10 @@ async function fetchPreciosPVPC(inicio, fin) {
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
 
+            let p1KwhIndexedTime = 0, p2KwhIndexedTime = 0, p3KwhIndexedTime = 0;   
+            let p1CostIndexedTime = 0, p2CostIndexedTime = 0, p3CostIndexedTime = 0; 
+            let p1IndexedTimeHours = 0, p2IndexedTimeHours = 0, p3IndexedTimeHours = 0;
+
             const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
             const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
 
@@ -1584,6 +1638,32 @@ async function fetchPreciosPVPC(inicio, fin) {
                     p3CostTime += item.costeManual; 
                     p3TimeHours++; 
                 }
+
+                // --- CÁLCULO ESTRICTO SEGÚN PERÍODOS OFICIALES 2.0TD PARA INDEXADA ---
+             let officialSlot20TD = 'P3'; // Por defecto Valle (Sábados, Domingos y Festivos completos)
+             if (!isWeekend && !isHoliday) {
+                 if ((item.hora >= 10 && item.hora < 14) || (item.hora >= 18 && item.hora < 22)) {
+                     officialSlot20TD = 'P1'; // Punta (10h-14h y 18h-22h)
+                 } else if ((item.hora >= 8 && item.hora < 10) || (item.hora >= 14 && item.hora < 18) || (item.hora >= 22 && item.hora < 24)) {
+                     officialSlot20TD = 'P2'; // Llano (8h-10h, 14h-18h y 22h-24h)
+                 } else {
+                     officialSlot20TD = 'P3'; // Valle (00h-08h)
+                 }
+             }
+
+             if (officialSlot20TD === 'P1') {
+                 p1KwhIndexedTime += item.consumo;
+                 p1CostIndexedTime += item.costePvpc;
+                 p1IndexedTimeHours++;
+             } else if (officialSlot20TD === 'P2') {
+                 p2KwhIndexedTime += item.consumo;
+                 p2CostIndexedTime += item.costePvpc;
+                 p2IndexedTimeHours++;
+             } else {
+                 p3KwhIndexedTime += item.consumo;
+                 p3CostIndexedTime += item.costePvpc;
+                 p3IndexedTimeHours++;
+             }
 
                 const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
                 const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
@@ -1851,9 +1931,39 @@ async function fetchPreciosPVPC(inicio, fin) {
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
+            // --- RENDERIZADO DE LAS NUEVAS TARJETAS INDEXADAS POR TRAMO HORARIO ESTRICTO ---
+            const p1PctIndexedTimeKwh = totalKwh > 0 ? (p1KwhIndexedTime / totalKwh) * 100 : 0;
+            const p2PctIndexedTimeKwh = totalKwh > 0 ? (p2KwhIndexedTime / totalKwh) * 100 : 0;
+            const p3PctIndexedTimeKwh = totalKwh > 0 ? (p3KwhIndexedTime / totalKwh) * 100 : 0;
+
+            const p1PctIndexedTimeCost = totalCostPvpc > 0 ? (p1CostIndexedTime / totalCostPvpc) * 100 : 0;
+            const p2PctIndexedTimeCost = totalCostPvpc > 0 ? (p2CostIndexedTime / totalCostPvpc) * 100 : 0;
+            const p3PctIndexedTimeCost = totalCostPvpc > 0 ? (p3CostIndexedTime / totalCostPvpc) * 100 : 0;
+
+            const avgP1IndexedPrice = p1KwhIndexedTime > 0 ? (p1CostIndexedTime / p1KwhIndexedTime) : 0;
+            const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
+            const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
+
+            const p1IndexedTimeTitleEl = document.getElementById('p1IndexedTimeTitle');
+            const p2IndexedTimeTitleEl = document.getElementById('p2IndexedTimeTitle');
+            const p3IndexedTimeTitleEl = document.getElementById('p3IndexedTimeTitle');
+
+            if (p1IndexedTimeTitleEl) p1IndexedTimeTitleEl.textContent = `P1 Punta (Horario Estricto 2.0TD) [${p1IndexedTimeHours} h]`;
+            if (p2IndexedTimeTitleEl) p2IndexedTimeTitleEl.textContent = `P2 Llano (Horario Estricto 2.0TD) [${p2IndexedTimeHours} h]`;
+            if (p3IndexedTimeTitleEl) p3IndexedTimeTitleEl.textContent = `P3 Valle (Horario Estricto 2.0TD) [${p3IndexedTimeHours} h]`;
+
+            document.getElementById('p1KwhIndexedTimeText').innerHTML = `${p1KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctIndexedTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p1CostIndexedTimeText').innerHTML = `${p1CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP1IndexedPrice.toFixed(5)} €/kWh]</span>`;
+
+            document.getElementById('p2KwhIndexedTimeText').innerHTML = `${p2KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctIndexedTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p2CostIndexedTimeText').innerHTML = `${p2CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP2IndexedPrice.toFixed(5)} €/kWh]</span>`;
+
+            document.getElementById('p3KwhIndexedTimeText').innerHTML = `${p3KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndexedTimeKwh.toFixed(1)}%)</span>`;
+            document.getElementById('p3CostIndexedTimeText').innerHTML = `${p3CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
+
     
             // --- CÁLCULOS DE SIMULACIÓN INDEPENDIENTES (AÑADIDOS) ---
-   // --- CÁLCULOS DE SIMULACIÓN E IMPUESTOS (REVISADO) ---
+   -
             const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
             const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
             const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
