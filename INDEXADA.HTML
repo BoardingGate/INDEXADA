@@ -13,7 +13,6 @@
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Cabecera -->
         <header class="mb-8 text-center max-w-xl mx-auto">
-            <!-- Etiqueta BoardingGate -->
             <span class="text-[13px] font-bold tracking-wider bg-blue-50/80 px-3 py-0.5 rounded-full inline-flex items-center mb-2">
                 <span class="text-slate-900">Boarding</span>
                 <span class="text-blue-500 ml-0.7">Gate</span>
@@ -34,17 +33,11 @@
                     <h3 id="todayPricesTitle" class="text-md font-bold text-amber-700">Precios de la Luz de Hoy</h3>
                     <p id="todayPricesSubtitle" class="text-xs text-gray-500 mt-1">Precio regulado oficial (se publican a las 20:30 horas)</p>
                 </div>
-                <div id="todayAvgBadge" class="shrink-0">
-                    <!-- Se carga dinámicamente -->
-                </div>
+                <div id="todayAvgBadge" class="shrink-0"></div>
             </div>
             
-            <!-- Leyenda compacta -->
-            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500">
-                <!-- Se carga dinámicamente -->
-            </div>
+            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500"></div>
             
-            <!-- Gráfica compacta -->
             <div class="relative h-[180px] sm:h-[300px] w-full">
                 <canvas id="todayHourlyPricesChart"></canvas>
             </div>
@@ -76,7 +69,6 @@
             </div>
             <div class="flex flex-col">
                 <label class="block text-sm font-medium text-gray-700 mb-2">5. Archivo CSV Distribuidora</label>
-                <!-- Zona Arrastrar y Soltar (Drag & Drop) -->
                 <div id="dropZone" class="border-2 border-dashed border-blue-300 rounded-lg p-3 text-center cursor-pointer hover:bg-blue-50 transition-colors flex flex-col justify-center items-center h-[42px] relative bg-gray-50">
                     <input type="file" id="csvInput" accept=".csv" class="hidden">
                     <div id="dropZonePrompt" class="text-xs text-gray-500 flex items-center gap-1.5">
@@ -91,8 +83,7 @@
             </div>
         </div>
 
-
-        <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
+        <!-- Panel de Importación Datadis -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
@@ -101,7 +92,6 @@
                         Descarga de forma segura tus curvas de consumo oficiales de Datadis.es para el periodo que tú decidas.
                     </p>
                 </div>
-                <!-- Botones de Acción -->
                 <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                     <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
                         <span>Regístrate en Datadis.es</span>
@@ -119,20 +109,20 @@
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
                 <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">¿Qué es Datadis.es y cómo darte de alta?</h4>
                 <p class="text-xs text-gray-700 leading-relaxed mb-2">
-                    Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas (Endesa, Iberdrola, etc.) publican tus curvas de consumo horario reales, con independencia de tu comercializadora.
+                    Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas publican tus curvas de consumo horario reales.
                 </p>
                 <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
                     <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
-                    <li>Usa tu NIF/NIE como usuario y crea una contraseña; recibirás un correo de confirmación.</li>
-                    <li>Localiza tu CUPS (código de tu punto de suministro) en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
+                    <li>Usa tu NIF/NIE como usuario.</li>
+                    <li>Localiza tu CUPS en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
                 </ol>
             </div>
 
-            <!-- Panel de Descarga Directa vía Proxy -->
+            <!-- Panel de Descarga Directa -->
             <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
                 <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
                 <p class="text-xs text-gray-600 mb-3">
-                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la DATASIS y descargará los datos automáticamente
+                    Introduce tus credenciales de Datadis.es y el periodo; la app se conectará y procesará la información.
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     <div>
@@ -160,7 +150,6 @@
                     <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
                         ⬇️ Descargar y analizar directamente
                     </button>
-                    <!-- Botón para guardar CSV localmente -->
                     <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
                         💾 Guardar como archivo CSV
                     </button>
@@ -173,7 +162,7 @@
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
                 <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
-                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes.</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
@@ -203,7 +192,7 @@
             </div>
         </div>
 
-        <!-- Panel de Filtros Temporales y Horarios -->
+        <!-- Panel de Filtros Temporales -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
@@ -283,32 +272,29 @@
             </div>
         </div>
 
-        <!-- Configuración Específica de Tarifa Manual -->
+        <!-- Configuración de Tarifa Manual -->
         <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
             <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                <!-- Tramo Punta -->
                 <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
+                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO T1 PUNTA</span>
                     <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
                     <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (10, es 10 a 11):</label>
+                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
                     <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
                 </div>
 
-                <!-- Tramo Llano -->
                 <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
+                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO T2 LLANO</span>
                     <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
                     <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
                     <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
                     <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
                 </div>
 
-                <!-- Tramo Valle -->
                 <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
+                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO T3 VALLE</span>
                     <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
                     <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
                     <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
@@ -323,26 +309,24 @@
                         <span>Fines de semana completos a precio VALLE</span>
                     </label>
                 </div>
-              <div>
+                <div>
                     <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (DD-MM separadas por comas):</label>
                     <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12">
                 </div>
             </div>
         </div>
 
-        <!-- Botón Recalcular centralizado -->
+        <!-- Recalcular centralizado -->
         <div class="flex justify-center mb-8">
             <button id="recalculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 Recalcular Datos
             </button>
         </div>
 
-        <!-- Messages de Estado -->
-        <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center"></div>
+        <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center font-semibold"></div>
 
         <!-- Resultados -->
         <div id="resultsSection" class="hidden">
-
             <!-- Métricas Globales (7 indicadores) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-blue-500">
@@ -379,8 +363,7 @@
 
             <!-- Gráficas del Análisis -->
             <div class="space-y-6 mb-8">
-
-                <!-- PANEL: Patrón de Consumo (Doble Clasificación con Comparación) -->
+                <!-- PANEL: Patrón de Consumo -->
                 <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
                         <div>
@@ -392,9 +375,8 @@
                     <div class="space-y-6">
                         <!-- 1. Clasificación por Tramos Horarios -->
                         <div>
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario 2.0TD de 3 tramos o precio fijo (Introducido por el usuario en opción MANUAL POR TRAMOS)</h4>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario (Tarifa Fija por Tramos introducida por el usuario)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <!-- P1 Punta -->
                                 <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
                                     <span id="p1TimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -408,7 +390,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P2 Llano -->
                                 <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
                                     <span id="p2TimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -422,7 +403,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P3 Valle -->
                                 <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
                                     <span id="p3TimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -443,7 +423,6 @@
                         <div class="pt-4 border-t border-gray-100">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
                                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
-                                
                                 <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
                                     <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
                                     <div>
@@ -458,7 +437,6 @@
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <!-- P1 Alto (Caro) -->
                                 <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
                                     <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -472,7 +450,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P2 Medio -->
                                 <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
                                     <span id="p2PriceTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -486,7 +463,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P3 Bajo (Barato) -->
                                 <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
                                     <span id="p3PriceTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">Coste Bajo (Precio &le; Umbral Barato)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -503,13 +479,12 @@
                             </div>
                         </div>
 
-                        <!-- 3. Clasificación por Tramos Horarios Oficiales 2.0TD con coste PVPC real -->
+                        <!-- 3. Clasificación Oficial 2.0TD -->
                         <div class="pt-4 border-t border-gray-100 mt-4">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD para comprobar factura PVPC ya que agrupan los kWh por P1,P2 Y P3 igual que 2.0TD</h4>
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD (Consumo en Horas Punta, Llano y Valle valorado a PVPC)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <!-- P1 Punta PVPC -->
                                 <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta (Horas Punta oficial @ PVPC)</span>
+                                    <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-600">Consumo:</span>
@@ -521,9 +496,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P2 Llano PVPC -->
                                 <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano (Horas Llano oficial @ PVPC)</span>
+                                    <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-600">Consumo:</span>
@@ -535,9 +509,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- P3 Valle PVPC -->
                                 <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle (Horas Valle oficial @ PVPC)</span>
+                                    <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
                                         <div class="flex justify-between font-medium">
                                             <span class="text-gray-600">Consumo:</span>
@@ -552,9 +525,8 @@
                             </div>
                         </div>
 
-                        <!-- Panel de Parámetros de Simulación de Factura Continuo -->
+                        <!-- Parámetros de Simulación de Factura -->
                         <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
-                            <!-- Fila Continua PVPC -->
                             <div>
                                 <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC (Tarifa Indexada)</span>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -589,7 +561,6 @@
                                 </div>
                             </div>
 
-                            <!-- Fila Continua Manual -->
                             <div class="pt-3 border-t border-emerald-100">
                                 <span class="text-[10px] font-bold text-green-900 uppercase tracking-wider block mb-1.5">2. Parámetros de Factura Manual (Tarifa por Tramos)</span>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -625,13 +596,13 @@
                             </div>
                         </div>
 
-                        <!-- 3. Comparación Global de Sistemas de Facturación -->
+                        <!-- Comparación Global -->
                         <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
                             <div class="text-left">
                                 <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
-                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo descargado de tu distribuidora o de Datadis para ver el desglose económico.</p>
+                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo para ver el desglose económico.</p>
                             </div>
-                            <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
+                            <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs font-semibold">
                                 Sin datos
                             </div>
                         </div>
@@ -644,17 +615,14 @@
                         <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
                         <p class="text-xs text-gray-500">Muestra los kWh totales e importes diarios de manera estructurada por mes.</p>
                     </div>
-                    <div id="calendarGridContainer" class="space-y-8">
-                        <!-- Se generarán dinámicamente aquí los meses -->
-                    </div>
-                    <!-- Instrucciones de selección al pie del calendario -->
+                    <div id="calendarGridContainer" class="space-y-8"></div>
                     <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
                         <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
-                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros. Tambien puedes ver el consumo individual pinchando en el icono de la gráfica en la casilla del día."</strong>.</p>
+                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros. También puedes ver el consumo individual pinchando en el icono de la gráfica en la casilla del día."</strong>.</p>
                     </div>
                 </div>
 
-                <!-- 1. Evolución Cronológica Diaria -->
+                <!-- Evolución Cronológica -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
                     <div class="relative h-[450px]">
@@ -662,7 +630,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Acumulado por Día de la Semana -->
+                <!-- Análisis por Día de la Semana -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
                     <div class="relative h-[450px]">
@@ -670,7 +638,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Perfil Horario de 24 horas -->
+                <!-- Perfil Horario -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
                     <div class="relative h-[500px]">
@@ -680,7 +648,7 @@
                 </div>
             </div>
 
-            <!-- Métricas Filtradas con Doble Cálculo Base/Simulado -->
+            <!-- Métricas Filtradas -->
             <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
                 <h3 class="text-lg font-semibold text-yellow-800 mb-4">Análisis de horas que superan el umbral</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -696,7 +664,7 @@
                         <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
                         <div class="leading-tight">
                             <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
-                            <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold" title="Coste aislado aplicando los descuentos e impuestos configurados">Simulado: 0.00 €</span>
+                            <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold">Simulado: 0.00 €</span>
                         </div>
                     </div>
                     <div>
@@ -709,7 +677,6 @@
                     </div>
                 </div>
 
-                <!-- Sub-sección Autonomía y Doble Coste por Kilómetro -->
                 <div class="mt-6 pt-4 border-t border-yellow-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-yellow-900">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="font-bold uppercase tracking-wider text-[10px]">Parámetro de Consumo Coche:</span>
@@ -744,15 +711,12 @@
                                 <th class="p-4 border-b text-right">Coste (€)</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="text-sm divide-y">
-                            <!-- Filas dinámicas -->
-                        </tbody>
+                        <tbody id="tableBody" class="text-sm divide-y"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- Sección de Referidos -->
         <footer class="mt-16 border-t border-gray-200 pt-8 pb-4 text-center">
             <div class="bg-gradient-to-r from-purple-950 to-indigo-950 text-white p-6 rounded-2xl shadow-lg max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="text-left md:max-w-xl">
@@ -760,37 +724,30 @@
                         <span>¿Quieres ahorrar aún más en tu factura de la luz?</span> 🐙
                     </h4>
                     <p class="text-xs text-purple-200 mt-1.5 leading-relaxed">
-                        Si contratas tu tarifa de luz con <span class="font-semibold text-pink-400">Octopus Energy</span> usando nuestro enlace oficial de referidos, te llevarás <span class="font-bold text-white bg-pink-500 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">50 € de regalo</span> directos como saldo de descuento para tus próximas facturas.
+                        Si contratas tu tarifa de luz con <span class="font-semibold text-pink-400">Octopus Energy</span> usando nuestro enlace oficial de referidos, te llevarás <span class="font-bold text-white bg-pink-500 px-1.5 py-0.5 rounded text-[11px] whitespace-nowrap">50 € de regalo</span> directos como saldo de descuento.
                     </p>
                 </div>
                 <div class="w-full md:w-auto">
-                    <a href="https://share.octopusenergy.es/topaz-boar-888" target="_blank" rel="noopener noreferrer" class="inline-block w-full md:w-auto bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl text-xs transition-all shadow-md hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                    <a href="https://share.octopusenergy.es/topaz-boar-888" target="_blank" rel="noopener noreferrer" class="inline-block w-full md:w-auto bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl text-xs transition-all shadow-md hover:scale-[1.02] focus:outline-none">
                         Conseguir 50€ Gratis (consulte el importe exacto en la web)
                     </a>
                 </div>
             </div>
 
-            <!-- Accesos Directos a Utilidades Adicionales (Añadido) -->
             <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <a href="https://boardinggate.github.io/BGUTIL/index.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                <a href="https://boardinggate.github.io/BGUTIL/index.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none">
                     <span>⚡ Utilidades para vehículo eléctrico</span>
                 </a>
-                <a href="https://boardinggate.github.io/Tesla/tesla.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                <a href="https://boardinggate.github.io/Tesla/tesla.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none">
                     <span>🚗 Navegador de rutas avanzado para Tesla</span>
                 </a>
-                <a href="https://comparador.cnmc.gob.es/facturaluz/inicio" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                <a href="https://comparador.cnmc.gob.es/facturaluz/inicio" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none">
                     <span>📋 COMPROBADOR / SIMULADOR CONSUMO DE LA CNMC</span>
-                </a>
-                <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
-                    <span>📋 BUSCAR TARIFAS CNMC</span>
-                </a>
-                <a href="https://www.comercializadoraregulada.es/regulada/luz/pvpc" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
-                    <span>📋 PVPC Comercializadora Regulada-Grupo Naturgy</span>
                 </a>
             </div>
 
             <p class="text-[10px] text-gray-400 mt-8">
-                Analizador de Consumo Eléctrico •  • Contacto: 
+                Analizador de Consumo Eléctrico • Contacto: 
                 <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
             </p>
         </footer>
@@ -799,7 +756,6 @@
     <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
     <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
-            <!-- Cabecera del modal -->
             <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
                 <div>
                     <h3 class="font-bold text-gray-900 text-base flex items-center gap-1.5">
@@ -810,7 +766,6 @@
                 <button id="closePriceQueryModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1">&times;</button>
             </div>
             
-            <!-- Panel de control temporal -->
             <div class="p-4 bg-white border-b flex flex-wrap items-end gap-3 shrink-0">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Fecha Inicio</label>
@@ -826,23 +781,14 @@
                 <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <!-- Contenedor del calendario (con scroll) -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <!-- Leyenda de operaciones -->
                 <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
-                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha. El color de las casillas indica la tendencia del precio medio del día (rango de tonalidad en verde para los más baratos, rojo para los más caros del rango).</span>
+                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas para ver el gráfico diario.</span>
                 </div>
 
-                <!-- Fila de Indicadores del Periodo Seleccionado -->
-                <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-                    <!-- Se rellenará dinámicamente mediante JavaScript -->
-                </div>
-
+                <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"></div>
                 <div id="modalAiRecommendation" class="hidden mb-6 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
-
-                <div id="queryCalendarContainer" class="space-y-8">
-                    <!-- Se renderizarán los meses dinámicamente -->
-                </div>
+                <div id="queryCalendarContainer" class="space-y-8"></div>
             </div>
          </div>
     </div>
@@ -850,7 +796,6 @@
     <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
     <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200">
-            <!-- Cabecera adaptativa -->
             <div class="p-3 sm:p-4 bg-gray-50 border-b flex items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
                     <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
@@ -866,26 +811,10 @@
                 <button id="closeDayDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 ml-1 leading-none shrink-0">&times;</button>
             </div>
             
-            <!-- Cuerpo con scroll -->
-           <!-- Cuerpo -->
             <div class="p-3 sm:p-6 overflow-y-auto flex-1">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
-                    <div id="consumDetailLegend" class="flex flex-wrap gap-2 text-[10px] sm:text-[11px] flex-1">
-                        <!-- Rellenado por JS -->
-                    </div>
-                    <!-- Conmutador para activar la línea de Coste Horario -->
-                    <div class="flex items-center gap-2 shrink-0 text-xs font-semibold text-gray-700">
-                        <label class="relative inline-flex items-center cursor-pointer select-none">
-                            <input type="checkbox" id="showHourlyCostToggle" class="sr-only peer">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                            <span class="ml-2">Mostrar Coste Horario (€)</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <!-- Área de Gráfico -->
-                <div class="relative h-[260px] sm:h-[400px] md:h-[520px] w-full">
-                    <canvas id="dayConsumHourlyChart"></canvas>
+                <div id="detailModalLegend" class="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 text-[10px] sm:text-[11px] leading-relaxed"></div>
+                <div class="relative h-[260px] sm:h-[400px] md:h-[500px] w-full">
+                    <canvas id="detailHourlyChart"></canvas>
                 </div>
             </div>
         </div>
@@ -894,7 +823,6 @@
     <!-- MODAL: Tendencia Anual de Precios PVPC -->
     <div id="annualTrendModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
-            <!-- Cabecera -->
             <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
                 <div>
                     <h3 class="font-bold text-gray-900 text-base flex items-center gap-1.5">
@@ -905,13 +833,10 @@
                 <button id="closeAnnualTrendModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 leading-none shrink-0">&times;</button>
             </div>
             
-            <!-- Controles -->
             <div class="p-4 bg-white border-b flex flex-wrap items-end gap-3 shrink-0">
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Año a Consultar</label>
-                    <select id="trendYearSelector" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                        <!-- Rellenado por JS -->
-                    </select>
+                    <select id="trendYearSelector" class="px-2.5 py-1.5 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"></select>
                 </div>
                 <button id="fetchAnnualTrendBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
                     Consultar Año
@@ -919,23 +844,13 @@
                 <span id="annualTrendStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <!-- Cuerpo del modal -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
                 <div class="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-xs">
                     <div class="relative h-[200px] sm:h-[260px] w-full">
                         <canvas id="annualTrendChart"></canvas>
                     </div>
                 </div>
-
-                <!-- Leyenda -->
-                <div class="mb-4 bg-amber-50 border border-amber-100 rounded-lg p-3 text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
-                    <span class="font-semibold">💡 Nota:</span>
-                    <span>Los promedios y límites se basan en el histórico de la tarifa PVPC oficial de REE. El color de fondo del mes varía gradualmente de verde a rojo según su precio medio.</span>
-                </div>
-                
-                <div id="annualTrendGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Meses dinámicos -->
-                </div>
+                <div id="annualTrendGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
             </div>
         </div>
     </div>
@@ -943,7 +858,6 @@
     <!-- MODAL: Detalle de Consumo Horario Diario -->
     <div id="dayConsumDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200">
-            <!-- Cabecera -->
             <div class="p-3 sm:p-4 bg-gray-50 border-b flex items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
                     <button id="prevConsumDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-2 py-1 rounded text-[11px] sm:text-xs transition-colors shrink-0">
@@ -959,13 +873,18 @@
                 <button id="closeDayConsumDetailModal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 ml-1 leading-none shrink-0">&times;</button>
             </div>
             
-            <!-- Cuerpo -->
             <div class="p-3 sm:p-6 overflow-y-auto flex-1">
-                <div id="consumDetailLegend" class="mb-4 flex flex-wrap gap-2 text-[10px] sm:text-[11px]">
-                    <!-- Rellenado por JS -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
+                    <div id="consumDetailLegend" class="flex flex-wrap gap-2 text-[10px] sm:text-[11px] flex-1"></div>
+                    <div class="flex items-center gap-2 shrink-0 text-xs font-semibold text-gray-700">
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="showHourlyCostToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <span class="ml-2">Mostrar Coste Horario (€)</span>
+                        </label>
+                    </div>
                 </div>
                 
-                <!-- Área de Gráfico -->
                 <div class="relative h-[260px] sm:h-[400px] md:h-[520px] w-full">
                     <canvas id="dayConsumHourlyChart"></canvas>
                 </div>
@@ -979,7 +898,6 @@
         window.todayChartInstance = null;
         window.annualChartInstance = null;
 
-        // Variables globales
         window.rawCsvData = null;
         window.lastDatadisCsv = null; 
         window.chartInstance1 = null;
@@ -989,14 +907,12 @@
 
         const STORAGE_KEY = 'analizador_consumo_config';
 
-        // Elementos del DOM
         const rateMode = document.getElementById('rateMode');
         const manualConfig = document.getElementById('manualConfig');
         const thresholdInput = document.getElementById('thresholdInput');
         const subtractInput = document.getElementById('subtractInput');
         const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');
         
-        // Drag & Drop
         const dropZone = document.getElementById('dropZone');
         const csvInput = document.getElementById('csvInput');
         const dropZonePrompt = document.getElementById('dropZonePrompt');
@@ -1028,8 +944,6 @@
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
 
-        // Detector de cambios para el conmutador de Coste Horario
-        // Drag & Drop event mapping
         dropZone.addEventListener('click', () => csvInput.click());
 
         csvInput.addEventListener('change', (e) => {
@@ -1065,7 +979,6 @@
             }`;
         }
 
-        // Datadis Direct Download API Proxy
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
         function toDatadisDate(isoDate) {
@@ -1133,7 +1046,6 @@
                     return;
                 }
 
-                // Normalización de datos CSV devueltos por la API de Datadis
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
                 data.consumptionData.forEach((x) => {
@@ -1155,7 +1067,7 @@
                             window.calendarSelectedDates.clear();
                         }
                         document.getElementById('filterStartDate').value = startDate;
-                        document.getElementById('filterEndDate').value = endDate;
+                        document.getElementById('filterEndDate').value = startDate;
                         saveConfig();
 
                         processData(window.rawCsvData);
@@ -1169,12 +1081,12 @@
                         fileNameSpan.textContent = `Datadis API (CUPS ${cupsVal})`;
                     },
                     error: (err) => {
-                        statusEl.textContent = '❌ Error al procesar los datos recibidos: ' + err.message;
+                        statusEl.textContent = '❌ Error al procesar los datos: ' + err.message;
                         statusEl.className = 'text-xs mt-2 text-red-600';
                     },
                 });
             } catch (err) {
-                statusEl.textContent = '❌ Error de conexión con el proxy: ' + err.message;
+                statusEl.textContent = '❌ Error de conexión: ' + err.message;
                 statusEl.className = 'text-xs mt-2 text-red-600';
             }
         }
@@ -1323,7 +1235,7 @@
                 
                 const totalPreciosDescargados = Object.keys(preciosMap || {}).length;
                 if (totalPreciosDescargados === 0) {
-                    showStatus(`⚠️ No se han podido obtener precios PVPC para el rango ${fechaInicio} a ${fechaFin}. Compruebe si el archivo contiene fechas futuras o si la API de Red Eléctrica tiene problemas de conexión.`, "error");
+                    showStatus(`⚠️ No se han podido obtener precios PVPC para el rango ${fechaInicio} a ${fechaFin}.`, "error");
                 }
 
                 const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
@@ -1331,7 +1243,6 @@
                 const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
                 const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
-                const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
                 const useWeekendValle = document.getElementById('weekendValle').checked;
                 const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
                 
@@ -1346,7 +1257,6 @@
                     const dayOfWeek = dateObj.getDay(); 
                     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                     
-                    // Obtener formato DD-MM a partir de YYYY-MM-DD
                     const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
                     const isHoliday = holidays.includes(dayMonthStr);
 
@@ -1419,11 +1329,11 @@
                 });
 
                 if (filteredData.length === 0) {
-                    showStatus("Ningún registro coincide con los filtros temporales especificados.", "error");
+                    showStatus("Ningún registro coincide con los filtros especificados.", "error");
                     return;
                 }
 
-                showStatus("Procesamiento finalizado con éxito.", "success");
+                showStatus("Procesamiento finalizado.", "success");
                 renderResultsAndCharts(filteredData);
 
             } catch (err) {
@@ -1465,7 +1375,6 @@
                     const response = await fetch(url);
                     
                     if (!response.ok) {
-                        console.warn(`Fragmento omitido por REE (${chunk.start} a ${chunk.end}): HTTP ${response.status}`);
                         continue; 
                     }
                     
@@ -1480,8 +1389,7 @@
                         return id === '600' || 
                                type.includes('pvpc') || 
                                title.includes('pvpc') || 
-                               title.includes('pequeño consumidor') || 
-                               title.includes('voluntario para el');
+                               title.includes('pequeño consumidor');
                     });
                     
                     if (pvpcSeries && pvpcSeries.attributes && pvpcSeries.attributes.values) {
@@ -1492,22 +1400,20 @@
                                 const hourPart = parseInt(v.datetime.substring(11, 13), 10); 
                                 const key = `${datePart}_T${String(hourPart).padStart(2, '0')}`;
                                 preciosMap[key] = v.value / 1000.0; 
-                            } catch (e) {
-                                console.error("Error al procesar el registro de fecha de REE:", v.datetime, e);
-                            }
+                            } catch (e) {}
                         });
                     }
 
                     await new Promise(resolve => setTimeout(resolve, 100));
 
                 } catch (err) {
-                    console.error(`Fallo de conexión en fragmento REE (${chunk.start} a ${chunk.end}):`, err);
+                    console.error(err);
                 }
             }
             return preciosMap;
         }
 
-function renderResultsAndCharts(data) {
+        function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
@@ -1536,7 +1442,6 @@ function renderResultsAndCharts(data) {
             let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; 
             let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; 
 
-            // Variables para el cálculo oficial estricto 2.0TD de la tarifa indexada
             let p1KwhIndexedTime = 0, p2KwhIndexedTime = 0, p3KwhIndexedTime = 0;   
             let p1CostIndexedTime = 0, p2CostIndexedTime = 0, p3CostIndexedTime = 0; 
             let p1IndexedTimeHours = 0, p2IndexedTimeHours = 0, p3IndexedTimeHours = 0;
@@ -1622,7 +1527,6 @@ function renderResultsAndCharts(data) {
                     p3TimeHours++; 
                 }
 
-                // --- CÁLCULO ESTRICTO SEGÚN PERÍODOS OFICIALES 2.0TD PARA INDEXADA ---
                 let officialSlot20TD = 'P3'; 
                 if (!isWeekend && !isHoliday) {
                     if ((item.hora >= 10 && item.hora < 14) || (item.hora >= 18 && item.hora < 22)) {
@@ -1706,7 +1610,7 @@ function renderResultsAndCharts(data) {
                             <td class="p-4 border-b">${String(item.hora).padStart(2, '0')}:00</td>
                             <td class="p-4 border-b text-right font-mono">
                                 ${adjustedKwh.toFixed(3)} 
-                                <span class="text-xs text-gray-400 block" title="Original: ${item.consumo.toFixed(3)} kWh">(-${subtractVal.toFixed(2)})</span>
+                                <span class="text-xs text-gray-400 block">(-${subtractVal.toFixed(2)})</span>
                             </td>
                             <td class="p-4 border-b text-right font-mono">${item.precio.toFixed(5)}</td>
                             <td class="p-4 border-b text-right font-mono font-semibold">${adjustedCost.toFixed(3)} €</td>
@@ -1731,7 +1635,6 @@ function renderResultsAndCharts(data) {
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
 
-            // --- CÁLCULO DE SIMULACIONES INTEGRADO AQUÍ ---
             const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
             const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
             const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
@@ -1748,7 +1651,6 @@ function renderResultsAndCharts(data) {
             const alqContadorManual = parseFloat(document.getElementById('meterRentalManual').value) || 0;
             const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
 
-            // 1. Simulación PVPC
             const margenComTotalPvpc = margenComDiarioPvpc * numDays;
             const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
             const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
@@ -1760,7 +1662,6 @@ function renderResultsAndCharts(data) {
             const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
             const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
 
-            // 2. Simulación Manual
             const margenComTotalManual = margenComDiarioManual * numDays;
             const totalCostManualNeto = totalCostManual * (1 - descEnergiaManual / 100);
             const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotenciaManual / 100);
@@ -1772,7 +1673,6 @@ function renderResultsAndCharts(data) {
             const grandTotalManualSimulated = baseIvaManual + ivaManualVal;
             const avgKwhPriceManualSimulated = totalKwh > 0 ? (grandTotalManualSimulated / totalKwh) : 0;
 
-            // Selección de totales según modo activo
             const activeGrandTotalSimulated = (mode === 'pvpc') ? grandTotalPvpcSimulated : grandTotalManualSimulated;
             const activeAvgDailySimple = grandTotalActive / numDays;
             const activeAvgDailySimulated = activeGrandTotalSimulated / numDays;
@@ -1790,30 +1690,26 @@ function renderResultsAndCharts(data) {
 
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
-            // Tarjetón de Coste Actualizado
             totalCostEl.innerHTML = `
                 ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                <span class="text-xs text-blue-600 font-bold block mt-1" title="Incluye energía neta, potencia contratada, descuentos, impuestos, alquiler de contador prorrateado y margen comercial">
-                    [Factura: ${activeGrandTotalSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €]
+                <span class="text-xs text-blue-600 font-bold block mt-1">
+                    [Completo Sim.: ${activeGrandTotalSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €]
                 </span>
                 <span class="text-[10px] text-gray-500 block font-normal mt-2 leading-tight text-left space-y-0.5">
                     • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
                     • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
                     • Medio Simple: ${activeAvgDailySimple.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día<br>
-                    • Medio fra: ${activeAvgDailySimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
+                    • Medio Completo: ${activeAvgDailySimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
                 </span>
             `;
 
-            // Tarjetón de Días Actualizado
             const firstDate = sortedDates[0];
             const lastDate = sortedDates[sortedDates.length - 1];
             let dateRangeText = '';
-            
             if (firstDate && lastDate) {
                 const formatDmy = (str) => str.split('-').reverse().join('/');
                 dateRangeText = `${formatDmy(firstDate)} al ${formatDmy(lastDate)}`;
             }
-
             totalDaysEl.innerHTML = `
                 ${numDays} días
                 ${dateRangeText ? `<p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed font-normal">${dateRangeText}</p>` : ''}
@@ -1972,7 +1868,6 @@ function renderResultsAndCharts(data) {
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
-            // --- RENDERIZADO DE LAS TARJETAS INDEXADAS POR TRAMO HORARIO ESTRICTO 2.0TD ---
             const p1PctIndexedTimeKwh = totalKwh > 0 ? (p1KwhIndexedTime / totalKwh) * 100 : 0;
             const p2PctIndexedTimeKwh = totalKwh > 0 ? (p2KwhIndexedTime / totalKwh) * 100 : 0;
             const p3PctIndexedTimeKwh = totalKwh > 0 ? (p3KwhIndexedTime / totalKwh) * 100 : 0;
@@ -2002,7 +1897,6 @@ function renderResultsAndCharts(data) {
             document.getElementById('p3KwhIndexedTimeText').innerHTML = `${p3KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndexedTimeKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostIndexedTimeText').innerHTML = `${p3CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
 
-            // 3. Comparación Global de Sistemas de Facturación
             const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
             const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
             const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
@@ -2182,34 +2076,34 @@ function renderResultsAndCharts(data) {
                         
                         let cellClass, dayLabelClass, kwhClass, costClass;
 
-                    if (isEvChargingDay) {
-                        cellClass = "bg-red-50 border-2 border-red-500 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:border-red-700 transition-colors min-h-[68px]";
-                        dayLabelClass = "text-xs font-black text-red-600 leading-none";
-                        kwhClass = "text-[10px] font-black text-red-700 leading-tight";
-                        costClass = "text-[9px] font-black text-red-800 leading-tight mt-0.5";
-                    } else {
-                        cellClass = "bg-white border border-gray-400 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-600 transition-colors min-h-[68px]";
-                        dayLabelClass = "text-xs font-bold text-gray-700 leading-none";
-                        kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
-                        costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
-                    }
+                        if (isEvChargingDay) {
+                            cellClass = "bg-red-50 border-2 border-red-500 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:border-red-700 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-black text-red-600 leading-none";
+                            kwhClass = "text-[10px] font-black text-red-700 leading-tight";
+                            costClass = "text-[9px] font-black text-red-800 leading-tight mt-0.5";
+                        } else {
+                            cellClass = "bg-white border border-gray-400 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-600 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-bold text-gray-700 leading-none";
+                            kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
+                            costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
+                        }
 
-                    monthHtml += `
-                        <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
-                            <div class="flex justify-between items-center w-full shrink-0">
-                                <span class="${dayLabelClass}">${day}</span>
-                                <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
-                                        onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
-                                        title="Ver perfil de consumo horario de este día">
-                                    📊
-                                </button>
+                        monthHtml += `
+                            <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
+                                <div class="flex justify-between items-center w-full shrink-0">
+                                    <span class="${dayLabelClass}">${day}</span>
+                                    <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
+                                            onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
+                                            title="Ver perfil de consumo horario de este día">
+                                        📊
+                                    </button>
+                                </div>
+                                <div class="text-right mt-1.5 w-full">
+                                    <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
+                                    <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                </div>
                             </div>
-                            <div class="text-right mt-1.5 w-full">
-                                <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
-                                <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
-                            </div>
-                        </div>
-                    `;
+                        `;
                     } else {
                         monthHtml += `
                             <div class="bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
@@ -2599,7 +2493,6 @@ function renderResultsAndCharts(data) {
             });
         }
 
-        // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
         function saveConfig() {
             const config = {
                 rateMode: document.getElementById('rateMode').value,
@@ -2722,7 +2615,7 @@ function renderResultsAndCharts(data) {
 
                 toggleRatePanels();
             } catch (e) {
-                console.error("Error al restaurar la sesión guardada:", e);
+                console.error(e);
             }
         }
 
@@ -2766,7 +2659,7 @@ function renderResultsAndCharts(data) {
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
             } else {
-                showStatus("No hay datos cargados para procesar. Suba un archivo CSV utilizando las instrucciones de Datadis o arrastrando un fichero.", "error");
+                showStatus("No hay datos cargados para procesar.", "error");
             }
         });
 
@@ -2815,10 +2708,7 @@ function renderResultsAndCharts(data) {
             }
         });
 
-        // Cargamos la configuración guardada
         loadConfig();
-
-        // Iniciamos la carga y renderizado de precios del día actual
         initTodayPrices();
 
         window.handleCalendarDayClick = function(dateStr) {
@@ -2851,9 +2741,6 @@ function renderResultsAndCharts(data) {
             }
         };
 
-
-        // --- MÓDULO INTEGRADO DE CONSULTA DE PRECIOS DIARIOS ---
-        
         const consultPricesBtn = document.getElementById('consultPricesBtn');
         const priceQueryModal = document.getElementById('priceQueryModal');
         const closePriceQueryModal = document.getElementById('closePriceQueryModal');
@@ -2869,9 +2756,9 @@ function renderResultsAndCharts(data) {
         const prevDayBtn = document.getElementById('prevDayBtn');
         const nextDayBtn = document.getElementById('nextDayBtn');
 
-        window.queryPricesDb = {}; // Almacenará { "YYYY-MM-DD_THH": precio }
-        window.activeDetailDate = null; // Fecha cargada en el visor de 24 horas
-        window.detailChartInstance = null; // Referencia del Chart.js del modal
+        window.queryPricesDb = {}; 
+        window.activeDetailDate = null; 
+        window.detailChartInstance = null; 
 
         (function initQueryDates() {
             const today = new Date();
@@ -2991,7 +2878,7 @@ function renderResultsAndCharts(data) {
             }
 
             if (allHourlyPrices.length === 0) {
-                metricsContainer.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 font-semibold py-2">No hay lecturas cargadas en este rango.</p>`;
+                metricsContainer.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 font-semibold py-2">No hay lecturas cargadas.</p>`;
                 return;
             }
 
@@ -3138,8 +3025,6 @@ function renderResultsAndCharts(data) {
             queryCalendarContainer.innerHTML = calendarHtml;
         }
 
-        // --- INICIALIZACIÓN Y RENDERIZADO DE LA GRÁFICA DE HOY ---
-
         async function initTodayPrices() {
             const todayLabelEl = document.getElementById('todayPricesTitle');
             const subtitleEl = document.getElementById('todayPricesSubtitle');
@@ -3158,14 +3043,15 @@ function renderResultsAndCharts(data) {
                     window.todayPricesMap = prices;
                     renderTodayPricesChart(dateStr);
                 } else {
-                    subtitleEl.textContent = "⚠️ No se han podido obtener los precios de hoy. Compruebe su conexión o reintente más tarde.";
+                    subtitleEl.textContent = "⚠️ No se han podido obtener los precios de hoy.";
                 }
             } catch (err) {
-                subtitleEl.textContent = "⚠️ Error de conexión al cargar precios del día de hoy.";
+                subtitleEl.textContent = "⚠️ Error de conexión al cargar precios.";
                 console.error(err);
             }
         }
-function renderTodayPricesChart(dateStr) {
+
+        function renderTodayPricesChart(dateStr) {
             const canvas = document.getElementById('todayHourlyPricesChart');
             if (!canvas || !window.todayPricesMap) return;
 
@@ -3191,7 +3077,6 @@ function renderTodayPricesChart(dateStr) {
             const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
             const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-            // Obtener los precios manuales configurados por el usuario
             const priceP1 = parseFloat(document.getElementById('pricePunta').value) || 0;
             const priceP2 = parseFloat(document.getElementById('priceLlano').value) || 0;
             const priceP3 = parseFloat(document.getElementById('priceValle').value) || 0;
@@ -3202,7 +3087,6 @@ function renderTodayPricesChart(dateStr) {
                 </span>
             `;
 
-            // Leyenda actualizada que incluye la referencia visual a la Tarifa Manual
             document.getElementById('todayChartLegend').innerHTML = `
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo (${minVal.toFixed(4)})</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo (${maxVal.toFixed(4)})</span>
@@ -3283,7 +3167,6 @@ function renderTodayPricesChart(dateStr) {
                             fill: false,
                             order: 4
                         },
-                        // Línea horizontal para Tramo Punta
                         {
                             label: 'Punta Manual',
                             data: Array(24).fill(priceP1),
@@ -3295,7 +3178,6 @@ function renderTodayPricesChart(dateStr) {
                             fill: false,
                             order: 1
                         },
-                        // Línea horizontal para Tramo Llano
                         {
                             label: 'Llano Manual',
                             data: Array(24).fill(priceP2),
@@ -3307,7 +3189,6 @@ function renderTodayPricesChart(dateStr) {
                             fill: false,
                             order: 2
                         },
-                        // Línea horizontal para Tramo Valle
                         {
                             label: 'Valle Manual',
                             data: Array(24).fill(priceP3),
@@ -3335,7 +3216,6 @@ function renderTodayPricesChart(dateStr) {
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
-                            // Asegura que la escala muestre la línea aunque el precio manual supere al precio PVPC
                             suggestedMax: Math.max(maxVal, priceP1, priceP2, priceP3) * 1.1
                         },
                         x: {
@@ -3380,7 +3260,7 @@ function renderTodayPricesChart(dateStr) {
             if (hasAnyData) {
                 openDayDetail(nextDateStr);
             } else {
-                alert(`No hay datos disponibles para la fecha: ${formatFriendlyDate(nextDateStr)}`);
+                alert(`No hay datos disponibles para: ${formatFriendlyDate(nextDateStr)}`);
             }
         }
 
@@ -3524,8 +3404,6 @@ function renderTodayPricesChart(dateStr) {
             });
         }
 
-        // --- MÓDULO: TENDENCIA ANUAL DE PRECIOS PVPC ---
-
         const annualTrendBtn = document.getElementById('annualTrendBtn');
         const annualTrendModal = document.getElementById('annualTrendModal');
         const closeAnnualTrendModal = document.getElementById('closeAnnualTrendModal');
@@ -3560,7 +3438,7 @@ function renderTodayPricesChart(dateStr) {
 
         async function triggerAnnualTrendQuery() {
             const year = trendYearSelector.value;
-            annualTrendStatus.textContent = `⏳ Descargando datos de Red Eléctrica para el año ${year}...`;
+            annualTrendStatus.textContent = `⏳ Descargando datos para el año ${year}...`;
             annualTrendStatus.className = "text-xs text-gray-500 self-center ml-2";
             annualTrendGrid.innerHTML = "";
 
@@ -3575,7 +3453,7 @@ function renderTodayPricesChart(dateStr) {
                     annualTrendStatus.className = "text-xs text-emerald-700 self-center ml-2";
                     renderAnnualTrendGrid(year);
                 } else {
-                    annualTrendStatus.textContent = "⚠️ No se han podido obtener datos para el año seleccionado.";
+                    annualTrendStatus.textContent = "⚠️ No se han podido obtener datos.";
                     annualTrendStatus.className = "text-xs text-amber-700 self-center ml-2";
                 }
             } catch (err) {
@@ -3734,15 +3612,14 @@ function renderTodayPricesChart(dateStr) {
                     gridHtml += `
                         <div class="border-2 border-gray-300 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow hover:scale-[1.01] transition-all min-h-[92px] cursor-pointer" 
                              style="background-color: ${bgColor};"
-                             onclick="switchToMonthlyCalendar('${year}', ${m.monthIndex})"
-                             title="Clic para abrir el calendario diario detallado de ${m.name}">
+                             onclick="switchToMonthlyCalendar('${year}', ${m.monthIndex})">
                             <h5 class="text-xs font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-2 py-0.5 self-start uppercase tracking-wider">
                                 ${m.name}
                             </h5>
                             <div class="text-[10px] leading-tight text-right mt-3 font-mono font-bold">
-                                <p class="text-emerald-800" title="Mínimo horario">▼ Mín: ${m.min.toFixed(4)}</p>
-                                <p class="text-rose-800" title="Máximo horario">▲ Máx: ${m.max.toFixed(4)}</p>
-                                <p class="text-blue-900 border-t border-gray-400/40 mt-1.5 pt-1.5 text-xs font-black" title="Precio medio mensual">
+                                <p class="text-emerald-800">▼ Mín: ${m.min.toFixed(4)}</p>
+                                <p class="text-rose-800">▲ Máx: ${m.max.toFixed(4)}</p>
+                                <p class="text-blue-900 border-t border-gray-400/40 mt-1.5 pt-1.5 text-xs font-black">
                                     μ: ${m.avg.toFixed(4)}
                                 </p>
                             </div>
@@ -3776,9 +3653,6 @@ function renderTodayPricesChart(dateStr) {
             triggerPricesQuery();
         };   
 
-
-        // --- MÓDULO: DETALLE DE CONSUMO HORARIO DIARIO ---
-
         const dayConsumDetailModal = document.getElementById('dayConsumDetailModal');
         const closeDayConsumDetailModal = document.getElementById('closeDayConsumDetailModal');
         const consumDetailModalTitle = document.getElementById('consumDetailModalTitle');
@@ -3793,12 +3667,6 @@ function renderTodayPricesChart(dateStr) {
             dayConsumDetailModal.classList.add('hidden');
         });
 
-        document.getElementById('showHourlyCostToggle').addEventListener('change', () => {
-            if (window.activeConsumDetailDate) {
-                renderDayConsumHourlyChart(window.activeConsumDetailDate);
-            }
-        });
-
         prevConsumDayBtn.addEventListener('click', () => {
             navigateActiveConsumDay(-1);
         });
@@ -3806,6 +3674,15 @@ function renderTodayPricesChart(dateStr) {
         nextConsumDayBtn.addEventListener('click', () => {
             navigateActiveConsumDay(1);
         });
+
+        const toggleBtn = document.getElementById('showHourlyCostToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('change', () => {
+                if (window.activeConsumDetailDate) {
+                    renderDayConsumHourlyChart(window.activeConsumDetailDate);
+                }
+            });
+        }
 
         window.openDayConsumDetail = function(dateStr) {
             window.activeConsumDetailDate = dateStr;
@@ -3827,11 +3704,11 @@ function renderTodayPricesChart(dateStr) {
             if (hasData) {
                 openDayConsumDetail(nextDateStr);
             } else {
-                alert(`No hay registros de consumo cargados en el archivo para la fecha: ${formatFriendlyDate(nextDateStr)}`);
+                alert(`No hay registros de consumo cargados para: ${formatFriendlyDate(nextDateStr)}`);
             }
         }
 
-function renderDayConsumHourlyChart(dateStr) {
+        function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
@@ -3856,13 +3733,11 @@ function renderDayConsumHourlyChart(dateStr) {
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
 
-            // OPTIMIZACIÓN: Detectar el formato de hora (base 1 o base 0) una sola vez fuera de los bucles
             let isOneBased = false;
             if (window.rawCsvData.length > 0) {
                 const sampleRow = window.rawCsvData[0];
                 const colHora = Object.keys(sampleRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
                 if (colHora) {
-                    // Comprobamos solo las primeras 100 filas para que sea inmediato
                     isOneBased = window.rawCsvData.slice(0, 100).some(r => parseInt(r[colHora], 10) === 24);
                 }
             }
@@ -3932,7 +3807,6 @@ function renderDayConsumHourlyChart(dateStr) {
                     }
                 }
 
-                // Cálculo del coste horario
                 hourlyCosts[h] = hourlyConsumption[h] * hourlyPrices[h];
             }
 
@@ -3940,17 +3814,16 @@ function renderDayConsumHourlyChart(dateStr) {
             const avgPriceOfThatDay = hourlyPrices.reduce((sum, p) => sum + p, 0) / 24;
             const threshold = parseFloat(thresholdInput.value) || 0;
 
-            // COMPROBACIÓN SEGURA: Si el elemento no existe en el DOM, por defecto es falso y no rompe el flujo.
             const toggleEl = document.getElementById('showHourlyCostToggle');
             const showCostLine = toggleEl ? toggleEl.checked : false;
 
             consumDetailLegend.innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
                     <span class="bg-blue-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Consumo Diario: ${dayTotalKwh.toFixed(2)} kWh
+                        Consumo: ${dayTotalKwh.toFixed(2)} kWh
                     </span>
                     <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Coste Diario: ${dayTotalCost.toFixed(2)} €
+                        Coste: ${dayTotalCost.toFixed(2)} €
                     </span>
                     <span class="bg-rose-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
                         Precio Medio: ${avgPriceOfThatDay.toFixed(5)} €/kWh
