@@ -1797,7 +1797,7 @@
                 <span class="text-[10px] text-gray-500 block font-normal mt-2 leading-tight text-left space-y-0.5">
                     • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
                     • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
-                    • Medio Simple: ${activeAvgDailySimple.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día<br>
+                    • Media: ${activeAvgDailySimple.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día<br>
                     • Media Fra.: ${activeAvgDailySimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
                 </span>
             `;
@@ -3383,7 +3383,7 @@
             }
         }
 
-        function renderDayDetailChart(dateStr) {
+function renderDayDetailChart(dateStr) {
             const canvas = document.getElementById('detailHourlyChart');
             if (!canvas) return;
 
@@ -3412,6 +3412,12 @@
             const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
             const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
+            // Recuperación de precios fijos manuales por tramos
+            const priceP1 = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const priceP2 = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const priceP3 = parseFloat(document.getElementById('priceValle').value) || 0;
+
+            // Actualización de la leyenda superior del modal para incluir los tramos manuales
             document.getElementById('detailModalLegend').innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
                     <span class="bg-blue-600 text-white font-extrabold px-2 py-0.5 rounded text-xs shrink-0">
@@ -3419,9 +3425,12 @@
                     </span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo (${minVal.toFixed(4)})</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo (${maxVal.toFixed(4)})</span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro (&ge; ${pvpcHigh.toFixed(3)})</span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio</span>
-                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato (&le; ${pvpcLow.toFixed(3)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro PVPC (&ge; ${pvpcHigh.toFixed(3)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio PVPC</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato PVPC (&le; ${pvpcLow.toFixed(3)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0 border-l pl-2 border-gray-300"><span class="w-3.5 h-0.5 bg-red-500 inline-block"></span> Punta Manual (${priceP1.toFixed(5)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-amber-500 inline-block"></span> Llano Manual (${priceP2.toFixed(5)})</span>
+                    <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-emerald-500 inline-block"></span> Valle Manual (${priceP3.toFixed(5)})</span>
                 </div>
             `;
 
@@ -3481,7 +3490,7 @@
                             backgroundColor: backgroundColors,
                             borderColor: borderColors,
                             borderWidth: 1.5,
-                            order: 2
+                            order: 5
                         },
                         {
                             label: 'Media del Día',
@@ -3492,7 +3501,41 @@
                             borderDash: [5, 5],
                             pointRadius: 0,
                             fill: false,
+                            order: 4
+                        },
+                        // Líneas de referencia para la Tarifa Manual
+                        {
+                            label: 'Punta Manual',
+                            data: Array(24).fill(priceP1),
+                            type: 'line',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1.5,
+                            borderDash: [3, 3],
+                            pointRadius: 0,
+                            fill: false,
                             order: 1
+                        },
+                        {
+                            label: 'Llano Manual',
+                            data: Array(24).fill(priceP2),
+                            type: 'line',
+                            borderColor: 'rgb(245, 158, 11)',
+                            borderWidth: 1.5,
+                            borderDash: [3, 3],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 2
+                        },
+                        {
+                            label: 'Valle Manual',
+                            data: Array(24).fill(priceP3),
+                            type: 'line',
+                            borderColor: 'rgb(16, 185, 129)',
+                            borderWidth: 1.5,
+                            borderDash: [3, 3],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 3
                         }
                     ]
                 },
@@ -3511,7 +3554,8 @@
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
-                            suggestedMax: maxVal * 1.1
+                            // Garantiza que el eje Y cubra el valor máximo entre los precios del PVPC y las tarifas manuales
+                            suggestedMax: Math.max(maxVal, priceP1, priceP2, priceP3) * 1.1
                         },
                         x: {
                             ticks: {
@@ -3522,6 +3566,7 @@
                 }
             });
         }
+
 
         // --- MÓDULO: TENDENCIA ANUAL DE PRECIOS PVPC ---
 
