@@ -1703,7 +1703,7 @@
                 }
             });
 
-            const sortedDates = Object.keys(dailyStats).sort();
+const sortedDates = Object.keys(dailyStats).sort();
             const numDays = sortedDates.length || 1;
 
             const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
@@ -1718,6 +1718,52 @@
 
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
+
+            // --- CÁLCULO DE SIMULACIONES INTEGRADO AQUÍ ---
+            const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
+            const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
+            const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
+            const margenComDiarioPvpc = parseFloat(document.getElementById('retailerMarginPvpc').value) || 0;
+            const impElecPvpc = parseFloat(document.getElementById('electricityTaxPvpc').value) || 0;
+            const alqContadorPvpc = parseFloat(document.getElementById('meterRentalPvpc').value) || 0;
+            const tipoIvaPvpc = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
+
+            const descEnergiaManual = parseFloat(document.getElementById('discountEnergyManual').value) || 0;
+            const descPotenciaManual = parseFloat(document.getElementById('discountPowerManual').value) || 0;
+            const ajustesManual = parseFloat(document.getElementById('invoiceAdjustmentsManual').value) || 0;
+            const margenComDiarioManual = parseFloat(document.getElementById('retailerMarginManual').value) || 0;
+            const impElecManual = parseFloat(document.getElementById('electricityTaxManual').value) || 0;
+            const alqContadorManual = parseFloat(document.getElementById('meterRentalManual').value) || 0;
+            const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
+
+            // 1. Simulación PVPC
+            const margenComTotalPvpc = margenComDiarioPvpc * numDays;
+            const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
+            const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
+            const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotalPvpc + ajustesPvpc;
+            const impElecPvpcVal = baseImpElecPvpc * (impElecPvpc / 100);
+            const alqContadorTotalPvpc = (alqContadorPvpc / 30) * numDays;
+            const baseIvaPvpc = baseImpElecPvpc + impElecPvpcVal + alqContadorTotalPvpc;
+            const ivaPvpcVal = baseIvaPvpc * (tipoIvaPvpc / 100);
+            const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
+            const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
+
+            // 2. Simulación Manual
+            const margenComTotalManual = margenComDiarioManual * numDays;
+            const totalCostManualNeto = totalCostManual * (1 - descEnergiaManual / 100);
+            const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotenciaManual / 100);
+            const baseImpElecManual = totalCostManualNeto + totalPowerCostManualNeto + margenComTotalManual + ajustesManual;
+            const impElecManualVal = baseImpElecManual * (impElecManual / 100);
+            const alqContadorTotalManual = (alqContadorManual / 30) * numDays;
+            const baseIvaManual = baseImpElecManual + impElecManualVal + alqContadorTotalManual;
+            const ivaManualVal = baseIvaManual * (tipoIvaManual / 100);
+            const grandTotalManualSimulated = baseIvaManual + ivaManualVal;
+            const avgKwhPriceManualSimulated = totalKwh > 0 ? (grandTotalManualSimulated / totalKwh) : 0;
+
+            // Selección de totales según modo activo
+            const activeGrandTotalSimulated = (mode === 'pvpc') ? grandTotalPvpcSimulated : grandTotalManualSimulated;
+            const activeAvgDailySimple = grandTotalActive / numDays;
+            const activeAvgDailySimulated = activeGrandTotalSimulated / numDays;
 
             const dayOfWeekCount = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
             sortedDates.forEach(dateStr => {
@@ -1734,10 +1780,14 @@
             
             totalCostEl.innerHTML = `
                 ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                <span class="text-[10px] text-gray-500 block font-normal mt-1 leading-tight text-left">
+                <span class="text-xs text-blue-600 font-bold block mt-1" title="Total con impuestos, alquiler y margen comercial incluidos">
+                    [Completo Sim.: ${activeGrandTotalSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €]
+                </span>
+                <span class="text-[10px] text-gray-500 block font-normal mt-2 leading-tight text-left space-y-0.5">
                     • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
                     • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
-                    • Medio: ${(grandTotalActive / numDays).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
+                    • Medio Simple: ${activeAvgDailySimple.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día<br>
+                    • Medio Completo: ${activeAvgDailySimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
                 </span>
             `;
             
@@ -1938,36 +1988,7 @@
             document.getElementById('p3CostIndexedTimeText').innerHTML = `${p3CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
 
             // --- CÁLCULOS DE SIMULACIÓN INDEPENDIENTES ---
-            const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
-            const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
-            const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
-            const margenComDiarioPvpc = parseFloat(document.getElementById('retailerMarginPvpc').value) || 0;
-            const impElecPvpc = parseFloat(document.getElementById('electricityTaxPvpc').value) || 0;
-            const alqContadorPvpc = parseFloat(document.getElementById('meterRentalPvpc').value) || 0;
-            const tipoIvaPvpc = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
 
-            const descEnergiaManual = parseFloat(document.getElementById('discountEnergyManual').value) || 0;
-            const descPotenciaManual = parseFloat(document.getElementById('discountPowerManual').value) || 0;
-            const ajustesManual = parseFloat(document.getElementById('invoiceAdjustmentsManual').value) || 0;
-            const margenComDiarioManual = parseFloat(document.getElementById('retailerMarginManual').value) || 0;
-            const impElecManual = parseFloat(document.getElementById('electricityTaxManual').value) || 0;
-            const alqContadorManual = parseFloat(document.getElementById('meterRentalManual').value) || 0;
-            const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
-
-            // 1. Simulación PVPC
-            const margenComTotalPvpc = margenComDiarioPvpc * numDays;
-            const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
-            const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
-            const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotalPvpc + ajustesPvpc;
-            const impElecPvpcVal = baseImpElecPvpc * (impElecPvpc / 100);
-            
-            // Alquiler prorrateado por días de consumo (PVP de entrada se divide entre 30 días)
-            const alqContadorTotalPvpc = (alqContadorPvpc / 30) * numDays;
-            
-            const baseIvaPvpc = baseImpElecPvpc + impElecPvpcVal + alqContadorTotalPvpc;
-            const ivaPvpcVal = baseIvaPvpc * (tipoIvaPvpc / 100);
-            const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
-            const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
 
             // 2. Simulación Manual
             const margenComTotalManual = margenComDiarioManual * numDays;
