@@ -338,7 +338,7 @@
         </div>
 
         <!-- Messages de Estado -->
-        <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center"></div>
+        <div id="statusMessage" class="hidden p-4 rounded-lg mb-8 text-center font-semibold"></div>
 
         <!-- Resultados -->
         <div id="resultsSection" class="hidden">
@@ -847,7 +847,7 @@
          </div>
     </div>
 
-    <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas -->
+    <!-- MODAL SECUNDARIO: Detalle Horario de 24 Horas (Precios) -->
     <div id="dayDetailModal" class="hidden fixed inset-0 bg-gray-950/70 backdrop-blur-xs z-[60] flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden border border-gray-200">
             <!-- Cabecera adaptativa -->
@@ -867,25 +867,14 @@
             </div>
             
             <!-- Cuerpo con scroll -->
-           <!-- Cuerpo -->
             <div class="p-3 sm:p-6 overflow-y-auto flex-1">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
-                    <div id="consumDetailLegend" class="flex flex-wrap gap-2 text-[10px] sm:text-[11px] flex-1">
-                        <!-- Rellenado por JS -->
-                    </div>
-                    <!-- Conmutador para activar la línea de Coste Horario -->
-                    <div class="flex items-center gap-2 shrink-0 text-xs font-semibold text-gray-700">
-                        <label class="relative inline-flex items-center cursor-pointer select-none">
-                            <input type="checkbox" id="showHourlyCostToggle" class="sr-only peer">
-                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                            <span class="ml-2">Mostrar Coste Horario (€)</span>
-                        </label>
-                    </div>
+                <div id="detailModalLegend" class="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 text-[10px] sm:text-[11px] leading-relaxed">
+                    <!-- Se rellena por JavaScript -->
                 </div>
                 
                 <!-- Área de Gráfico -->
-                <div class="relative h-[260px] sm:h-[400px] md:h-[520px] w-full">
-                    <canvas id="dayConsumHourlyChart"></canvas>
+                <div class="relative h-[260px] sm:h-[400px] md:h-[500px] w-full">
+                    <canvas id="detailHourlyChart"></canvas>
                 </div>
             </div>
         </div>
@@ -961,8 +950,18 @@
             
             <!-- Cuerpo -->
             <div class="p-3 sm:p-6 overflow-y-auto flex-1">
-                <div id="consumDetailLegend" class="mb-4 flex flex-wrap gap-2 text-[10px] sm:text-[11px]">
-                    <!-- Rellenado por JS -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
+                    <div id="consumDetailLegend" class="flex flex-wrap gap-2 text-[10px] sm:text-[11px] flex-1">
+                        <!-- Rellenado por JS -->
+                    </div>
+                    <!-- Conmutador para coste horario -->
+                    <div class="flex items-center gap-2 shrink-0 text-xs font-semibold text-gray-700">
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="showHourlyCostToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <span class="ml-2">Mostrar Coste Horario (€)</span>
+                        </label>
+                    </div>
                 </div>
                 
                 <!-- Área de Gráfico -->
@@ -1028,7 +1027,6 @@
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
 
-        // Detector de cambios para el conmutador de Coste Horario
         // Drag & Drop event mapping
         dropZone.addEventListener('click', () => csvInput.click());
 
@@ -1507,7 +1505,7 @@
             return preciosMap;
         }
 
-function renderResultsAndCharts(data) {
+        function renderResultsAndCharts(data) {
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
@@ -1794,13 +1792,13 @@ function renderResultsAndCharts(data) {
             totalCostEl.innerHTML = `
                 ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
                 <span class="text-xs text-blue-600 font-bold block mt-1" title="Incluye energía neta, potencia contratada, descuentos, impuestos, alquiler de contador prorrateado y margen comercial">
-                    [Factura: ${activeGrandTotalSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €]
+                    [Completo Sim.: ${activeGrandTotalSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €]
                 </span>
                 <span class="text-[10px] text-gray-500 block font-normal mt-2 leading-tight text-left space-y-0.5">
                     • Energía: ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
                     • Potencia: ${activePowerCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €<br>
                     • Medio Simple: ${activeAvgDailySimple.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día<br>
-                    • Medio fra: ${activeAvgDailySimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
+                    • Medio Completo: ${activeAvgDailySimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €/día
                 </span>
             `;
 
@@ -2233,7 +2231,7 @@ function renderResultsAndCharts(data) {
                 const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
                 return {
-                    hour: item.hora,
+                    hour: item.hour,
                     price: item.precio,
                     isWeekend: isWeekend
                 };
@@ -3165,7 +3163,8 @@ function renderResultsAndCharts(data) {
                 console.error(err);
             }
         }
-function renderTodayPricesChart(dateStr) {
+
+        function renderTodayPricesChart(dateStr) {
             const canvas = document.getElementById('todayHourlyPricesChart');
             if (!canvas || !window.todayPricesMap) return;
 
@@ -3622,6 +3621,7 @@ function renderTodayPricesChart(dateStr) {
             const validAvgs = calculatedMonths.filter(m => m.hasData).map(m => m.avg);
             const minMonthAvg = validAvgs.length > 0 ? Math.min(...validAvgs) : 0;
             const maxMonthAvg = validAvgs.length > 0 ? Math.max(...validAvgs) : 0;
+            
             const yearAvg = allHourlyPrices.length > 0 ? (allHourlyPrices.reduce((sum, p) => sum + p, 0) / allHourlyPrices.length) : 0;
 
             function getTrendColor(avgVal, minAvg, maxAvg) {
