@@ -3831,7 +3831,7 @@ function renderTodayPricesChart(dateStr) {
             }
         }
 
-       function renderDayConsumHourlyChart(dateStr) {
+function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
@@ -3855,6 +3855,17 @@ function renderTodayPricesChart(dateStr) {
             const useWeekendValle = document.getElementById('weekendValle').checked;
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            // OPTIMIZACIÓN: Detectar el formato de hora (base 1 o base 0) una sola vez fuera de los bucles
+            let isOneBased = false;
+            if (window.rawCsvData.length > 0) {
+                const sampleRow = window.rawCsvData[0];
+                const colHora = Object.keys(sampleRow).find(k => k.toLowerCase().includes('hor') || k.toLowerCase().includes('time'));
+                if (colHora) {
+                    // Comprobamos solo las primeras 100 filas para que sea inmediato
+                    isOneBased = window.rawCsvData.slice(0, 100).some(r => parseInt(r[colHora], 10) === 24);
+                }
+            }
 
             for (let h = 0; h < 24; h++) {
                 let precio = priceValle;
@@ -3902,7 +3913,6 @@ function renderTodayPricesChart(dateStr) {
                     if (fDate !== dateStr) return false;
 
                     let hora = parseInt(row[colHora], 10);
-                    const isOneBased = window.rawCsvData.some(r => parseInt(r[colHora], 10) === 24);
                     if (isOneBased) {
                         hora = hora - 1;
                         if (hora < 0) hora = 23;
@@ -3922,7 +3932,7 @@ function renderTodayPricesChart(dateStr) {
                     }
                 }
 
-                // Cálculo preciso del coste de esta hora
+                // Cálculo del coste horario
                 hourlyCosts[h] = hourlyConsumption[h] * hourlyPrices[h];
             }
 
@@ -3930,7 +3940,9 @@ function renderTodayPricesChart(dateStr) {
             const avgPriceOfThatDay = hourlyPrices.reduce((sum, p) => sum + p, 0) / 24;
             const threshold = parseFloat(thresholdInput.value) || 0;
 
-            const showCostLine = document.getElementById('showHourlyCostToggle').checked;
+            // COMPROBACIÓN SEGURA: Si el elemento no existe en el DOM, por defecto es falso y no rompe el flujo.
+            const toggleEl = document.getElementById('showHourlyCostToggle');
+            const showCostLine = toggleEl ? toggleEl.checked : false;
 
             consumDetailLegend.innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
@@ -3965,7 +3977,6 @@ function renderTodayPricesChart(dateStr) {
                 window.dayConsumChartInstance.destroy();
             }
 
-            // Colección base de datasets
             const chartDatasets = [
                 {
                     label: 'Consumo (kWh)',
@@ -4015,7 +4026,6 @@ function renderTodayPricesChart(dateStr) {
                 }
             ];
 
-            // Si el conmutador está activado, añadimos la línea de Coste Horario (€) al eje izquierdo (y)
             if (showCostLine) {
                 chartDatasets.push({
                     label: 'Coste Horario (€)',
@@ -4027,7 +4037,7 @@ function renderTodayPricesChart(dateStr) {
                     pointRadius: 3,
                     pointHoverRadius: 6,
                     fill: false,
-                    yAxisID: 'y', // Comparte el eje de magnitud izquierdo (kWh) por proximidad de valores
+                    yAxisID: 'y',
                     order: 0
                 });
             }
