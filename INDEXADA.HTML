@@ -1741,7 +1741,19 @@
                 </span>
             `;
             
-            totalDaysEl.textContent = `${numDays} días`;
+           const firstDate = sortedDates[0];
+            const lastDate = sortedDates[sortedDates.length - 1];
+            let dateRangeText = '';
+            
+            if (firstDate && lastDate) {
+                const formatDmy = (str) => str.split('-').reverse().join('/');
+                dateRangeText = `${formatDmy(firstDate)} al ${formatDmy(lastDate)}`;
+            }
+
+            totalDaysEl.innerHTML = `
+                ${numDays} días
+                ${dateRangeText ? `<p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed font-normal">${dateRangeText}</p>` : ''}
+            `;    
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
 
