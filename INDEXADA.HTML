@@ -867,14 +867,25 @@
             </div>
             
             <!-- Cuerpo con scroll -->
+           <!-- Cuerpo -->
             <div class="p-3 sm:p-6 overflow-y-auto flex-1">
-                <div id="detailModalLegend" class="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 text-[10px] sm:text-[11px] leading-relaxed">
-                    <!-- Se rellena por JavaScript -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b pb-3">
+                    <div id="consumDetailLegend" class="flex flex-wrap gap-2 text-[10px] sm:text-[11px] flex-1">
+                        <!-- Rellenado por JS -->
+                    </div>
+                    <!-- Conmutador para activar la línea de Coste Horario -->
+                    <div class="flex items-center gap-2 shrink-0 text-xs font-semibold text-gray-700">
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="showHourlyCostToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <span class="ml-2">Mostrar Coste Horario (€)</span>
+                        </label>
+                    </div>
                 </div>
                 
                 <!-- Área de Gráfico -->
-                <div class="relative h-[260px] sm:h-[400px] md:h-[500px] w-full">
-                    <canvas id="detailHourlyChart"></canvas>
+                <div class="relative h-[260px] sm:h-[400px] md:h-[520px] w-full">
+                    <canvas id="dayConsumHourlyChart"></canvas>
                 </div>
             </div>
         </div>
@@ -1017,6 +1028,7 @@
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
 
+        // Detector de cambios para el conmutador de Coste Horario
         // Drag & Drop event mapping
         dropZone.addEventListener('click', () => csvInput.click());
 
@@ -3781,6 +3793,12 @@ function renderTodayPricesChart(dateStr) {
             dayConsumDetailModal.classList.add('hidden');
         });
 
+        document.getElementById('showHourlyCostToggle').addEventListener('change', () => {
+            if (window.activeConsumDetailDate) {
+                renderDayConsumHourlyChart(window.activeConsumDetailDate);
+            }
+        });
+
         prevConsumDayBtn.addEventListener('click', () => {
             navigateActiveConsumDay(-1);
         });
@@ -3813,12 +3831,13 @@ function renderTodayPricesChart(dateStr) {
             }
         }
 
-        function renderDayConsumHourlyChart(dateStr) {
+       function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
             const hourlyConsumption = Array.from({ length: 24 }, () => 0);
             const hourlyPrices = Array.from({ length: 24 }, () => 0);
+            const hourlyCosts = Array.from({ length: 24 }, () => 0);
             
             let dayTotalKwh = 0;
             let dayTotalCost = 0;
@@ -3848,7 +3867,6 @@ function renderTodayPricesChart(dateStr) {
                     const dayOfWeek = dateObj.getDay(); 
                     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                     
-                    // Obtener formato DD-MM a partir de YYYY-MM-DD
                     const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
                     const isHoliday = holidaysList.includes(dayMonthStr);
 
@@ -3903,11 +3921,16 @@ function renderTodayPricesChart(dateStr) {
                         hourlyConsumption[h] = consumo;
                     }
                 }
+
+                // Cálculo preciso del coste de esta hora
+                hourlyCosts[h] = hourlyConsumption[h] * hourlyPrices[h];
             }
 
             const avgHourlyConsum = dayTotalKwh / 24;
             const avgPriceOfThatDay = hourlyPrices.reduce((sum, p) => sum + p, 0) / 24;
             const threshold = parseFloat(thresholdInput.value) || 0;
+
+            const showCostLine = document.getElementById('showHourlyCostToggle').checked;
 
             consumDetailLegend.innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
@@ -3924,6 +3947,7 @@ function renderTodayPricesChart(dateStr) {
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600 inline-block"></span> Curva Precios</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-rose-600/40 border border-dashed border-rose-600 inline-block"></span> Precio Medio</span>
+                    ${showCostLine ? '<span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-emerald-600 inline-block"></span> Coste Horario (€)</span>' : ''}
                 </div>
             `;
 
@@ -3939,6 +3963,73 @@ function renderTodayPricesChart(dateStr) {
 
             if (window.dayConsumChartInstance) {
                 window.dayConsumChartInstance.destroy();
+            }
+
+            // Colección base de datasets
+            const chartDatasets = [
+                {
+                    label: 'Consumo (kWh)',
+                    data: hourlyConsumption,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1.5,
+                    yAxisID: 'y',
+                    order: 4
+                },
+                {
+                    label: 'Media de Consumo Horario',
+                    data: Array(24).fill(avgHourlyConsum),
+                    type: 'line',
+                    borderColor: 'rgba(29, 78, 216, 0.85)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y',
+                    order: 3
+                },
+                {
+                    label: 'Precio de la Energía (€/kWh)',
+                    data: hourlyPrices,
+                    type: 'line',
+                    borderColor: 'rgb(225, 29, 72)',
+                    backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                    borderWidth: 2.5,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    fill: false,
+                    yAxisID: 'y1',
+                    order: 1
+                },
+                {
+                    label: 'Precio Medio Diario',
+                    data: Array(24).fill(avgPriceOfThatDay),
+                    type: 'line',
+                    borderColor: 'rgba(225, 29, 72, 0.45)',
+                    borderWidth: 1.5,
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                    fill: false,
+                    yAxisID: 'y1',
+                    order: 2
+                }
+            ];
+
+            // Si el conmutador está activado, añadimos la línea de Coste Horario (€) al eje izquierdo (y)
+            if (showCostLine) {
+                chartDatasets.push({
+                    label: 'Coste Horario (€)',
+                    data: hourlyCosts,
+                    type: 'line',
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    fill: false,
+                    yAxisID: 'y', // Comparte el eje de magnitud izquierdo (kWh) por proximidad de valores
+                    order: 0
+                });
             }
 
             const consumLabelsPlugin = {
@@ -3967,54 +4058,7 @@ function renderTodayPricesChart(dateStr) {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [
-                        {
-                            label: 'Consumo (kWh)',
-                            data: hourlyConsumption,
-                            backgroundColor: backgroundColors,
-                            borderColor: borderColors,
-                            borderWidth: 1.5,
-                            yAxisID: 'y',
-                            order: 4
-                        },
-                        {
-                            label: 'Media de Consumo Horario',
-                            data: Array(24).fill(avgHourlyConsum),
-                            type: 'line',
-                            borderColor: 'rgba(29, 78, 216, 0.85)',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 0,
-                            fill: false,
-                            yAxisID: 'y',
-                            order: 3
-                        },
-                        {
-                            label: 'Precio de la Energía (€/kWh)',
-                            data: hourlyPrices,
-                            type: 'line',
-                            borderColor: 'rgb(225, 29, 72)',
-                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
-                            borderWidth: 2.5,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            fill: false,
-                            yAxisID: 'y1',
-                            order: 1
-                        },
-                        {
-                            label: 'Precio Medio Diario',
-                            data: Array(24).fill(avgPriceOfThatDay),
-                            type: 'line',
-                            borderColor: 'rgba(225, 29, 72, 0.45)',
-                            borderWidth: 1.5,
-                            borderDash: [4, 4],
-                            pointRadius: 0,
-                            fill: false,
-                            yAxisID: 'y1',
-                            order: 2
-                        }
-                    ]
+                    datasets: chartDatasets
                 },
                 plugins: [consumLabelsPlugin],
                 options: {
@@ -4028,10 +4072,10 @@ function renderTodayPricesChart(dateStr) {
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: { display: true, text: 'Consumo (kWh)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
+                            title: { display: true, text: 'Consumo (kWh) / Coste (€)', font: { size: window.innerWidth < 640 ? 8 : 10 } },
                             ticks: {
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
-                                callback: (val) => `${val.toFixed(2)} kWh`
+                                callback: (val) => `${val.toFixed(2)}`
                             },
                             suggestedMax: Math.max(...hourlyConsumption) * 1.15
                         },
