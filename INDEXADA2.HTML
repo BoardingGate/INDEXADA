@@ -170,7 +170,7 @@
         </div>
 
         <!-- Panel de Configuración de Potencia Contratada -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
+         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
                 <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
                 <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
@@ -184,24 +184,33 @@
                     <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
                     <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
+
+
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
                     <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
                     <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
                     <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
                     <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+                    <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                </div>   
             </div>
+            <!-- Contenedor para mostrar la diferencia mensual de potencia -->
+            <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
         </div>
+           
 
         <!-- Panel de Filtros Temporales y Horarios -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
@@ -797,6 +806,7 @@
     </div>
 
     <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
+ <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
     <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
             <!-- Cabecera del modal -->
@@ -826,7 +836,7 @@
                 <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <!-- Contenedor del calendario (con scroll) -->
+            <!-- Cuerpo del modal -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
                 <!-- Leyenda de operaciones -->
                 <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
@@ -881,8 +891,9 @@
     </div>
 
     <!-- MODAL: Tendencia Anual de Precios PVPC -->
+<!-- MODAL: Tendencia Anual de Precios PVPC -->
     <div id="annualTrendModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
+        <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] h-[95vh] flex flex-col overflow-hidden border border-gray-100">
             <!-- Cabecera -->
             <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
                 <div>
@@ -910,20 +921,22 @@
 
             <!-- Cuerpo del modal -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-xs">
-                    <div class="relative h-[200px] sm:h-[260px] w-full">
+                <!-- Tarjeta de Gráfica Ultra-Compacta (reducida a un máximo de 190px de alto) -->
+                <div class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs">
+                    <div class="relative h-[185px] sm:h-[335px] w-full">
                         <canvas id="annualTrendChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Leyenda -->
-                <div class="mb-4 bg-amber-50 border border-amber-100 rounded-lg p-3 text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
+                <!-- Rejilla compacta de 4 columnas -->
+                <div id="annualTrendGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-3">
+                    <!-- Meses dinámicos -->
+                </div>
+
+                <!-- Nota informativa colocada debajo del calendario de meses -->
+                <div class="bg-amber-50 border border-amber-100 rounded-lg p-2.5 text-[10px] sm:text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
                     <span class="font-semibold">💡 Nota:</span>
                     <span>Los promedios y límites se basan en el histórico de la tarifa PVPC oficial de REE. El color de fondo del mes varía gradualmente de verde a rojo según su precio medio.</span>
-                </div>
-                
-                <div id="annualTrendGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Meses dinámicos -->
                 </div>
             </div>
         </div>
@@ -1062,6 +1075,77 @@
                 type === 'success' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
             }`;
         }
+
+        function updatePowerPriceHelpers() {
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+
+            const p1Pvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+            const p2Pvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+            const p1Manual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
+            const p2Manual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
+
+            // Renderizado de las ayudas individuales (formato compacto sin "Total")
+            const renderHelper = (elementId, annualPricePerKw, kwValue) => {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+
+                const dailyPerKw = annualPricePerKw / 365;
+                const monthlyPerKw = dailyPerKw * 30;
+
+                const dailyTotal = dailyPerKw * kwValue;
+                const monthlyTotal = monthlyPerKw * kwValue;
+
+                el.innerHTML = `
+                    <span class="block text-gray-400">Unitario: ${dailyPerKw.toFixed(4)} €/día | ${monthlyPerKw.toFixed(4)} €/mes</span>
+                    <span class="block font-medium text-gray-600">(${kwValue.toFixed(2)} kW): ${dailyTotal.toFixed(3)} €/día | ${monthlyTotal.toFixed(2)} €/mes</span>
+                `;
+            };
+
+            renderHelper('helperP1Pvpc', p1Pvpc, p1Kw);
+            renderHelper('helperP2Pvpc', p2Pvpc, p2Kw);
+            renderHelper('helperP1Manual', p1Manual, p1Kw);
+            renderHelper('helperP2Manual', p2Manual, p2Kw);
+
+            // Cálculo mensual combinado (P1 + P2) de potencia (30 días)
+            const pvpcP1MonthlyTotal = (p1Pvpc / 365) * 30 * p1Kw;
+            const pvpcP2MonthlyTotal = (p2Pvpc / 365) * 30 * p2Kw;
+            const pvpcCombinedMonthly = pvpcP1MonthlyTotal + pvpcP2MonthlyTotal;
+
+            const manualP1MonthlyTotal = (p1Manual / 365) * 30 * p1Kw;
+            const manualP2MonthlyTotal = (p2Manual / 365) * 30 * p2Kw;
+            const manualCombinedMonthly = manualP1MonthlyTotal + manualP2MonthlyTotal;
+
+            const diffMonthly = pvpcCombinedMonthly - manualCombinedMonthly;
+            const diffContainer = document.getElementById('powerDiffContainer');
+
+            if (diffContainer) {
+                if (diffMonthly < 0) {
+                    const savings = Math.abs(diffMonthly);
+                    diffContainer.innerHTML = `
+                        <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-4 py-1.5 rounded-full font-bold border border-emerald-200">
+                            <span>⚡ La potencia PVPC combinada (P1+P2) es <strong>${savings.toFixed(2)} €/mes más barata</strong> que la manual</span>
+                            <span class="text-[10px] font-normal text-gray-500">(${pvpcCombinedMonthly.toFixed(2)} € frente a ${manualCombinedMonthly.toFixed(2)} €)</span>
+                        </div>
+                    `;
+                } else if (diffMonthly > 0) {
+                    const savings = diffMonthly;
+                    diffContainer.innerHTML = `
+                        <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-800 px-4 py-1.5 rounded-full font-bold border border-blue-200">
+                            <span>⚡ La potencia Manual combinada (P1+P2) es <strong>${savings.toFixed(2)} €/mes más barata</strong> que la PVPC</span>
+                            <span class="text-[10px] font-normal text-gray-500">(${manualCombinedMonthly.toFixed(2)} € frente a ${pvpcCombinedMonthly.toFixed(2)} €)</span>
+                        </div>
+                    `;
+                } else {
+                    diffContainer.innerHTML = `
+                        <div class="inline-flex items-center gap-1.5 bg-gray-50 text-gray-700 px-4 py-1.5 rounded-full font-bold border border-gray-200">
+                            <span>Ambos sistemas de potencia combinada (P1+P2) tienen el mismo coste mensual</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
 
         // Datadis Direct Download API Proxy
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
@@ -2483,9 +2567,53 @@
             const avgHourlyKwh = totalCount > 0 ? (totalKwh / totalCount) : 0;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
+            // Obtener la configuración de tramos horarios manuales para el coloreado del eje
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+
             if (window.chartInstance3) {
                 window.chartInstance3.destroy();
             }
+
+            // Plugin para sombrear las bandas del eje horizontal según los tramos manuales laborables
+            const tickBackgroundsHourlyPlugin = {
+                id: 'tickBackgroundsHourly',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde por defecto)
+                        
+                        if (hoursPunta.includes(hour)) {
+                            color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                        } else if (hoursLlano.includes(hour)) {
+                            color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
+                    ctx.restore();
+                }
+            };
 
             const ctx = canvas.getContext('2d');
             window.chartInstance3 = new Chart(ctx, {
@@ -2559,6 +2687,7 @@
                         }
                     ]
                 },
+                plugins: [tickBackgroundsHourlyPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -2589,6 +2718,24 @@
                             ticks: {
                                 callback: function(value) {
                                     return value.toFixed(3) + ' €';
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
                                 }
                             }
                         }
@@ -2781,7 +2928,7 @@
             'evEfficiency'
         ];
 
-        inputsToWatch.forEach(id => {
+       inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', () => {
@@ -2796,6 +2943,7 @@
                         const dd = String(now.getDate()).padStart(2, '0');
                         renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
                     }
+                    updatePowerPriceHelpers();
                 });
                 el.addEventListener('change', () => {
                     saveConfig();
@@ -2809,14 +2957,14 @@
                         const dd = String(now.getDate()).padStart(2, '0');
                         renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
                     }
+                    updatePowerPriceHelpers();
                 });
             }
         });
 
         // Cargamos la configuración guardada
         loadConfig();
-
-        // Iniciamos la carga y renderizado de precios del día actual
+        updatePowerPriceHelpers();   
         initTodayPrices();
 
         window.handleCalendarDayClick = function(dateStr) {
@@ -3164,7 +3312,7 @@
             }
         }
 
-        function renderTodayPricesChart(dateStr) {
+function renderTodayPricesChart(dateStr) {
             const canvas = document.getElementById('todayHourlyPricesChart');
             if (!canvas || !window.todayPricesMap) return;
 
@@ -3190,10 +3338,22 @@
             const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
             const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-            // Obtener los precios manuales configurados por el usuario
+            // Obtener parámetros manuales y calendario para determinar el tramo correspondiente a hoy
             const priceP1 = parseFloat(document.getElementById('pricePunta').value) || 0;
             const priceP2 = parseFloat(document.getElementById('priceLlano').value) || 0;
             const priceP3 = parseFloat(document.getElementById('priceValle').value) || 0;
+
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+            const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
+
+            const dateParts = dateStr.split('-');
+            const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const dayOfWeek = dateObj.getDay(); 
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+            const isHoliday = holidays.includes(dayMonthStr);
 
             document.getElementById('todayAvgBadge').innerHTML = `
                 <span class="bg-blue-600 text-white font-black px-2.5 py-1 rounded-md text-xs sm:text-sm block text-center font-mono">
@@ -3201,7 +3361,7 @@
                 </span>
             `;
 
-            // Leyenda actualizada que incluye la referencia visual a la Tarifa Manual
+            // Leyenda compacta
             document.getElementById('todayChartLegend').innerHTML = `
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo (${minVal.toFixed(4)})</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo (${maxVal.toFixed(4)})</span>
@@ -3235,6 +3395,7 @@
                 window.todayChartInstance.destroy();
             }
 
+            // Plugin para añadir valores numéricos encima de las barras
             const barLabelsPlugin = {
                 id: 'barLabelsToday',
                 afterDatasetsDraw(chart) {
@@ -3253,6 +3414,48 @@
                             ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
                         }
                     });
+                    ctx.restore();
+                }
+            };
+
+            // Plugin para sombrear las bandas del eje horizontal
+            const tickBackgroundsPlugin = {
+                id: 'tickBackgroundsToday',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde por defecto)
+                        
+                        if (!((isWeekend && useWeekendValle) || isHoliday)) {
+                            if (hoursPunta.includes(hour)) {
+                                color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                            } else if (hoursLlano.includes(hour)) {
+                                color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                            }
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
                     ctx.restore();
                 }
             };
@@ -3282,7 +3485,6 @@
                             fill: false,
                             order: 4
                         },
-                        // Línea horizontal para Tramo Punta
                         {
                             label: 'Punta Manual',
                             data: Array(24).fill(priceP1),
@@ -3294,7 +3496,6 @@
                             fill: false,
                             order: 1
                         },
-                        // Línea horizontal para Tramo Llano
                         {
                             label: 'Llano Manual',
                             data: Array(24).fill(priceP2),
@@ -3306,7 +3507,6 @@
                             fill: false,
                             order: 2
                         },
-                        // Línea horizontal para Tramo Valle
                         {
                             label: 'Valle Manual',
                             data: Array(24).fill(priceP3),
@@ -3320,7 +3520,7 @@
                         }
                     ]
                 },
-                plugins: [barLabelsPlugin],
+                plugins: [barLabelsPlugin, tickBackgroundsPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -3334,12 +3534,27 @@
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
-                            // Asegura que la escala muestre la línea aunque el precio manual supere al precio PVPC
                             suggestedMax: Math.max(maxVal, priceP1, priceP2, priceP3) * 1.1
                         },
                         x: {
                             ticks: {
-                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                                font: { 
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                                        return 'rgb(16, 185, 129)'; // Valle (Verde)
+                                    }
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
+                                }
                             }
                         }
                     }
@@ -3417,6 +3632,20 @@ function renderDayDetailChart(dateStr) {
             const priceP2 = parseFloat(document.getElementById('priceLlano').value) || 0;
             const priceP3 = parseFloat(document.getElementById('priceValle').value) || 0;
 
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            // Analizar la fecha seleccionada para determinar si es fin de semana o festivo
+            const dateParts = dateStr.split('-');
+            const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const dayOfWeek = dateObj.getDay(); 
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+            const isHoliday = holidaysList.includes(dayMonthStr);
+
             // Actualización de la leyenda superior del modal para incluir los tramos manuales
             document.getElementById('detailModalLegend').innerHTML = `
                 <div class="flex flex-wrap gap-x-3 gap-y-1.5 items-center w-full">
@@ -3456,6 +3685,7 @@ function renderDayDetailChart(dateStr) {
                 window.detailChartInstance.destroy();
             }
 
+            // Plugin para añadir valores numéricos encima de las barras
             const barLabelsPlugin = {
                 id: 'barLabels',
                 afterDatasetsDraw(chart) {
@@ -3474,6 +3704,48 @@ function renderDayDetailChart(dateStr) {
                             ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
                         }
                     });
+                    ctx.restore();
+                }
+            };
+
+            // Plugin para sombrear el fondo de cada hora del eje X en el modal de detalle de precios
+            const tickBackgroundsDetailPlugin = {
+                id: 'tickBackgroundsDetail',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde)
+                        
+                        if (!((isWeekend && useWeekendValle) || isHoliday)) {
+                            if (hoursPunta.includes(hour)) {
+                                color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                            } else if (hoursLlano.includes(hour)) {
+                                color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                            }
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
                     ctx.restore();
                 }
             };
@@ -3503,7 +3775,6 @@ function renderDayDetailChart(dateStr) {
                             fill: false,
                             order: 4
                         },
-                        // Líneas de referencia para la Tarifa Manual
                         {
                             label: 'Punta Manual',
                             data: Array(24).fill(priceP1),
@@ -3539,7 +3810,7 @@ function renderDayDetailChart(dateStr) {
                         }
                     ]
                 },
-                plugins: [barLabelsPlugin],
+                plugins: [barLabelsPlugin, tickBackgroundsDetailPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -3554,19 +3825,33 @@ function renderDayDetailChart(dateStr) {
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
-                            // Garantiza que el eje Y cubra el valor máximo entre los precios del PVPC y las tarifas manuales
                             suggestedMax: Math.max(maxVal, priceP1, priceP2, priceP3) * 1.1
                         },
                         x: {
                             ticks: {
-                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                                font: { 
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                                        return 'rgb(16, 185, 129)'; // Valle (Verde)
+                                    }
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
+                                }
                             }
                         }
                     }
                 }
             });
         }
-
 
         // --- MÓDULO: TENDENCIA ANUAL DE PRECIOS PVPC ---
 
@@ -3687,22 +3972,37 @@ function renderDayDetailChart(dateStr) {
                 if (window.annualChartInstance) {
                     window.annualChartInstance.destroy();
                 }
-
-                const barLabelsTrendPlugin = {
+const barLabelsTrendPlugin = {
                     id: 'barLabelsTrend',
                     afterDatasetsDraw(chart) {
-                        const { ctx, data } = chart;
+                        const { ctx } = chart;
                         ctx.save();
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
+                        
                         const isSmallScreen = window.innerWidth < 640;
-                        ctx.font = `bold ${isSmallScreen ? '6px' : '9px'} sans-serif`;
-                        ctx.fillStyle = '#334155';
+                        const fontSize = isSmallScreen ? 8 : 11;
+                        const lineHeight = isSmallScreen ? 9 : 13;
+                        ctx.font = `bold ${fontSize}px sans-serif`;
                         
                         chart.getDatasetMeta(0).data.forEach((bar, index) => {
-                            const val = data.datasets[0].data[index];
-                            if (val !== null && val !== undefined) {
-                                ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
+                            const monthInfo = calculatedMonths[index];
+                            if (monthInfo && monthInfo.hasData) {
+                                const maxText = `▲ ${monthInfo.max.toFixed(4)}`;
+                                const avgText = `● ${monthInfo.avg.toFixed(4)}`;
+                                const minText = `▼ ${monthInfo.min.toFixed(4)}`;
+                                
+                                // Máximo (Línea superior en color rojo)
+                                ctx.fillStyle = '#b91c1c';
+                                ctx.fillText(maxText, bar.x, bar.y - (lineHeight * 2) - 2);
+                                
+                                // Medio / Promedio (Línea intermedia en color azul)
+                                ctx.fillStyle = '#1e3a8a';
+                                ctx.fillText(avgText, bar.x, bar.y - lineHeight - 2);
+                                
+                                // Mínimo (Línea inferior en color verde)
+                                ctx.fillStyle = '#047857';
+                                ctx.fillText(minText, bar.x, bar.y - 2);
                             }
                         });
                         ctx.restore();
@@ -3760,7 +4060,7 @@ function renderDayDetailChart(dateStr) {
                                     font: { size: window.innerWidth < 640 ? 7 : 9 },
                                     callback: (val) => `${val.toFixed(3)} €`
                                 },
-                                suggestedMax: maxMonthAvg * 1.15
+                                suggestedMax: maxMonthAvg * 1.30
                             },
                             x: {
                                 ticks: {
@@ -3772,22 +4072,24 @@ function renderDayDetailChart(dateStr) {
                 });
             }
 
-            let gridHtml = "";
+let gridHtml = "";
             calculatedMonths.forEach(m => {
                 if (m.hasData) {
                     const bgColor = getTrendColor(m.avg, minMonthAvg, maxMonthAvg);
                     gridHtml += `
-                        <div class="border-2 border-gray-300 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow hover:scale-[1.01] transition-all min-h-[92px] cursor-pointer" 
+                        <div class="border border-gray-300 rounded-lg p-2 flex flex-col justify-between shadow-xs hover:shadow transition-all cursor-pointer" 
                              style="background-color: ${bgColor};"
                              onclick="switchToMonthlyCalendar('${year}', ${m.monthIndex})"
                              title="Clic para abrir el calendario diario detallado de ${m.name}">
-                            <h5 class="text-xs font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-2 py-0.5 self-start uppercase tracking-wider">
+                            <h5 class="text-[10px] font-black text-slate-900 bg-white/85 backdrop-blur-xs rounded px-1.5 py-0.5 self-start uppercase tracking-wider">
                                 ${m.name}
                             </h5>
-                            <div class="text-[10px] leading-tight text-right mt-3 font-mono font-bold">
-                                <p class="text-emerald-800" title="Mínimo horario">▼ Mín: ${m.min.toFixed(4)}</p>
-                                <p class="text-rose-800" title="Máximo horario">▲ Máx: ${m.max.toFixed(4)}</p>
-                                <p class="text-blue-900 border-t border-gray-400/40 mt-1.5 pt-1.5 text-xs font-black" title="Precio medio mensual">
+                            <div class="mt-1 font-mono leading-none">
+                                <div class="flex justify-between gap-1.5 text-[10px] sm:text-[11px] font-extrabold mb-0.5">
+                                    <span class="text-emerald-600" title="Mínimo">▼ ${m.min.toFixed(4)}</span>
+                                    <span class="text-rose-600" title="Máximo">▲ ${m.max.toFixed(4)}</span>
+                                </div>
+                                <p class="text-blue-950 border-t border-gray-300/60 pt-1 text-xs sm:text-sm text-right font-black" title="Precio medio mensual">
                                     μ: ${m.avg.toFixed(4)}
                                 </p>
                             </div>
@@ -3795,9 +4097,9 @@ function renderDayDetailChart(dateStr) {
                     `;
                 } else {
                     gridHtml += `
-                        <div class="bg-gray-100 border border-gray-300 rounded-xl p-4 flex flex-col justify-start min-h-[92px] opacity-40">
-                            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-wider text-left">${m.name}</h5>
-                            <p class="text-[9px] text-gray-400 mt-auto text-right font-medium">Sin datos</p>
+                        <div class="bg-gray-100/65 border border-gray-250 rounded-lg p-2 flex flex-col justify-start opacity-45">
+                            <h5 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">${m.name}</h5>
+                            <p class="text-[8px] text-gray-400 mt-1 text-right font-medium">Sin datos</p>
                         </div>
                     `;
                 }
@@ -3876,7 +4178,7 @@ function renderDayDetailChart(dateStr) {
             }
         }
 
-       function renderDayConsumHourlyChart(dateStr) {
+function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
@@ -3901,20 +4203,20 @@ function renderDayDetailChart(dateStr) {
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
 
+            // Pre-cálculo del día seleccionado (fin de semana o festivo) para el eje
+            const dateParts = dateStr.split('-');
+            const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const dayOfWeek = dateObj.getDay(); 
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+            const isHoliday = holidaysList.includes(dayMonthStr);
+
             for (let h = 0; h < 24; h++) {
                 let precio = priceValle;
                 if (rateMode.value === 'pvpc') {
                     const priceKey = `${dateStr}_T${String(h).padStart(2, '0')}`;
                     precio = window.queryPricesDb[priceKey] || 0;
                 } else {
-                    const dateParts = dateStr.split('-');
-                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                    const dayOfWeek = dateObj.getDay(); 
-                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                    
-                    const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
-                    const isHoliday = holidaysList.includes(dayMonthStr);
-
                     if ((isWeekend && useWeekendValle) || isHoliday) {
                         precio = priceValle;
                     } else {
@@ -3967,7 +4269,6 @@ function renderDayDetailChart(dateStr) {
                     }
                 }
 
-                // Cálculo preciso del coste de esta hora
                 hourlyCosts[h] = hourlyConsumption[h] * hourlyPrices[h];
             }
 
@@ -4010,7 +4311,6 @@ function renderDayDetailChart(dateStr) {
                 window.dayConsumChartInstance.destroy();
             }
 
-            // Colección base de datasets
             const chartDatasets = [
                 {
                     label: 'Consumo (kWh)',
@@ -4060,7 +4360,6 @@ function renderDayDetailChart(dateStr) {
                 }
             ];
 
-            // Si el conmutador está activado, añadimos la línea de Coste Horario (€) al eje izquierdo (y)
             if (showCostLine) {
                 chartDatasets.push({
                     label: 'Coste Horario (€)',
@@ -4072,7 +4371,7 @@ function renderDayDetailChart(dateStr) {
                     pointRadius: 3,
                     pointHoverRadius: 6,
                     fill: false,
-                    yAxisID: 'y', // Comparte el eje de magnitud izquierdo (kWh) por proximidad de valores
+                    yAxisID: 'y', 
                     order: 0
                 });
             }
@@ -4098,6 +4397,48 @@ function renderDayDetailChart(dateStr) {
                 }
             };
 
+            // Plugin para sombrear el fondo de cada hora del eje X en el modal
+            const tickBackgroundsConsumPlugin = {
+                id: 'tickBackgroundsConsum',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde)
+                        
+                        if (!((isWeekend && useWeekendValle) || isHoliday)) {
+                            if (hoursPunta.includes(hour)) {
+                                color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                            } else if (hoursLlano.includes(hour)) {
+                                color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                            }
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
+                    ctx.restore();
+                }
+            };
+
             const ctx = canvas.getContext('2d');
             window.dayConsumChartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -4105,7 +4446,7 @@ function renderDayDetailChart(dateStr) {
                     labels: labels,
                     datasets: chartDatasets
                 },
-                plugins: [consumLabelsPlugin],
+                plugins: [consumLabelsPlugin, tickBackgroundsConsumPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -4135,6 +4476,27 @@ function renderDayDetailChart(dateStr) {
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
                             suggestedMax: Math.max(...hourlyPrices) * 1.15
+                        },
+                        x: {
+                            ticks: {
+                                font: { 
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                                        return 'rgb(16, 185, 129)'; // Valle (Verde)
+                                    }
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
+                                }
+                            }
                         }
                     }
                 }
