@@ -2567,9 +2567,53 @@
             const avgHourlyKwh = totalCount > 0 ? (totalKwh / totalCount) : 0;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
 
+            // Obtener la configuración de tramos horarios manuales para el coloreado del eje
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+
             if (window.chartInstance3) {
                 window.chartInstance3.destroy();
             }
+
+            // Plugin para sombrear las bandas del eje horizontal según los tramos manuales laborables
+            const tickBackgroundsHourlyPlugin = {
+                id: 'tickBackgroundsHourly',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde por defecto)
+                        
+                        if (hoursPunta.includes(hour)) {
+                            color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                        } else if (hoursLlano.includes(hour)) {
+                            color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
+                    ctx.restore();
+                }
+            };
 
             const ctx = canvas.getContext('2d');
             window.chartInstance3 = new Chart(ctx, {
@@ -2643,6 +2687,7 @@
                         }
                     ]
                 },
+                plugins: [tickBackgroundsHourlyPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -2673,6 +2718,24 @@
                             ticks: {
                                 callback: function(value) {
                                     return value.toFixed(3) + ' €';
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
                                 }
                             }
                         }
