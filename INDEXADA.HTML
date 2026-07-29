@@ -3768,22 +3768,37 @@ function renderDayDetailChart(dateStr) {
                 if (window.annualChartInstance) {
                     window.annualChartInstance.destroy();
                 }
-
-                const barLabelsTrendPlugin = {
+const barLabelsTrendPlugin = {
                     id: 'barLabelsTrend',
                     afterDatasetsDraw(chart) {
-                        const { ctx, data } = chart;
+                        const { ctx } = chart;
                         ctx.save();
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
+                        
                         const isSmallScreen = window.innerWidth < 640;
-                        ctx.font = `bold ${isSmallScreen ? '6px' : '9px'} sans-serif`;
-                        ctx.fillStyle = '#334155';
+                        const fontSize = isSmallScreen ? 6 : 8;
+                        const lineHeight = isSmallScreen ? 7 : 10;
+                        ctx.font = `bold ${fontSize}px sans-serif`;
                         
                         chart.getDatasetMeta(0).data.forEach((bar, index) => {
-                            const val = data.datasets[0].data[index];
-                            if (val !== null && val !== undefined) {
-                                ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
+                            const monthInfo = calculatedMonths[index];
+                            if (monthInfo && monthInfo.hasData) {
+                                const maxText = `▲ ${monthInfo.max.toFixed(4)}`;
+                                const avgText = `● ${monthInfo.avg.toFixed(4)}`;
+                                const minText = `▼ ${monthInfo.min.toFixed(4)}`;
+                                
+                                // Máximo (Línea superior en color rojo)
+                                ctx.fillStyle = '#b91c1c';
+                                ctx.fillText(maxText, bar.x, bar.y - (lineHeight * 2) - 2);
+                                
+                                // Medio / Promedio (Línea intermedia en color azul)
+                                ctx.fillStyle = '#1e3a8a';
+                                ctx.fillText(avgText, bar.x, bar.y - lineHeight - 2);
+                                
+                                // Mínimo (Línea inferior en color verde)
+                                ctx.fillStyle = '#047857';
+                                ctx.fillText(minText, bar.x, bar.y - 2);
                             }
                         });
                         ctx.restore();
@@ -3841,7 +3856,7 @@ function renderDayDetailChart(dateStr) {
                                     font: { size: window.innerWidth < 640 ? 7 : 9 },
                                     callback: (val) => `${val.toFixed(3)} €`
                                 },
-                                suggestedMax: maxMonthAvg * 1.15
+                                suggestedMax: maxMonthAvg * 1.30
                             },
                             x: {
                                 ticks: {
