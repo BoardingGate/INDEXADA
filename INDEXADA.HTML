@@ -170,7 +170,7 @@
         </div>
 
         <!-- Panel de Configuración de Potencia Contratada -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
+         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
                 <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
                 <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
@@ -205,9 +205,12 @@
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
                     <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>               
+                </div>   
             </div>
+            <!-- Contenedor para mostrar la diferencia mensual de potencia -->
+            <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
         </div>
+           
 
         <!-- Panel de Filtros Temporales y Horarios -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
@@ -1069,7 +1072,6 @@
             }`;
         }
 
-
         function updatePowerPriceHelpers() {
             const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
             const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
@@ -1079,6 +1081,7 @@
             const p1Manual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
             const p2Manual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
 
+            // Renderizado de las ayudas individuales (formato compacto sin "Total")
             const renderHelper = (elementId, annualPricePerKw, kwValue) => {
                 const el = document.getElementById(elementId);
                 if (!el) return;
@@ -1099,7 +1102,46 @@
             renderHelper('helperP2Pvpc', p2Pvpc, p2Kw);
             renderHelper('helperP1Manual', p1Manual, p1Kw);
             renderHelper('helperP2Manual', p2Manual, p2Kw);
+
+            // Cálculo mensual combinado (P1 + P2) de potencia (30 días)
+            const pvpcP1MonthlyTotal = (p1Pvpc / 365) * 30 * p1Kw;
+            const pvpcP2MonthlyTotal = (p2Pvpc / 365) * 30 * p2Kw;
+            const pvpcCombinedMonthly = pvpcP1MonthlyTotal + pvpcP2MonthlyTotal;
+
+            const manualP1MonthlyTotal = (p1Manual / 365) * 30 * p1Kw;
+            const manualP2MonthlyTotal = (p2Manual / 365) * 30 * p2Kw;
+            const manualCombinedMonthly = manualP1MonthlyTotal + manualP2MonthlyTotal;
+
+            const diffMonthly = pvpcCombinedMonthly - manualCombinedMonthly;
+            const diffContainer = document.getElementById('powerDiffContainer');
+
+            if (diffContainer) {
+                if (diffMonthly < 0) {
+                    const savings = Math.abs(diffMonthly);
+                    diffContainer.innerHTML = `
+                        <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-4 py-1.5 rounded-full font-bold border border-emerald-200">
+                            <span>⚡ La potencia PVPC combinada (P1+P2) es <strong>${savings.toFixed(2)} €/mes más barata</strong> que la manual</span>
+                            <span class="text-[10px] font-normal text-gray-500">(${pvpcCombinedMonthly.toFixed(2)} € frente a ${manualCombinedMonthly.toFixed(2)} €)</span>
+                        </div>
+                    `;
+                } else if (diffMonthly > 0) {
+                    const savings = diffMonthly;
+                    diffContainer.innerHTML = `
+                        <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-800 px-4 py-1.5 rounded-full font-bold border border-blue-200">
+                            <span>⚡ La potencia Manual combinada (P1+P2) es <strong>${savings.toFixed(2)} €/mes más barata</strong> que la PVPC</span>
+                            <span class="text-[10px] font-normal text-gray-500">(${manualCombinedMonthly.toFixed(2)} € frente a ${pvpcCombinedMonthly.toFixed(2)} €)</span>
+                        </div>
+                    `;
+                } else {
+                    diffContainer.innerHTML = `
+                        <div class="inline-flex items-center gap-1.5 bg-gray-50 text-gray-700 px-4 py-1.5 rounded-full font-bold border border-gray-200">
+                            <span>Ambos sistemas de potencia combinada (P1+P2) tienen el mismo coste mensual</span>
+                        </div>
+                    `;
+                }
+            }
         }
+
 
         // Datadis Direct Download API Proxy
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
