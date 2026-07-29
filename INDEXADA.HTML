@@ -835,24 +835,27 @@
                 <span id="queryPricesStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <!-- Contenedor del calendario (con scroll) -->
+            <!-- Cuerpo del modal -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <!-- Leyenda de operaciones -->
-                <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
-                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha. El color de las casillas indica la tendencia del precio medio del día (rango de tonalidad en verde para los más baratos, rojo para los más caros del rango).</span>
+                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-4 shadow-xs">
+                    <!-- Reducción de la altura del gráfico para lograr el reparto 50/50 -->
+                    <div class="relative h-[180px] sm:h-[280px] w-full">
+                        <canvas id="annualTrendChart"></canvas>
+                    </div>
                 </div>
 
-                <!-- Fila de Indicadores del Periodo Seleccionado -->
-                <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-                    <!-- Se rellenará dinámicamente mediante JavaScript -->
+                <!-- Leyenda compactada -->
+                <div class="mb-3 bg-amber-50 border border-amber-100 rounded-lg p-2.5 text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
+                    <span class="font-semibold">💡 Nota:</span>
+                    <span>Los promedios y límites se basan en el histórico de la tarifa PVPC oficial de REE. El color de fondo del mes varía de verde a rojo según su precio medio.</span>
                 </div>
-
-                <div id="modalAiRecommendation" class="hidden mb-6 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
-
-                <div id="queryCalendarContainer" class="space-y-8">
-                    <!-- Se renderizarán los meses dinámicamente -->
+                
+                <!-- Ajuste a más columnas por fila (gap-2 y rejilla compacta) para reducir la altura total -->
+                <div id="annualTrendGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    <!-- Meses dinámicos -->
                 </div>
             </div>
+
          </div>
     </div>
 
@@ -3868,24 +3871,24 @@ const barLabelsTrendPlugin = {
                 });
             }
 
-         let gridHtml = "";
+let gridHtml = "";
             calculatedMonths.forEach(m => {
                 if (m.hasData) {
                     const bgColor = getTrendColor(m.avg, minMonthAvg, maxMonthAvg);
                     gridHtml += `
-                        <div class="border border-gray-350 rounded-lg p-2.5 flex flex-col justify-between shadow-sm hover:shadow transition-all cursor-pointer" 
+                        <div class="border border-gray-300 rounded-lg p-2 flex flex-col justify-between shadow-xs hover:shadow transition-all cursor-pointer" 
                              style="background-color: ${bgColor};"
                              onclick="switchToMonthlyCalendar('${year}', ${m.monthIndex})"
                              title="Clic para abrir el calendario diario detallado de ${m.name}">
-                            <h5 class="text-[10px] font-black text-slate-900 bg-white/80 backdrop-blur-xs rounded px-1.5 py-0.5 self-start uppercase tracking-wider">
+                            <h5 class="text-[10px] font-black text-slate-900 bg-white/85 backdrop-blur-xs rounded px-1.5 py-0.5 self-start uppercase tracking-wider">
                                 ${m.name}
                             </h5>
-                            <div class="text-[9px] leading-tight mt-1.5 font-mono font-bold">
-                                <div class="flex justify-between gap-1 text-[8px] text-gray-600 mb-1">
-                                    <span class="text-emerald-850" title="Mínimo">▼ ${m.min.toFixed(4)}</span>
-                                    <span class="text-rose-850" title="Máximo">▲ ${m.max.toFixed(4)}</span>
+                            <div class="mt-1 font-mono leading-none">
+                                <div class="flex justify-between gap-1.5 text-[10px] sm:text-[11px] font-extrabold mb-0.5">
+                                    <span class="text-emerald-600" title="Mínimo">▼ ${m.min.toFixed(4)}</span>
+                                    <span class="text-rose-600" title="Máximo">▲ ${m.max.toFixed(4)}</span>
                                 </div>
-                                <p class="text-blue-950 border-t border-gray-450 mt-1 pt-1 text-[11px] text-right font-black" title="Precio medio mensual">
+                                <p class="text-blue-950 border-t border-gray-300/60 pt-1 text-xs sm:text-sm text-right font-black" title="Precio medio mensual">
                                     μ: ${m.avg.toFixed(4)}
                                 </p>
                             </div>
@@ -3893,9 +3896,9 @@ const barLabelsTrendPlugin = {
                     `;
                 } else {
                     gridHtml += `
-                        <div class="bg-gray-100 border border-gray-300 rounded-lg p-2.5 flex flex-col justify-start opacity-40">
+                        <div class="bg-gray-100/65 border border-gray-250 rounded-lg p-2 flex flex-col justify-start opacity-45">
                             <h5 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">${m.name}</h5>
-                            <p class="text-[8px] text-gray-400 mt-2 text-right font-medium">Sin datos</p>
+                            <p class="text-[8px] text-gray-400 mt-1 text-right font-medium">Sin datos</p>
                         </div>
                     `;
                 }
