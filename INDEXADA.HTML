@@ -891,6 +891,7 @@
     </div>
 
     <!-- MODAL: Tendencia Anual de Precios PVPC -->
+<!-- MODAL: Tendencia Anual de Precios PVPC -->
     <div id="annualTrendModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] h-[95vh] flex flex-col overflow-hidden border border-gray-100">
             <!-- Cabecera -->
@@ -920,20 +921,22 @@
 
             <!-- Cuerpo del modal -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-xs">
-                    <div class="relative h-[280px] sm:h-[450px] w-full">
+                <!-- Tarjeta de Gráfica Ultra-Compacta (reducida a un máximo de 190px de alto) -->
+                <div class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs">
+                    <div class="relative h-[130px] sm:h-[190px] w-full">
                         <canvas id="annualTrendChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Leyenda -->
-                <div class="mb-4 bg-amber-50 border border-amber-100 rounded-lg p-3 text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
+                <!-- Rejilla compacta de 4 columnas -->
+                <div id="annualTrendGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-3">
+                    <!-- Meses dinámicos -->
+                </div>
+
+                <!-- Nota informativa colocada debajo del calendario de meses -->
+                <div class="bg-amber-50 border border-amber-100 rounded-lg p-2.5 text-[10px] sm:text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
                     <span class="font-semibold">💡 Nota:</span>
                     <span>Los promedios y límites se basan en el histórico de la tarifa PVPC oficial de REE. El color de fondo del mes varía gradualmente de verde a rojo según su precio medio.</span>
-                </div>
-                
-                <div id="annualTrendGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Meses dinámicos -->
                 </div>
             </div>
         </div>
