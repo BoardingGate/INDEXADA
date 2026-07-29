@@ -806,6 +806,7 @@
     </div>
 
     <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
+ <!-- MODAL PRINCIPAL: Calendario de Precios PVPC -->
     <div id="priceQueryModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
             <!-- Cabecera del modal -->
@@ -837,25 +838,22 @@
 
             <!-- Cuerpo del modal -->
             <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="bg-white p-4 rounded-xl border border-gray-200 mb-4 shadow-xs">
-                    <!-- Reducción de la altura del gráfico para lograr el reparto 50/50 -->
-                    <div class="relative h-[180px] sm:h-[280px] w-full">
-                        <canvas id="annualTrendChart"></canvas>
-                    </div>
+                <!-- Leyenda de operaciones -->
+                <div class="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-1.5 leading-relaxed">
+                    <span>Los precios se muestran en €/kWh. Haz clic en cualquiera de las casillas diarias del calendario para desplegar la gráfica detallada de 24 horas correspondientes a esa fecha. El color de las casillas indica la tendencia del precio medio del día (rango de tonalidad en verde para los más baratos, rojo para los más caros del rango).</span>
                 </div>
 
-                <!-- Leyenda compactada -->
-                <div class="mb-3 bg-amber-50 border border-amber-100 rounded-lg p-2.5 text-[11px] text-amber-900 flex items-start gap-1.5 leading-relaxed">
-                    <span class="font-semibold">💡 Nota:</span>
-                    <span>Los promedios y límites se basan en el histórico de la tarifa PVPC oficial de REE. El color de fondo del mes varía de verde a rojo según su precio medio.</span>
+                <!-- Fila de Indicadores del Periodo Seleccionado -->
+                <div id="queryPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                    <!-- Se rellenará dinámicamente mediante JavaScript -->
                 </div>
-                
-                <!-- Ajuste a más columnas por fila (gap-2 y rejilla compacta) para reducir la altura total -->
-                <div id="annualTrendGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    <!-- Meses dinámicos -->
+
+                <div id="modalAiRecommendation" class="hidden mb-6 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
+
+                <div id="queryCalendarContainer" class="space-y-8">
+                    <!-- Se renderizarán los meses dinámicamente -->
                 </div>
             </div>
-
          </div>
     </div>
 
