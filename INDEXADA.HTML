@@ -3777,8 +3777,8 @@ const barLabelsTrendPlugin = {
                         ctx.textBaseline = 'bottom';
                         
                         const isSmallScreen = window.innerWidth < 640;
-                        const fontSize = isSmallScreen ? 6 : 8;
-                        const lineHeight = isSmallScreen ? 7 : 10;
+                        const fontSize = isSmallScreen ? 8 : 11;
+                        const lineHeight = isSmallScreen ? 9 : 13;
                         ctx.font = `bold ${fontSize}px sans-serif`;
                         
                         chart.getDatasetMeta(0).data.forEach((bar, index) => {
@@ -3868,22 +3868,24 @@ const barLabelsTrendPlugin = {
                 });
             }
 
-            let gridHtml = "";
+         let gridHtml = "";
             calculatedMonths.forEach(m => {
                 if (m.hasData) {
                     const bgColor = getTrendColor(m.avg, minMonthAvg, maxMonthAvg);
                     gridHtml += `
-                        <div class="border-2 border-gray-300 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow hover:scale-[1.01] transition-all min-h-[92px] cursor-pointer" 
+                        <div class="border border-gray-350 rounded-lg p-2.5 flex flex-col justify-between shadow-sm hover:shadow transition-all cursor-pointer" 
                              style="background-color: ${bgColor};"
                              onclick="switchToMonthlyCalendar('${year}', ${m.monthIndex})"
                              title="Clic para abrir el calendario diario detallado de ${m.name}">
-                            <h5 class="text-xs font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-2 py-0.5 self-start uppercase tracking-wider">
+                            <h5 class="text-[10px] font-black text-slate-900 bg-white/80 backdrop-blur-xs rounded px-1.5 py-0.5 self-start uppercase tracking-wider">
                                 ${m.name}
                             </h5>
-                            <div class="text-[10px] leading-tight text-right mt-3 font-mono font-bold">
-                                <p class="text-emerald-800" title="Mínimo horario">▼ Mín: ${m.min.toFixed(4)}</p>
-                                <p class="text-rose-800" title="Máximo horario">▲ Máx: ${m.max.toFixed(4)}</p>
-                                <p class="text-blue-900 border-t border-gray-400/40 mt-1.5 pt-1.5 text-xs font-black" title="Precio medio mensual">
+                            <div class="text-[9px] leading-tight mt-1.5 font-mono font-bold">
+                                <div class="flex justify-between gap-1 text-[8px] text-gray-600 mb-1">
+                                    <span class="text-emerald-850" title="Mínimo">▼ ${m.min.toFixed(4)}</span>
+                                    <span class="text-rose-850" title="Máximo">▲ ${m.max.toFixed(4)}</span>
+                                </div>
+                                <p class="text-blue-950 border-t border-gray-450 mt-1 pt-1 text-[11px] text-right font-black" title="Precio medio mensual">
                                     μ: ${m.avg.toFixed(4)}
                                 </p>
                             </div>
@@ -3891,9 +3893,9 @@ const barLabelsTrendPlugin = {
                     `;
                 } else {
                     gridHtml += `
-                        <div class="bg-gray-100 border border-gray-300 rounded-xl p-4 flex flex-col justify-start min-h-[92px] opacity-40">
-                            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-wider text-left">${m.name}</h5>
-                            <p class="text-[9px] text-gray-400 mt-auto text-right font-medium">Sin datos</p>
+                        <div class="bg-gray-100 border border-gray-300 rounded-lg p-2.5 flex flex-col justify-start opacity-40">
+                            <h5 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">${m.name}</h5>
+                            <p class="text-[8px] text-gray-400 mt-2 text-right font-medium">Sin datos</p>
                         </div>
                     `;
                 }
