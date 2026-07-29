@@ -3249,7 +3249,7 @@
             }
         }
 
-        function renderTodayPricesChart(dateStr) {
+function renderTodayPricesChart(dateStr) {
             const canvas = document.getElementById('todayHourlyPricesChart');
             if (!canvas || !window.todayPricesMap) return;
 
@@ -3275,10 +3275,22 @@
             const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
             const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
-            // Obtener los precios manuales configurados por el usuario
+            // Obtener parámetros manuales y calendario para determinar el tramo correspondiente a hoy
             const priceP1 = parseFloat(document.getElementById('pricePunta').value) || 0;
             const priceP2 = parseFloat(document.getElementById('priceLlano').value) || 0;
             const priceP3 = parseFloat(document.getElementById('priceValle').value) || 0;
+
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+            const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
+
+            const dateParts = dateStr.split('-');
+            const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const dayOfWeek = dateObj.getDay(); 
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+            const isHoliday = holidays.includes(dayMonthStr);
 
             document.getElementById('todayAvgBadge').innerHTML = `
                 <span class="bg-blue-600 text-white font-black px-2.5 py-1 rounded-md text-xs sm:text-sm block text-center font-mono">
@@ -3286,7 +3298,7 @@
                 </span>
             `;
 
-            // Leyenda actualizada que incluye la referencia visual a la Tarifa Manual
+            // Leyenda compacta
             document.getElementById('todayChartLegend').innerHTML = `
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Mínimo (${minVal.toFixed(4)})</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Máximo (${maxVal.toFixed(4)})</span>
@@ -3320,6 +3332,7 @@
                 window.todayChartInstance.destroy();
             }
 
+            // Plugin para añadir valores numéricos encima de las barras
             const barLabelsPlugin = {
                 id: 'barLabelsToday',
                 afterDatasetsDraw(chart) {
@@ -3338,6 +3351,48 @@
                             ctx.fillText(val.toFixed(4), bar.x, bar.y - 3);
                         }
                     });
+                    ctx.restore();
+                }
+            };
+
+            // Plugin para sombrear las bandas del eje horizontal
+            const tickBackgroundsPlugin = {
+                id: 'tickBackgroundsToday',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde por defecto)
+                        
+                        if (!((isWeekend && useWeekendValle) || isHoliday)) {
+                            if (hoursPunta.includes(hour)) {
+                                color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                            } else if (hoursLlano.includes(hour)) {
+                                color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                            }
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
                     ctx.restore();
                 }
             };
@@ -3367,7 +3422,6 @@
                             fill: false,
                             order: 4
                         },
-                        // Línea horizontal para Tramo Punta
                         {
                             label: 'Punta Manual',
                             data: Array(24).fill(priceP1),
@@ -3379,7 +3433,6 @@
                             fill: false,
                             order: 1
                         },
-                        // Línea horizontal para Tramo Llano
                         {
                             label: 'Llano Manual',
                             data: Array(24).fill(priceP2),
@@ -3391,7 +3444,6 @@
                             fill: false,
                             order: 2
                         },
-                        // Línea horizontal para Tramo Valle
                         {
                             label: 'Valle Manual',
                             data: Array(24).fill(priceP3),
@@ -3405,7 +3457,7 @@
                         }
                     ]
                 },
-                plugins: [barLabelsPlugin],
+                plugins: [barLabelsPlugin, tickBackgroundsPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -3419,12 +3471,27 @@
                                 font: { size: window.innerWidth < 640 ? 7 : 9 },
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
-                            // Asegura que la escala muestre la línea aunque el precio manual supere al precio PVPC
                             suggestedMax: Math.max(maxVal, priceP1, priceP2, priceP3) * 1.1
                         },
                         x: {
                             ticks: {
-                                font: { size: window.innerWidth < 640 ? 7 : 9 }
+                                font: { 
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                                        return 'rgb(16, 185, 129)'; // Valle (Verde)
+                                    }
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
+                                }
                             }
                         }
                     }
