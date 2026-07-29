@@ -4108,7 +4108,7 @@ let gridHtml = "";
             }
         }
 
-       function renderDayConsumHourlyChart(dateStr) {
+function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
@@ -4133,20 +4133,20 @@ let gridHtml = "";
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
 
+            // Pre-cálculo del día seleccionado (fin de semana o festivo) para el eje
+            const dateParts = dateStr.split('-');
+            const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const dayOfWeek = dateObj.getDay(); 
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+            const isHoliday = holidaysList.includes(dayMonthStr);
+
             for (let h = 0; h < 24; h++) {
                 let precio = priceValle;
                 if (rateMode.value === 'pvpc') {
                     const priceKey = `${dateStr}_T${String(h).padStart(2, '0')}`;
                     precio = window.queryPricesDb[priceKey] || 0;
                 } else {
-                    const dateParts = dateStr.split('-');
-                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                    const dayOfWeek = dateObj.getDay(); 
-                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                    
-                    const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
-                    const isHoliday = holidaysList.includes(dayMonthStr);
-
                     if ((isWeekend && useWeekendValle) || isHoliday) {
                         precio = priceValle;
                     } else {
@@ -4199,7 +4199,6 @@ let gridHtml = "";
                     }
                 }
 
-                // Cálculo preciso del coste de esta hora
                 hourlyCosts[h] = hourlyConsumption[h] * hourlyPrices[h];
             }
 
@@ -4242,7 +4241,6 @@ let gridHtml = "";
                 window.dayConsumChartInstance.destroy();
             }
 
-            // Colección base de datasets
             const chartDatasets = [
                 {
                     label: 'Consumo (kWh)',
@@ -4292,7 +4290,6 @@ let gridHtml = "";
                 }
             ];
 
-            // Si el conmutador está activado, añadimos la línea de Coste Horario (€) al eje izquierdo (y)
             if (showCostLine) {
                 chartDatasets.push({
                     label: 'Coste Horario (€)',
@@ -4304,7 +4301,7 @@ let gridHtml = "";
                     pointRadius: 3,
                     pointHoverRadius: 6,
                     fill: false,
-                    yAxisID: 'y', // Comparte el eje de magnitud izquierdo (kWh) por proximidad de valores
+                    yAxisID: 'y', 
                     order: 0
                 });
             }
@@ -4330,6 +4327,48 @@ let gridHtml = "";
                 }
             };
 
+            // Plugin para sombrear el fondo de cada hora del eje X en el modal
+            const tickBackgroundsConsumPlugin = {
+                id: 'tickBackgroundsConsum',
+                beforeDraw(chart) {
+                    const { ctx, scales: { x } } = chart;
+                    if (!x || !x.ticks) return;
+                    
+                    ctx.save();
+                    const yTop = x.top;
+                    const yBottom = x.bottom;
+                    const count = x.ticks.length;
+                    
+                    for (let i = 0; i < count; i++) {
+                        const hour = i;
+                        let color = 'rgba(16, 185, 129, 0.12)'; // Valle (Verde)
+                        
+                        if (!((isWeekend && useWeekendValle) || isHoliday)) {
+                            if (hoursPunta.includes(hour)) {
+                                color = 'rgba(239, 68, 68, 0.12)'; // Punta (Rojo)
+                            } else if (hoursLlano.includes(hour)) {
+                                color = 'rgba(245, 158, 11, 0.12)'; // Llano (Ámbar)
+                            }
+                        }
+                        
+                        const currentPixel = x.getPixelForTick(i);
+                        let left, right;
+                        if (count > 1) {
+                            const step = (x.right - x.left) / count;
+                            left = currentPixel - step / 2;
+                            right = currentPixel + step / 2;
+                        } else {
+                            left = x.left;
+                            right = x.right;
+                        }
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(left, yTop, right - left, yBottom - yTop);
+                    }
+                    ctx.restore();
+                }
+            };
+
             const ctx = canvas.getContext('2d');
             window.dayConsumChartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -4337,7 +4376,7 @@ let gridHtml = "";
                     labels: labels,
                     datasets: chartDatasets
                 },
-                plugins: [consumLabelsPlugin],
+                plugins: [consumLabelsPlugin, tickBackgroundsConsumPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -4367,6 +4406,27 @@ let gridHtml = "";
                                 callback: (val) => `${val.toFixed(3)} €`
                             },
                             suggestedMax: Math.max(...hourlyPrices) * 1.15
+                        },
+                        x: {
+                            ticks: {
+                                font: { 
+                                    size: window.innerWidth < 640 ? 7 : 9,
+                                    weight: 'bold'
+                                },
+                                color: function(context) {
+                                    const hour = context.index;
+                                    if ((isWeekend && useWeekendValle) || isHoliday) {
+                                        return 'rgb(16, 185, 129)'; // Valle (Verde)
+                                    }
+                                    if (hoursPunta.includes(hour)) {
+                                        return 'rgb(220, 38, 38)'; // Punta (Rojo)
+                                    }
+                                    if (hoursLlano.includes(hour)) {
+                                        return 'rgb(217, 119, 6)'; // Llano (Ámbar)
+                                    }
+                                    return 'rgb(5, 150, 105)'; // Valle (Verde)
+                                }
+                            }
                         }
                     }
                 }
