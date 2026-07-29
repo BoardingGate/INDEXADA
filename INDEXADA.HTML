@@ -184,22 +184,28 @@
                     <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
                     <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
+
+
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
                     <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
                     <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
                     <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
                     <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+                    <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                </div>               
             </div>
         </div>
 
@@ -1061,6 +1067,38 @@
                 type === 'error' ? 'bg-red-100 text-red-800' : 
                 type === 'success' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
             }`;
+        }
+
+
+        function updatePowerPriceHelpers() {
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+
+            const p1Pvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+            const p2Pvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+            const p1Manual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
+            const p2Manual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
+
+            const renderHelper = (elementId, annualPricePerKw, kwValue) => {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+
+                const dailyPerKw = annualPricePerKw / 365;
+                const monthlyPerKw = dailyPerKw * 30;
+
+                const dailyTotal = dailyPerKw * kwValue;
+                const monthlyTotal = monthlyPerKw * kwValue;
+
+                el.innerHTML = `
+                    <span class="block text-gray-400">Unitario: ${dailyPerKw.toFixed(4)} €/día | ${monthlyPerKw.toFixed(4)} €/mes</span>
+                    <span class="block font-medium text-gray-600">Total (${kwValue.toFixed(2)} kW): ${dailyTotal.toFixed(3)} €/día | ${monthlyTotal.toFixed(2)} €/mes</span>
+                `;
+            };
+
+            renderHelper('helperP1Pvpc', p1Pvpc, p1Kw);
+            renderHelper('helperP2Pvpc', p2Pvpc, p2Kw);
+            renderHelper('helperP1Manual', p1Manual, p1Kw);
+            renderHelper('helperP2Manual', p2Manual, p2Kw);
         }
 
         // Datadis Direct Download API Proxy
@@ -2781,7 +2819,7 @@
             'evEfficiency'
         ];
 
-        inputsToWatch.forEach(id => {
+       inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('input', () => {
@@ -2796,6 +2834,7 @@
                         const dd = String(now.getDate()).padStart(2, '0');
                         renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
                     }
+                    updatePowerPriceHelpers();
                 });
                 el.addEventListener('change', () => {
                     saveConfig();
@@ -2809,14 +2848,14 @@
                         const dd = String(now.getDate()).padStart(2, '0');
                         renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
                     }
+                    updatePowerPriceHelpers();
                 });
             }
         });
 
         // Cargamos la configuración guardada
         loadConfig();
-
-        // Iniciamos la carga y renderizado de precios del día actual
+        updatePowerPriceHelpers();   
         initTodayPrices();
 
         window.handleCalendarDayClick = function(dateStr) {
