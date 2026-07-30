@@ -169,48 +169,6 @@
             </div>
         </div>
 
-        <!-- Panel de Configuración de Potencia Contratada -->
-         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
-            <div class="mb-4">
-                <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
-                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
-                    <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
-                    <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>   
-            </div>
-            <!-- Contenedor para mostrar la diferencia mensual de potencia -->
-            <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
-        </div>
-           
 
         <!-- Panel de Filtros Temporales y Horarios -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
@@ -339,6 +297,49 @@
             </div>
         </div>
 
+                <!-- Panel de Configuración de Potencia Contratada -->
+         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
+            <div class="mb-4">
+                <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
+                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
+                    <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
+                    <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
+                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
+                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
+                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
+                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                </div>   
+            </div>
+            <!-- Contenedor para mostrar la diferencia mensual de potencia -->
+            <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
+        </div>
+           
+
         <!-- Botón Recalcular centralizado -->
         <div class="flex justify-center mb-8">
             <button id="recalculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
@@ -451,7 +452,7 @@
                         <!-- 2. Clasificación por Coste Real -->
                         <div class="pt-4 border-t border-gray-100">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (Según Tarifa Indexada PVPC oficial de REE)</h4>
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (PVPC de REE)</h4>
                                 
                                 <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
                                     <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
@@ -1311,7 +1312,8 @@
             document.getElementById('datadisStart').value = toIso(hace30);
         })();
 
-        function handleFiles(files) {
+
+      function handleFiles(files) {
             const file = files[0];
             if (!file) return;
 
@@ -1322,6 +1324,12 @@
             dropZone.classList.remove('border-blue-300', 'bg-gray-50');
 
             showStatus("Archivo cargado. Procesando e interpretando lecturas...", "info");
+
+            // Limpiar selección previa del calendario al importar un nuevo archivo
+            if (window.calendarSelectedDates) {
+                window.calendarSelectedDates.clear();
+            }
+            saveConfig();
 
             Papa.parse(file, {
                 header: true,
@@ -1648,6 +1656,14 @@
 
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            // Pre-recuperar precios y tramos para las comparaciones del calendario
+            const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+            const useWeekendValle = document.getElementById('weekendValle').checked;
 
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
@@ -2284,8 +2300,7 @@
                     const selectHighlightClass = isSelected 
                         ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
                         : "opacity-35 hover:opacity-75 transition-opacity";
-
-                    if (dayData) {
+if (dayData) {
                         const isEvChargingDay = dayData.kwh >= dailyEvThreshold;
                         
                         let cellClass, dayLabelClass, kwhClass, costClass;
@@ -2302,9 +2317,57 @@
                         costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
                     }
 
+
+           const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
+
+                    // Calcular la media simple de la tarifa activa (PVPC o Manual) de este día
+                    const dayPrices = [];
+                    const dateParts = dateKey.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayOfWeek = dateObj.getDay(); 
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+                    const isHoliday = holidaysList.includes(dayMonthStr);
+
+                    for (let h = 0; h < 24; h++) {
+                        let precio = priceValle;
+                        if (mode === 'pvpc') {
+                            const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                            precio = window.queryPricesDb ? (window.queryPricesDb[priceKey] || 0) : 0;
+                        } else {
+                            if ((isWeekend && useWeekendValle) || isHoliday) {
+                                precio = priceValle;
+                            } else {
+                                if (hoursPunta.includes(h)) {
+                                    precio = pricePunta;
+                                } else if (hoursLlano.includes(h)) {
+                                    precio = priceLlano;
+                                } else {
+                                    precio = priceValle;
+                                }
+                            }
+                        }
+                        dayPrices.push(precio);
+                    }
+                    const daySimpleAvg = dayPrices.reduce((sum, p) => sum + p, 0) / 24;
+
+                    // Redondear ambos valores a 4 decimales (igual que el formato visual) para evitar discrepancias
+                    const roundedAchieved = parseFloat(dayAchievedAvg.toFixed(4));
+                    const roundedSimple = parseFloat(daySimpleAvg.toFixed(4));
+
+                    // Determinar el color del texto según la comparación de valores redondeados
+                    let mediaColorClass = "text-gray-700 font-bold";
+                    if (daySimpleAvg > 0) {
+                        if (roundedAchieved > roundedSimple) {
+                            mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media de la tarifa activa
+                        } else {
+                            mediaColorClass = "text-green-600 font-black"; // Verde si es igual o inferior
+                        }
+                    }
+
                     monthHtml += `
                         <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
-                            <div class="flex justify-between items-center w-full shrink-0">
+                            <div class="flex justify-between items-center w-full shrink-0 border-b border-gray-200/40 pb-1">
                                 <span class="${dayLabelClass}">${day}</span>
                                 <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
                                         onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
@@ -2312,9 +2375,17 @@
                                     📊
                                 </button>
                             </div>
-                            <div class="text-right mt-1.5 w-full">
-                                <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
-                                <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                            <div class="flex justify-between items-end mt-1.5 w-full">
+                                <div class="text-left leading-none shrink-0 self-end">
+                                    <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
+                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es igual o inferior.">
+                                        ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
+                                    </span>
+                                </div>
+                                <div class="text-right leading-tight">
+                                    <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
+                                    <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -4355,8 +4426,14 @@ function renderDayConsumHourlyChart(dateStr) {
 
             const avgHourlyConsum = dayTotalKwh / 24;
             const avgPriceOfThatDay = hourlyPrices.reduce((sum, p) => sum + p, 0) / 24;
-            const threshold = parseFloat(thresholdInput.value) || 0;
+            const achievedAvgPrice = dayTotalKwh > 0 ? (dayTotalCost / dayTotalKwh) : 0;
+            
+            // Cálculo del diferencial (Logrado - Simple de REE)
+            const priceDiff = achievedAvgPrice - avgPriceOfThatDay;
+            const diffSign = priceDiff >= 0 ? '+' : '';
+            const diffText = `[${diffSign}${priceDiff.toFixed(5)} €/kWh]`;
 
+            const threshold = parseFloat(thresholdInput.value) || 0;
             const showCostLine = document.getElementById('showHourlyCostToggle').checked;
 
             consumDetailLegend.innerHTML = `
@@ -4367,8 +4444,11 @@ function renderDayConsumHourlyChart(dateStr) {
                     <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
                         Coste Diario: ${dayTotalCost.toFixed(2)} €
                     </span>
-                    <span class="bg-rose-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
-                        Precio Medio: ${avgPriceOfThatDay.toFixed(5)} €/kWh
+                    <span class="bg-rose-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0" title="Precio medio aritmético simple de la tarifa de hoy">
+                        Precio Medio REE: ${avgPriceOfThatDay.toFixed(5)} €/kWh
+                    </span>
+                   <span class="bg-indigo-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0" title="Coste total del día dividido entre el consumo total del día. Entre corchetes se muestra la desviación frente al precio medio aritmético simple de REE del día.">
+                        P. Medio Logrado: ${achievedAvgPrice.toFixed(5)} €/kWh <span class="text-[10px] font-mono font-bold opacity-90 ml-1.5">${diffText}</span>
                     </span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-blue-100 border border-blue-200"></span> Consumo</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
