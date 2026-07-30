@@ -266,6 +266,25 @@
         <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
             <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
             
+            <!-- Selector de Perfil y Nombre -->
+            <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil de Tarifa (1 de 6)</label>
+                    <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
+                        <option value="0">Perfil 1: Tarifa Manual 1</option>
+                        <option value="1">Perfil 2: Tarifa Manual 2</option>
+                        <option value="2">Perfil 3: Tarifa Manual 3</option>
+                        <option value="3">Perfil 4: Tarifa Manual 4</option>
+                        <option value="4">Perfil 5: Tarifa Manual 5</option>
+                        <option value="5">Perfil 6: Tarifa Manual 6</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
+                    <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                 <!-- Tramo Punta -->
                 <div class="p-4 bg-red-50 rounded-lg border border-red-100">
@@ -313,7 +332,7 @@
          <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
                 <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
-                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo. El precio manual de potencia cambia automáticamente con el perfil seleccionado.</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
@@ -338,12 +357,12 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
                     <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
                     <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>   
             </div>
@@ -911,7 +930,6 @@
     </div>
 
     <!-- MODAL: Tendencia Anual de Precios PVPC -->
-<!-- MODAL: Tendencia Anual de Precios PVPC -->
     <div id="annualTrendModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] h-[95vh] flex flex-col overflow-hidden border border-gray-100">
             <!-- Cabecera -->
@@ -1026,7 +1044,132 @@
         window.chartInstance3 = null;
         window.calendarSelectedDates = new Set();
 
-        const STORAGE_KEY = 'analizador_consumo_config';
+        const STORAGE_KEY = 'analizador_consumo_config_v2';
+
+        // Estructura de perfiles de tarifa manual
+        window.activeProfileIndex = 0;
+        window.tariffProfiles = [
+            {
+                name: "Tarifa Manual 1",
+                pricePunta: 0.15000,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: 0.10000,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: 0.06000,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: 35.00,
+                powerPriceP2Manual: 15.00,
+                discountEnergyManual: 0.0,
+                discountPowerManual: 0.0,
+                invoiceAdjustmentsManual: 0.00,
+                retailerMarginManual: 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            },
+            {
+                name: "Tarifa Manual 2",
+                pricePunta: 0.16000,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: 0.11000,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: 0.07000,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: 35.00,
+                powerPriceP2Manual: 15.00,
+                discountEnergyManual: 0.0,
+                discountPowerManual: 0.0,
+                invoiceAdjustmentsManual: 0.00,
+                retailerMarginManual: 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            },
+            {
+                name: "Tarifa Manual 3",
+                pricePunta: 0.17000,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: 0.12000,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: 0.08000,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: 35.00,
+                powerPriceP2Manual: 15.00,
+                discountEnergyManual: 0.0,
+                discountPowerManual: 0.0,
+                invoiceAdjustmentsManual: 0.00,
+                retailerMarginManual: 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            },
+            {
+                name: "Tarifa Manual 4",
+                pricePunta: 0.18000,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: 0.13000,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: 0.09000,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: 35.00,
+                powerPriceP2Manual: 15.00,
+                discountEnergyManual: 0.0,
+                discountPowerManual: 0.0,
+                invoiceAdjustmentsManual: 0.00,
+                retailerMarginManual: 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            },
+            {
+                name: "Tarifa Manual 5",
+                pricePunta: 0.19000,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: 0.14000,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: 0.10000,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: 35.00,
+                powerPriceP2Manual: 15.00,
+                discountEnergyManual: 0.0,
+                discountPowerManual: 0.0,
+                invoiceAdjustmentsManual: 0.00,
+                retailerMarginManual: 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            },
+            {
+                name: "Tarifa Manual 6",
+                pricePunta: 0.20000,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: 0.15000,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: 0.11000,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: 35.00,
+                powerPriceP2Manual: 15.00,
+                discountEnergyManual: 0.0,
+                discountPowerManual: 0.0,
+                invoiceAdjustmentsManual: 0.00,
+                retailerMarginManual: 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            }
+        ];
 
         // Elementos del DOM
         const rateMode = document.getElementById('rateMode');
@@ -2118,7 +2261,7 @@
             const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
             const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
 
-         const p1IndexedTimeTitleEl = document.getElementById('p1IndexedTimeTitle');
+            const p1IndexedTimeTitleEl = document.getElementById('p1IndexedTimeTitle');
             const p2IndexedTimeTitleEl = document.getElementById('p2IndexedTimeTitle');
             const p3IndexedTimeTitleEl = document.getElementById('p3IndexedTimeTitle');
 
@@ -2160,6 +2303,8 @@
                 ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
                 : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
 
+            const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
+
             let comparisonHtml = `
                 <div class="w-full">
                     <div class="border-b pb-2 mb-3">
@@ -2172,7 +2317,7 @@
                                 <tr class="border-b text-gray-400 uppercase text-[9px] tracking-wider font-semibold">
                                     <th class="py-2">Concepto Facturado</th>
                                     <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
-                                    <th class="py-2 text-right">Tarifa Manual (Tramos)</th>
+                                    <th class="py-2 text-right">${activeManualTariffName} (Manual)</th>
                                     <th class="py-2 text-right">Desviación / Diferencia</th>
                                 </tr>
                             </thead>
@@ -2312,95 +2457,96 @@
                     const selectHighlightClass = isSelected 
                         ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
                         : "opacity-35 hover:opacity-75 transition-opacity";
-if (dayData) {
+
+                    if (dayData) {
                         const isEvChargingDay = dayData.kwh >= dailyEvThreshold;
                         
                         let cellClass, dayLabelClass, kwhClass, costClass;
 
-                    if (isEvChargingDay) {
-                        cellClass = "bg-red-50 border-2 border-red-500 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:border-red-700 transition-colors min-h-[68px]";
-                        dayLabelClass = "text-xs font-black text-red-600 leading-none";
-                        kwhClass = "text-[10px] font-black text-red-700 leading-tight";
-                        costClass = "text-[9px] font-black text-red-800 leading-tight mt-0.5";
-                    } else {
-                        cellClass = "bg-white border border-gray-400 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-600 transition-colors min-h-[68px]";
-                        dayLabelClass = "text-xs font-bold text-gray-700 leading-none";
-                        kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
-                        costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
-                    }
-
-
-           const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
-
-                    // Calcular la media simple de la tarifa activa (PVPC o Manual) de este día
-                    const dayPrices = [];
-                    const dateParts = dateKey.split('-');
-                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                    const dayOfWeek = dateObj.getDay(); 
-                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                    const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
-                    const isHoliday = holidaysList.includes(dayMonthStr);
-
-                    for (let h = 0; h < 24; h++) {
-                        let precio = priceValle;
-                        if (mode === 'pvpc') {
-                            const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
-                            precio = window.queryPricesDb ? (window.queryPricesDb[priceKey] || 0) : 0;
+                        if (isEvChargingDay) {
+                            cellClass = "bg-red-50 border-2 border-red-500 rounded-lg p-1.5 flex flex-col justify-between shadow-sm hover:border-red-700 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-black text-red-600 leading-none";
+                            kwhClass = "text-[10px] font-black text-red-700 leading-tight";
+                            costClass = "text-[9px] font-black text-red-800 leading-tight mt-0.5";
                         } else {
-                            if ((isWeekend && useWeekendValle) || isHoliday) {
-                                precio = priceValle;
+                            cellClass = "bg-white border border-gray-400 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:border-blue-600 transition-colors min-h-[68px]";
+                            dayLabelClass = "text-xs font-bold text-gray-700 leading-none";
+                            kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
+                            costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
+                        }
+
+
+                        const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
+
+                        // Calcular la media simple de la tarifa activa (PVPC o Manual) de este día
+                        const dayPrices = [];
+                        const dateParts = dateKey.split('-');
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        const dayOfWeek = dateObj.getDay(); 
+                        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                        const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+                        const isHoliday = holidaysList.includes(dayMonthStr);
+
+                        for (let h = 0; h < 24; h++) {
+                            let precio = priceValle;
+                            if (mode === 'pvpc') {
+                                const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                                precio = window.queryPricesDb ? (window.queryPricesDb[priceKey] || 0) : 0;
                             } else {
-                                if (hoursPunta.includes(h)) {
-                                    precio = pricePunta;
-                                } else if (hoursLlano.includes(h)) {
-                                    precio = priceLlano;
-                                } else {
+                                if ((isWeekend && useWeekendValle) || isHoliday) {
                                     precio = priceValle;
+                                } else {
+                                    if (hoursPunta.includes(h)) {
+                                        precio = pricePunta;
+                                    } else if (hoursLlano.includes(h)) {
+                                        precio = priceLlano;
+                                    } else {
+                                        precio = priceValle;
+                                    }
                                 }
                             }
+                            dayPrices.push(precio);
                         }
-                        dayPrices.push(precio);
-                    }
-                    const daySimpleAvg = dayPrices.reduce((sum, p) => sum + p, 0) / 24;
+                        const daySimpleAvg = dayPrices.reduce((sum, p) => sum + p, 0) / 24;
 
-                    // Redondear ambos valores a 4 decimales (igual que el formato visual) para evitar discrepancias
-                    const roundedAchieved = parseFloat(dayAchievedAvg.toFixed(4));
-                    const roundedSimple = parseFloat(daySimpleAvg.toFixed(4));
+                        // Redondear ambos valores a 4 decimales (igual que el formato visual) para evitar discrepancies
+                        const roundedAchieved = parseFloat(dayAchievedAvg.toFixed(4));
+                        const roundedSimple = parseFloat(daySimpleAvg.toFixed(4));
 
-                    // Determinar el color del texto según la comparación de valores redondeados
-                    let mediaColorClass = "text-gray-700 font-bold";
-                    if (daySimpleAvg > 0) {
-                        if (roundedAchieved > roundedSimple) {
-                            mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media de la tarifa activa
-                        } else {
-                            mediaColorClass = "text-green-600 font-black"; // Verde si es igual o inferior
+                        // Determinar el color del texto según la comparación de valores redondeados
+                        let mediaColorClass = "text-gray-700 font-bold";
+                        if (daySimpleAvg > 0) {
+                            if (roundedAchieved > roundedSimple) {
+                                mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media de la tarifa activa
+                            } else {
+                                mediaColorClass = "text-green-600 font-black"; // Verde si es igual o inferior
+                            }
                         }
-                    }
 
-                    monthHtml += `
-                        <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
-                            <div class="flex justify-between items-center w-full shrink-0 border-b border-gray-200/40 pb-1">
-                                <span class="${dayLabelClass}">${day}</span>
-                                <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
-                                        onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
-                                        title="Ver perfil de consumo horario de este día">
-                                    📊
-                                </button>
-                            </div>
-                            <div class="flex justify-between items-end mt-1.5 w-full">
-                                <div class="text-left leading-none shrink-0 self-end">
-                                    <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
-                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es igual o inferior.">
-                                        ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
-                                    </span>
+                        monthHtml += `
+                            <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
+                                <div class="flex justify-between items-center w-full shrink-0 border-b border-gray-200/40 pb-1">
+                                    <span class="${dayLabelClass}">${day}</span>
+                                    <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
+                                            onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
+                                            title="Ver perfil de consumo horario de este día">
+                                        📊
+                                    </button>
                                 </div>
-                                <div class="text-right leading-tight">
-                                    <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
-                                    <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                <div class="flex justify-between items-end mt-1.5 w-full">
+                                    <div class="text-left leading-none shrink-0 self-end">
+                                        <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
+                                        <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es igual o inferior.">
+                                            ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-right leading-tight">
+                                        <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
+                                        <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                     } else {
                         monthHtml += `
                             <div class="bg-gray-200/50 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
@@ -2853,21 +2999,101 @@ if (dayData) {
             });
         }
 
+        // --- SISTEMA DE MANEJO DE PERFILES DE TARIFA ---
+
+        function saveActiveProfileToMemory() {
+            const index = window.activeProfileIndex;
+            if (index < 0 || index >= 6) return;
+            
+            window.tariffProfiles[index] = {
+                name: document.getElementById('tariffProfileName').value || `Tarifa Manual ${index + 1}`,
+                pricePunta: parseFloat(document.getElementById('pricePunta').value) || 0,
+                hoursPunta: document.getElementById('hoursPunta').value,
+                priceLlano: parseFloat(document.getElementById('priceLlano').value) || 0,
+                hoursLlano: document.getElementById('hoursLlano').value,
+                priceValle: parseFloat(document.getElementById('priceValle').value) || 0,
+                hoursValle: document.getElementById('hoursValle').value,
+                weekendValle: document.getElementById('weekendValle').checked,
+                holidays: document.getElementById('holidaysInput').value,
+                powerPriceP1Manual: parseFloat(document.getElementById('powerPriceP1Manual').value) || 0,
+                powerPriceP2Manual: parseFloat(document.getElementById('powerPriceP2Manual').value) || 0,
+                discountEnergyManual: parseFloat(document.getElementById('discountEnergyManual').value) || 0,
+                discountPowerManual: parseFloat(document.getElementById('discountPowerManual').value) || 0,
+                invoiceAdjustmentsManual: parseFloat(document.getElementById('invoiceAdjustmentsManual').value) || 0,
+                retailerMarginManual: parseFloat(document.getElementById('retailerMarginManual').value) || 0,
+                electricityTaxManual: parseFloat(document.getElementById('electricityTaxManual').value) || 0,
+                meterRentalManual: parseFloat(document.getElementById('meterRentalManual').value) || 0,
+                vatRateManual: parseFloat(document.getElementById('vatRateManual').value) || 0
+            };
+        }
+
+        function loadProfileFromMemory(index) {
+            if (index < 0 || index >= 6) return;
+            window.activeProfileIndex = index;
+            const profile = window.tariffProfiles[index];
+            
+            document.getElementById('tariffProfileName').value = profile.name || "";
+            document.getElementById('pricePunta').value = profile.pricePunta;
+            document.getElementById('hoursPunta').value = profile.hoursPunta;
+            document.getElementById('priceLlano').value = profile.priceLlano;
+            document.getElementById('hoursLlano').value = profile.hoursLlano;
+            document.getElementById('priceValle').value = profile.priceValle;
+            document.getElementById('hoursValle').value = profile.hoursValle;
+            document.getElementById('weekendValle').checked = !!profile.weekendValle;
+            document.getElementById('holidaysInput').value = profile.holidays;
+            document.getElementById('powerPriceP1Manual').value = profile.powerPriceP1Manual;
+            document.getElementById('powerPriceP2Manual').value = profile.powerPriceP2Manual;
+            
+            document.getElementById('discountEnergyManual').value = profile.discountEnergyManual;
+            document.getElementById('discountPowerManual').value = profile.discountPowerManual;
+            document.getElementById('invoiceAdjustmentsManual').value = profile.invoiceAdjustmentsManual;
+            document.getElementById('retailerMarginManual').value = profile.retailerMarginManual;
+            document.getElementById('electricityTaxManual').value = profile.electricityTaxManual;
+            document.getElementById('meterRentalManual').value = profile.meterRentalManual;
+            document.getElementById('vatRateManual').value = profile.vatRateManual;
+            
+            document.getElementById('tariffProfileSelector').value = index;
+            updateProfileDropdownNames();
+        }
+
+        function updateProfileDropdownNames() {
+            const selector = document.getElementById('tariffProfileSelector');
+            if (!selector) return;
+            for (let i = 0; i < 6; i++) {
+                const profile = window.tariffProfiles[i];
+                const name = profile.name || `Tarifa Manual ${i + 1}`;
+                selector.options[i].text = `Perfil ${i + 1}: ${name}`;
+            }
+        }
+
+        document.getElementById('tariffProfileSelector').addEventListener('change', (e) => {
+            saveActiveProfileToMemory();
+            const newIdx = parseInt(e.target.value, 10);
+            loadProfileFromMemory(newIdx);
+            saveConfig();
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+            updatePowerPriceHelpers();
+        });
+
+        document.getElementById('tariffProfileName').addEventListener('input', (e) => {
+            const activeIdx = window.activeProfileIndex;
+            window.tariffProfiles[activeIdx].name = e.target.value;
+            updateProfileDropdownNames();
+            saveActiveProfileToMemory();
+            saveConfig();
+        });
+
+
         // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
         function saveConfig() {
+            saveActiveProfileToMemory();
             const config = {
                 rateMode: document.getElementById('rateMode').value,
                 thresholdInput: document.getElementById('thresholdInput').value,
                 subtractInput: document.getElementById('subtractInput').value,
                 dailyEvThresholdInput: document.getElementById('dailyEvThresholdInput').value,
-                pricePunta: document.getElementById('pricePunta').value,
-                hoursPunta: document.getElementById('hoursPunta').value,
-                priceLlano: document.getElementById('priceLlano').value,
-                hoursLlano: document.getElementById('hoursLlano').value,
-                priceValle: document.getElementById('priceValle').value,
-                hoursValle: document.getElementById('hoursValle').value,
-                weekendValle: document.getElementById('weekendValle').checked,
-                holidaysInput: document.getElementById('holidaysInput').value,
                 filterStartDate: document.getElementById('filterStartDate').value,
                 filterEndDate: document.getElementById('filterEndDate').value,
                 filterStartHour: document.getElementById('filterStartHour').value,
@@ -2879,8 +3105,6 @@ if (dayData) {
                 powerP2: document.getElementById('powerP2').value,
                 powerPriceP1Pvpc: document.getElementById('powerPriceP1Pvpc').value,
                 powerPriceP2Pvpc: document.getElementById('powerPriceP2Pvpc').value,
-                powerPriceP1Manual: document.getElementById('powerPriceP1Manual').value,
-                powerPriceP2Manual: document.getElementById('powerPriceP2Manual').value,
                 datadisUser: document.getElementById('datadisUser').value,
                 datadisPass: document.getElementById('datadisPass').value,
                 datadisCups: document.getElementById('datadisCups').value,
@@ -2893,14 +3117,10 @@ if (dayData) {
                 electricityTaxPvpc: document.getElementById('electricityTaxPvpc').value,
                 meterRentalPvpc: document.getElementById('meterRentalPvpc').value,
                 vatRatePvpc: document.getElementById('vatRatePvpc').value,
-                discountEnergyManual: document.getElementById('discountEnergyManual').value,
-                discountPowerManual: document.getElementById('discountPowerManual').value,
-                invoiceAdjustmentsManual: document.getElementById('invoiceAdjustmentsManual').value,
-                retailerMarginManual: document.getElementById('retailerMarginManual').value,
-                electricityTaxManual: document.getElementById('electricityTaxManual').value,
-                meterRentalManual: document.getElementById('meterRentalManual').value,
-                vatRateManual: document.getElementById('vatRateManual').value,
-                evEfficiency: document.getElementById('evEfficiency').value
+                evEfficiency: document.getElementById('evEfficiency').value,
+                // Guardar todos los perfiles de tarifas y el índice seleccionado
+                tariffProfiles: window.tariffProfiles,
+                activeProfileIndex: window.activeProfileIndex
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -2908,6 +3128,8 @@ if (dayData) {
         function loadConfig() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) {
+                // Configuración por defecto
+                loadProfileFromMemory(0);
                 toggleRatePanels();
                 return;
             }
@@ -2917,18 +3139,11 @@ if (dayData) {
                 if (config.thresholdInput !== undefined) document.getElementById('thresholdInput').value = config.thresholdInput;
                 if (config.subtractInput !== undefined) document.getElementById('subtractInput').value = config.subtractInput;
                 if (config.dailyEvThresholdInput !== undefined) document.getElementById('dailyEvThresholdInput').value = config.dailyEvThresholdInput;
-                if (config.pricePunta !== undefined) document.getElementById('pricePunta').value = config.pricePunta;
-                if (config.hoursPunta !== undefined) document.getElementById('hoursPunta').value = config.hoursPunta;
-                if (config.priceLlano !== undefined) document.getElementById('priceLlano').value = config.priceLlano;
-                if (config.hoursLlano !== undefined) document.getElementById('hoursLlano').value = config.hoursLlano;
-                if (config.priceValle !== undefined) document.getElementById('priceValle').value = config.priceValle;
-                if (config.hoursValle !== undefined) document.getElementById('hoursValle').value = config.hoursValle;
-                if (config.weekendValle !== undefined) document.getElementById('weekendValle').checked = config.weekendValle;
-                if (config.holidaysInput !== undefined) document.getElementById('holidaysInput').value = config.holidaysInput;
                 if (config.filterStartDate !== undefined) document.getElementById('filterStartDate').value = config.filterStartDate;
                 if (config.filterEndDate !== undefined) document.getElementById('filterEndDate').value = config.filterEndDate;
                 if (config.filterStartHour !== undefined) document.getElementById('filterStartHour').value = config.filterStartHour;
                 if (config.filterEndHour !== undefined) document.getElementById('filterEndHour').value = config.filterEndHour;
+                
                 if (config.discountEnergyPvpc !== undefined) document.getElementById('discountEnergyPvpc').value = config.discountEnergyPvpc;
                 if (config.discountPowerPvpc !== undefined) document.getElementById('discountPowerPvpc').value = config.discountPowerPvpc;
                 if (config.invoiceAdjustmentsPvpc !== undefined) document.getElementById('invoiceAdjustmentsPvpc').value = config.invoiceAdjustmentsPvpc;
@@ -2936,14 +3151,6 @@ if (dayData) {
                 if (config.electricityTaxPvpc !== undefined) document.getElementById('electricityTaxPvpc').value = config.electricityTaxPvpc;
                 if (config.meterRentalPvpc !== undefined) document.getElementById('meterRentalPvpc').value = config.meterRentalPvpc;
                 if (config.vatRatePvpc !== undefined) document.getElementById('vatRatePvpc').value = config.vatRatePvpc;
-                
-                if (config.discountEnergyManual !== undefined) document.getElementById('discountEnergyManual').value = config.discountEnergyManual;
-                if (config.discountPowerManual !== undefined) document.getElementById('discountPowerManual').value = config.discountPowerManual;
-                if (config.invoiceAdjustmentsManual !== undefined) document.getElementById('invoiceAdjustmentsManual').value = config.invoiceAdjustmentsManual;
-                if (config.retailerMarginManual !== undefined) document.getElementById('retailerMarginManual').value = config.retailerMarginManual;
-                if (config.electricityTaxManual !== undefined) document.getElementById('electricityTaxManual').value = config.electricityTaxManual;
-                if (config.meterRentalManual !== undefined) document.getElementById('meterRentalManual').value = config.meterRentalManual;
-                if (config.vatRateManual !== undefined) document.getElementById('vatRateManual').value = config.vatRateManual;
                 if (config.evEfficiency !== undefined) document.getElementById('evEfficiency').value = config.evEfficiency;
                 
                 if (config.pvpcHighThreshold !== undefined) {
@@ -2959,8 +3166,6 @@ if (dayData) {
                 if (config.powerP2 !== undefined) document.getElementById('powerP2').value = config.powerP2;
                 if (config.powerPriceP1Pvpc !== undefined) document.getElementById('powerPriceP1Pvpc').value = config.powerPriceP1Pvpc;
                 if (config.powerPriceP2Pvpc !== undefined) document.getElementById('powerPriceP2Pvpc').value = config.powerPriceP2Pvpc;
-                if (config.powerPriceP1Manual !== undefined) document.getElementById('powerPriceP1Manual').value = config.powerPriceP1Manual;
-                if (config.powerPriceP2Manual !== undefined) document.getElementById('powerPriceP2Manual').value = config.powerPriceP2Manual;
 
                 if (config.datadisUser !== undefined) document.getElementById('datadisUser').value = config.datadisUser;
                 if (config.datadisPass !== undefined) document.getElementById('datadisPass').value = config.datadisPass;
@@ -2974,9 +3179,19 @@ if (dayData) {
                     window.calendarSelectedDates = new Set();
                 }
 
+                // Cargar estructura de perfiles guardados
+                if (config.tariffProfiles !== undefined && Array.isArray(config.tariffProfiles)) {
+                    window.tariffProfiles = config.tariffProfiles;
+                }
+                if (config.activeProfileIndex !== undefined) {
+                    window.activeProfileIndex = config.activeProfileIndex;
+                }
+
+                loadProfileFromMemory(window.activeProfileIndex);
                 toggleRatePanels();
             } catch (e) {
                 console.error("Error al restaurar la sesión guardada:", e);
+                loadProfileFromMemory(0);
             }
         }
 
@@ -3040,7 +3255,17 @@ if (dayData) {
        inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
-                el.addEventListener('input', () => {
+                const triggerHandler = () => {
+                    const isManualField = [
+                        'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
+                        'weekendValle', 'holidaysInput', 'powerPriceP1Manual', 'powerPriceP2Manual',
+                        'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual',
+                        'electricityTaxManual', 'meterRentalManual', 'vatRateManual'
+                    ].includes(id);
+
+                    if (isManualField) {
+                        saveActiveProfileToMemory();
+                    }
                     saveConfig();
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
@@ -3053,21 +3278,9 @@ if (dayData) {
                         renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
                     }
                     updatePowerPriceHelpers();
-                });
-                el.addEventListener('change', () => {
-                    saveConfig();
-                    if (window.rawCsvData) {
-                        processData(window.rawCsvData);
-                    }
-                    if (window.todayPricesMap) {
-                        const now = new Date();
-                        const yyyy = now.getFullYear();
-                        const mm = String(now.getMonth() + 1).padStart(2, '0');
-                        const dd = String(now.getDate()).padStart(2, '0');
-                        renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
-                    }
-                    updatePowerPriceHelpers();
-                });
+                };
+                el.addEventListener('input', triggerHandler);
+                el.addEventListener('change', triggerHandler);
             }
         });
 
@@ -3309,8 +3522,7 @@ function renderQueryCalendar(startStr, endStr) {
 
             const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             let calendarHtml = "";
-
-            Object.keys(monthsMap).sort().forEach(yyyymm => {
+Object.keys(monthsMap).sort().forEach(yyyymm => {
                 if (monthsMap[yyyymm].length === 0) return;
 
                 const [year, monthNum] = yyyymm.split('-').map(Number);
@@ -3320,7 +3532,7 @@ function renderQueryCalendar(startStr, endStr) {
                 const daysInMonth = new Date(year, monthNum, 0).getDate();
 
                 let monthHtml = `
-                    <div class="border-2 border-gray-300 rounded-xl p-4 bg-gray-150 shadow-sm text-center">
+                    <div class="border-2 border-gray-300 rounded-xl p-4 bg-gray-100 shadow-sm text-center">
                         <h4 class="text-sm font-black text-blue-950 mb-3 text-center uppercase tracking-wide">
                             ${monthNames[monthNum - 1]} ${year}
                         </h4>
@@ -3452,7 +3664,7 @@ function renderQueryCalendar(startStr, endStr) {
             }
         }
 
-function renderTodayPricesChart(dateStr) {
+        function renderTodayPricesChart(dateStr) {
             const canvas = document.getElementById('todayHourlyPricesChart');
             if (!canvas || !window.todayPricesMap) return;
 
@@ -3508,7 +3720,7 @@ function renderTodayPricesChart(dateStr) {
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-red-100 border border-red-200"></span> Caro PVPC (&ge; ${pvpcHigh.toFixed(3)})</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-200"></span> Medio PVPC</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-200"></span> Barato PVPC (&le; ${pvpcLow.toFixed(3)})</span>
-                <span class="inline-flex items-center gap-1 shrink-0 border-l pl-2 border-gray-300"><span class="w-3.5 h-0.5 bg-red-500 inline-block"></span> Punta Manual (${priceP1.toFixed(5)})</span>
+                <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-red-500 inline-block"></span> Punta Manual (${priceP1.toFixed(5)})</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-amber-500 inline-block"></span> Llano Manual (${priceP2.toFixed(5)})</span>
                 <span class="inline-flex items-center gap-1 shrink-0"><span class="w-3.5 h-0.5 bg-emerald-500 inline-block"></span> Valle Manual (${priceP3.toFixed(5)})</span>
             `;
@@ -3738,7 +3950,7 @@ function renderTodayPricesChart(dateStr) {
             }
         }
 
-function renderDayDetailChart(dateStr) {
+        function renderDayDetailChart(dateStr) {
             const canvas = document.getElementById('detailHourlyChart');
             if (!canvas) return;
 
@@ -4128,7 +4340,7 @@ function renderDayDetailChart(dateStr) {
                 if (window.annualChartInstance) {
                     window.annualChartInstance.destroy();
                 }
-const barLabelsTrendPlugin = {
+                const barLabelsTrendPlugin = {
                     id: 'barLabelsTrend',
                     afterDatasetsDraw(chart) {
                         const { ctx } = chart;
@@ -4228,7 +4440,7 @@ const barLabelsTrendPlugin = {
                 });
             }
 
-let gridHtml = "";
+            let gridHtml = "";
             calculatedMonths.forEach(m => {
                 if (m.hasData) {
                     const bgColor = getTrendColor(m.avg, minMonthAvg, maxMonthAvg);
@@ -4342,7 +4554,7 @@ let gridHtml = "";
             }
         }
 
-function renderDayConsumHourlyChart(dateStr) {
+        function renderDayConsumHourlyChart(dateStr) {
             const canvas = document.getElementById('dayConsumHourlyChart');
             if (!canvas || !window.rawCsvData) return;
 
@@ -4783,7 +4995,7 @@ function renderDayConsumHourlyChart(dateStr) {
             targetEl.classList.remove('hidden');
         }
 
-      document.getElementById('queryPriceThreshold').addEventListener('input', () => {
+        document.getElementById('queryPriceThreshold').addEventListener('input', () => {
             const startVal = queryPriceStart.value;
             const endVal = queryPriceEnd.value;
             if (startVal && endVal) {
@@ -4798,7 +5010,7 @@ function renderDayConsumHourlyChart(dateStr) {
             }
         });
 
-      // Controlador de despliegue de ayuda de Datadis
+        // Controlador de despliegue de ayuda de Datadis
         const toggleDatadisHelpBtn = document.getElementById('toggleDatadisHelpBtn');
         const datadisHelpContent = document.getElementById('datadisHelpContent');
         const datadisHelpIcon = document.getElementById('datadisHelpIcon');
@@ -4813,3 +5025,5 @@ function renderDayConsumHourlyChart(dateStr) {
     </script>
 </body>
 </html>
+
+          
