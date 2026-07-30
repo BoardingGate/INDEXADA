@@ -1311,7 +1311,8 @@
             document.getElementById('datadisStart').value = toIso(hace30);
         })();
 
-        function handleFiles(files) {
+
+      function handleFiles(files) {
             const file = files[0];
             if (!file) return;
 
@@ -1322,6 +1323,12 @@
             dropZone.classList.remove('border-blue-300', 'bg-gray-50');
 
             showStatus("Archivo cargado. Procesando e interpretando lecturas...", "info");
+
+            // Limpiar selección previa del calendario al importar un nuevo archivo
+            if (window.calendarSelectedDates) {
+                window.calendarSelectedDates.clear();
+            }
+            saveConfig();
 
             Papa.parse(file, {
                 header: true,
