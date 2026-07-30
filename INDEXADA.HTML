@@ -597,7 +597,7 @@
                         <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
                             <!-- Fila Continua PVPC -->
                             <div>
-                                <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC (Tarifa Indexada)</span>
+                                <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC regulada</span>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
                                     <div>
                                         <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
@@ -1795,7 +1795,7 @@
             let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; 
             let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; 
 
-            // Variables para el cálculo oficial estricto 2.0TD de la tarifa indexada
+            // Variables para el cálculo oficial estricto 2.0TD de la tarifa regulada
             let p1KwhIndexedTime = 0, p2KwhIndexedTime = 0, p3KwhIndexedTime = 0;   
             let p1CostIndexedTime = 0, p2CostIndexedTime = 0, p3CostIndexedTime = 0; 
             let p1IndexedTimeHours = 0, p2IndexedTimeHours = 0, p3IndexedTimeHours = 0;
@@ -1889,7 +1889,7 @@
                     p3TimeHours++; 
                 }
 
-                // --- CÁLCULO ESTRICTO SEGÚN PERÍODOS OFICIALES 2.0TD PARA INDEXADA ---
+                // --- CÁLCULO ESTRICTO SEGÚN PERÍODOS OFICIALES 2.0TD PARA REGULADA ---
                 let officialSlot20TD = 'P3'; 
                 if (!isWeekend && !isHoliday) {
                     if ((item.hora >= 10 && item.hora < 14) || (item.hora >= 18 && item.hora < 22)) {
@@ -2248,7 +2248,7 @@
             document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
             document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
-            // --- RENDERIZADO DE LAS TARJETAS INDEXADAS POR TRAMO HORARIO ESTRICTO 2.0TD ---
+            // --- RENDERIZADO DE LAS TARJETAS REGULADAS POR TRAMO HORARIO ESTRICTO 2.0TD ---
             const p1PctIndexedTimeKwh = totalKwh > 0 ? (p1KwhIndexedTime / totalKwh) * 100 : 0;
             const p2PctIndexedTimeKwh = totalKwh > 0 ? (p2KwhIndexedTime / totalKwh) * 100 : 0;
             const p3PctIndexedTimeKwh = totalKwh > 0 ? (p3KwhIndexedTime / totalKwh) * 100 : 0;
@@ -2316,7 +2316,7 @@
                             <thead>
                                 <tr class="border-b text-gray-400 uppercase text-[9px] tracking-wider font-semibold">
                                     <th class="py-2">Concepto Facturado</th>
-                                    <th class="py-2 text-right">Tarifa PVPC (Indexada)</th>
+                                    <th class="py-2 text-right">Tarifa PVPC (Regulada)</th>
                                     <th class="py-2 text-right">${activeManualTariffName} (Manual)</th>
                                     <th class="py-2 text-right">Desviación / Diferencia</th>
                                 </tr>
