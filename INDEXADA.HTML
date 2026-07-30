@@ -2310,7 +2310,7 @@ if (dayData) {
                     }
 
 
-                  const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
+           const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
 
                     // Calcular la media simple de la tarifa activa (PVPC o Manual) de este día
                     const dayPrices = [];
@@ -2343,11 +2343,14 @@ if (dayData) {
                     }
                     const daySimpleAvg = dayPrices.reduce((sum, p) => sum + p, 0) / 24;
 
-                    // Determinar el color del texto según la comparación con la tarifa activa
-            // Determinar el color del texto según la comparación con la tarifa activa
+                    // Redondear ambos valores a 4 decimales (igual que el formato visual) para evitar discrepancias
+                    const roundedAchieved = parseFloat(dayAchievedAvg.toFixed(4));
+                    const roundedSimple = parseFloat(daySimpleAvg.toFixed(4));
+
+                    // Determinar el color del texto según la comparación de valores redondeados
                     let mediaColorClass = "text-gray-700 font-bold";
                     if (daySimpleAvg > 0) {
-                        if (dayAchievedAvg > daySimpleAvg) {
+                        if (roundedAchieved > roundedSimple) {
                             mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media de la tarifa activa
                         } else {
                             mediaColorClass = "text-green-600 font-black"; // Verde si es igual o inferior
