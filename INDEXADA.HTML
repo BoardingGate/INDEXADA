@@ -2052,8 +2052,9 @@
                 dayOfWeekCount[dayOfWeek]++;
             });
 
-            const avgDailyKwh = totalKwh / numDays;
+const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
+            const avgPeriodPriceWithPower = totalKwh > 0 ? (grandTotalActive / totalKwh) : 0;
 
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
@@ -2087,7 +2088,17 @@
             `;
 
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+            
+            avgPriceKwhTextEl.innerHTML = `
+                <div class="leading-tight">
+                    <span class="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Sólo Energía</span>
+                    <span class="font-bold text-gray-950 text-base">${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                    <div class="mt-1.5 pt-1.5 border-t border-gray-100">
+                        <span class="text-[10px] text-indigo-500 font-bold block uppercase tracking-wider" title="Coste total (Energía + Término de Potencia prorrateado) dividido por los kWh del periodo">Con Potencia</span>
+                        <span class="font-bold text-indigo-900 text-sm block mt-0.5">${avgPeriodPriceWithPower.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                    </div>
+                </div>
+            `;
 
             const dailyKwhValues = Object.values(dailyStats).map(d => d.kwh);
             const minDailyKwh = dailyKwhValues.length > 0 ? Math.min(...dailyKwhValues) : 0;
