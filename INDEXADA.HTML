@@ -4355,6 +4355,7 @@ function renderDayConsumHourlyChart(dateStr) {
 
             const avgHourlyConsum = dayTotalKwh / 24;
             const avgPriceOfThatDay = hourlyPrices.reduce((sum, p) => sum + p, 0) / 24;
+            const achievedAvgPrice = dayTotalKwh > 0 ? (dayTotalCost / dayTotalKwh) : 0;
             const threshold = parseFloat(thresholdInput.value) || 0;
 
             const showCostLine = document.getElementById('showHourlyCostToggle').checked;
@@ -4367,8 +4368,11 @@ function renderDayConsumHourlyChart(dateStr) {
                     <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
                         Coste Diario: ${dayTotalCost.toFixed(2)} €
                     </span>
-                    <span class="bg-rose-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0">
+                    <span class="bg-rose-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0" title="Precio medio aritmético simple de la tarifa de hoy">
                         Precio Medio: ${avgPriceOfThatDay.toFixed(5)} €/kWh
+                    </span>
+                    <span class="bg-indigo-600 text-white font-extrabold px-2.5 py-0.5 rounded text-xs shrink-0" title="Coste total del día dividido entre el consumo total del día">
+                        P. Medio Logrado: ${achievedAvgPrice.toFixed(5)} €/kWh
                     </span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-blue-100 border border-blue-200"></span> Consumo</span>
                     <span class="inline-flex items-center gap-1 shrink-0"><span class="w-2.5 h-2.5 rounded bg-amber-200 border border-amber-300"></span> Supera Umbral (&gt; ${threshold} kWh)</span>
