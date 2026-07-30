@@ -2300,8 +2300,30 @@ if (dayData) {
                         kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
                         costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
                     }
+const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
 
-                    const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
+                    // Calcular la media aritmética simple PVPC de REE para este día específico
+                    const dayPrices = [];
+                    for (let h = 0; h < 24; h++) {
+                        const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                        const price = window.queryPricesDb ? window.queryPricesDb[priceKey] : undefined;
+                        if (price !== undefined) {
+                            dayPrices.push(price);
+                        }
+                    }
+                    const daySimpleAvgPvpc = dayPrices.length > 0 
+                        ? (dayPrices.reduce((sum, p) => sum + p, 0) / dayPrices.length) 
+                        : 0;
+
+                    // Determinar el color del texto según la comparación
+                    let mediaColorClass = "text-gray-700 font-bold";
+                    if (daySimpleAvgPvpc > 0) {
+                        if (dayAchievedAvg > daySimpleAvgPvpc) {
+                            mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media simple de REE
+                        } else {
+                            mediaColorClass = "text-green-600 font-black"; // Verde si es inferior o igual
+                        }
+                    }
 
                     monthHtml += `
                         <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
@@ -2316,8 +2338,8 @@ if (dayData) {
                             <div class="flex justify-between items-end mt-1.5 w-full">
                                 <div class="text-left leading-none shrink-0 self-end">
                                     <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
-                                    <span class="text-[10px] font-black text-indigo-700 font-mono" title="Precio medio real logrado en el día (Coste / kWh)">
-                                        ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] text-gray-400 font-normal">€</span>
+                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media simple PVPC del día (${daySimpleAvgPvpc.toFixed(5)} €), verde si es inferior.">
+                                        ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
                                     </span>
                                 </div>
                                 <div class="text-right leading-tight">
