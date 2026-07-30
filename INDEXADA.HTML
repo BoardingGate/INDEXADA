@@ -2344,12 +2344,13 @@ if (dayData) {
                     const daySimpleAvg = dayPrices.reduce((sum, p) => sum + p, 0) / 24;
 
                     // Determinar el color del texto según la comparación con la tarifa activa
+            // Determinar el color del texto según la comparación con la tarifa activa
                     let mediaColorClass = "text-gray-700 font-bold";
                     if (daySimpleAvg > 0) {
                         if (dayAchievedAvg > daySimpleAvg) {
                             mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media de la tarifa activa
                         } else {
-                            mediaColorClass = "text-green-600 font-black"; // Verde si es inferior o igual
+                            mediaColorClass = "text-green-600 font-black"; // Verde si es igual o inferior
                         }
                     }
 
@@ -2366,7 +2367,7 @@ if (dayData) {
                             <div class="flex justify-between items-end mt-1.5 w-full">
                                 <div class="text-left leading-none shrink-0 self-end">
                                     <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
-                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es inferior.">
+                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es igual o inferior.">
                                         ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
                                     </span>
                                 </div>
