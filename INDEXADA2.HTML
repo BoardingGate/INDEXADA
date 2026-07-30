@@ -116,16 +116,28 @@
                 </div>
             </div>
 
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
-                <h4 class="font-bold text-xs text-blue-800 uppercase mb-2">¿Qué es Datadis.es y cómo darte de alta?</h4>
-                <p class="text-xs text-gray-700 leading-relaxed mb-2">
-                    Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas (Endesa, Iberdrola, etc.) publican tus curvas de consumo horario reales, con independencia de tu comercializadora.
-                </p>
-                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
-                    <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
-                    <li>Usa tu NIF/NIE como usuario y crea una contraseña; recibirás un correo de confirmación.</li>
-                    <li>Localiza tu CUPS (código de tu punto de suministro) en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
-                </ol>
+           <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
+                <!-- Cabecera clickable para desplegar/colapsar -->
+                <button id="toggleDatadisHelpBtn" type="button" class="w-full flex justify-between items-center text-left focus:outline-none select-none">
+                    <h4 class="font-bold text-xs text-blue-800 uppercase flex items-center gap-1.5">
+                        <span>ℹ️ ¿Qué es Datadis.es y cómo darte de alta?</span>
+                    </h4>
+                    <span id="datadisHelpIcon" class="text-blue-800 font-bold text-xs bg-blue-100 hover:bg-blue-200/80 px-2 py-1 rounded transition-colors select-none">
+                        (+) Mostrar ayuda
+                    </span>
+                </button>
+                
+                <!-- Contenido oculto por defecto -->
+                <div id="datadisHelpContent" class="hidden mt-3 pt-3 border-t border-blue-200/60">
+                    <p class="text-xs text-gray-700 leading-relaxed mb-2">
+                        Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas (Endesa, Iberdrola, etc.) publican tus curvas de consumo horario reales, con independencia de tu comercializadora.
+                    </p>
+                    <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
+                        <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
+                        <li>Usa tu NIF/NIE como usuario y crea una contraseña; recibirás un correo de confirmación.</li>
+                        <li>Localiza tu CUPS (código de tu punto de suministro) en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
+                    </ol>
+                </div>
             </div>
 
             <!-- Panel de Descarga Directa vía Proxy -->
@@ -4785,6 +4797,18 @@ function renderDayConsumHourlyChart(dateStr) {
                 renderAnnualTrendGrid(year);
             }
         });
+
+      // Controlador de despliegue de ayuda de Datadis
+        const toggleDatadisHelpBtn = document.getElementById('toggleDatadisHelpBtn');
+        const datadisHelpContent = document.getElementById('datadisHelpContent');
+        const datadisHelpIcon = document.getElementById('datadisHelpIcon');
+
+        if (toggleDatadisHelpBtn && datadisHelpContent && datadisHelpIcon) {
+            toggleDatadisHelpBtn.addEventListener('click', () => {
+                const isHidden = datadisHelpContent.classList.toggle('hidden');
+                datadisHelpIcon.textContent = isHidden ? '(+) Mostrar ayuda' : '(-) Ocultar ayuda';
+            });
+        }  
 
     </script>
 </body>
