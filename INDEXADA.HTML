@@ -1649,6 +1649,14 @@
             const holidaysInputEl = document.getElementById('holidaysInput');
             const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
 
+            // Pre-recuperar precios y tramos para las comparaciones del calendario
+            const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
                 2: { label: 'Martes', kwh: 0, cost: 0 },
@@ -2300,26 +2308,46 @@ if (dayData) {
                         kwhClass = "text-[10px] font-bold text-blue-800 leading-tight";
                         costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
                     }
-const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
 
-                    // Calcular la media aritmética simple PVPC de REE para este día específico
+
+                  const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
+
+                    // Calcular la media simple de la tarifa activa (PVPC o Manual) de este día
                     const dayPrices = [];
-                    for (let h = 0; h < 24; h++) {
-                        const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
-                        const price = window.queryPricesDb ? window.queryPricesDb[priceKey] : undefined;
-                        if (price !== undefined) {
-                            dayPrices.push(price);
-                        }
-                    }
-                    const daySimpleAvgPvpc = dayPrices.length > 0 
-                        ? (dayPrices.reduce((sum, p) => sum + p, 0) / dayPrices.length) 
-                        : 0;
+                    const dateParts = dateKey.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayOfWeek = dateObj.getDay(); 
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+                    const isHoliday = holidaysList.includes(dayMonthStr);
 
-                    // Determinar el color del texto según la comparación
+                    for (let h = 0; h < 24; h++) {
+                        let precio = priceValle;
+                        if (mode === 'pvpc') {
+                            const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                            precio = window.queryPricesDb ? (window.queryPricesDb[priceKey] || 0) : 0;
+                        } else {
+                            if ((isWeekend && useWeekendValle) || isHoliday) {
+                                precio = priceValle;
+                            } else {
+                                if (hoursPunta.includes(h)) {
+                                    precio = pricePunta;
+                                } else if (hoursLlano.includes(h)) {
+                                    precio = priceLlano;
+                                } else {
+                                    precio = priceValle;
+                                }
+                            }
+                        }
+                        dayPrices.push(precio);
+                    }
+                    const daySimpleAvg = dayPrices.reduce((sum, p) => sum + p, 0) / 24;
+
+                    // Determinar el color del texto según la comparación con la tarifa activa
                     let mediaColorClass = "text-gray-700 font-bold";
-                    if (daySimpleAvgPvpc > 0) {
-                        if (dayAchievedAvg > daySimpleAvgPvpc) {
-                            mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media simple de REE
+                    if (daySimpleAvg > 0) {
+                        if (dayAchievedAvg > daySimpleAvg) {
+                            mediaColorClass = "text-red-600 font-black"; // Rojo si supera la media de la tarifa activa
                         } else {
                             mediaColorClass = "text-green-600 font-black"; // Verde si es inferior o igual
                         }
@@ -2338,7 +2366,7 @@ const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
                             <div class="flex justify-between items-end mt-1.5 w-full">
                                 <div class="text-left leading-none shrink-0 self-end">
                                     <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
-                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media simple PVPC del día (${daySimpleAvgPvpc.toFixed(5)} €), verde si es inferior.">
+                                    <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es inferior.">
                                         ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
                                     </span>
                                 </div>
