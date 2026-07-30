@@ -2284,8 +2284,7 @@
                     const selectHighlightClass = isSelected 
                         ? "ring-2 ring-blue-500 ring-offset-0 z-10 scale-[1.01]" 
                         : "opacity-35 hover:opacity-75 transition-opacity";
-
-                    if (dayData) {
+if (dayData) {
                         const isEvChargingDay = dayData.kwh >= dailyEvThreshold;
                         
                         let cellClass, dayLabelClass, kwhClass, costClass;
@@ -2302,9 +2301,11 @@
                         costClass = "text-[9px] font-bold text-green-800 leading-tight mt-0.5";
                     }
 
+                    const dayAchievedAvg = dayData.kwh > 0 ? (dayData.cost / dayData.kwh) : 0;
+
                     monthHtml += `
                         <div class="${cellClass} cursor-pointer ${selectHighlightClass}" onclick="handleCalendarDayClick('${dateKey}')" title="${isEvChargingDay ? 'Umbral superado. Clic para alternar día' : 'Clic para alternar día'}">
-                            <div class="flex justify-between items-center w-full shrink-0">
+                            <div class="flex justify-between items-center w-full shrink-0 border-b border-gray-200/40 pb-1">
                                 <span class="${dayLabelClass}">${day}</span>
                                 <button class="text-blue-600 hover:text-blue-900 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded px-1.5 py-0.5 text-[10px] font-bold transition-all shrink-0 leading-none shadow-xs"
                                         onclick="event.stopPropagation(); openDayConsumDetail('${dateKey}')"
@@ -2312,9 +2313,17 @@
                                     📊
                                 </button>
                             </div>
-                            <div class="text-right mt-1.5 w-full">
-                                <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
-                                <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                            <div class="flex justify-between items-end mt-1.5 w-full">
+                                <div class="text-left leading-none shrink-0 self-end">
+                                    <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
+                                    <span class="text-[10px] font-black text-indigo-700 font-mono" title="Precio medio real logrado en el día (Coste / kWh)">
+                                        ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] text-gray-400 font-normal">€</span>
+                                    </span>
+                                </div>
+                                <div class="text-right leading-tight">
+                                    <p class="${kwhClass}">${dayData.kwh.toFixed(1)} <span class="text-[8px] font-normal opacity-70">kWh</span></p>
+                                    <p class="${costClass}">${dayData.cost.toFixed(2)} €</p>
+                                </div>
                             </div>
                         </div>
                     `;
