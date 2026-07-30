@@ -3115,7 +3115,7 @@
             }
         }
 
-        function renderQueryCalendar(startStr, endStr) {
+function renderQueryCalendar(startStr, endStr) {
             queryCalendarContainer.innerHTML = "";
             const metricsContainer = document.getElementById('queryPeriodMetrics');
             metricsContainer.innerHTML = "";
@@ -3251,7 +3251,7 @@
                     monthHtml += `<div class="bg-gray-200/50 border border-dashed border-gray-300 rounded-lg min-h-[68px]"></div>`;
                 }
 
-for (let day = 1; day <= daysInMonth; day++) {
+                for (let day = 1; day <= daysInMonth; day++) {
                     const dayStr = String(day).padStart(2, '0');
                     const dateKey = `${yyyymm}-${dayStr}`;
 
@@ -3278,7 +3278,6 @@ for (let day = 1; day <= daysInMonth; day++) {
                                 dayPrices.push(price);
                             }
                         }
-                        const queryThreshold = parseFloat(document.getElementById('queryPriceThreshold').value) || 0.08;
                         const cheapHoursCount = dayPrices.filter(p => p <= queryThreshold).length;
                         const cheapPct = dayPrices.length > 0 ? (cheapHoursCount / dayPrices.length) * 100 : 0;
 
@@ -3294,31 +3293,6 @@ for (let day = 1; day <= daysInMonth; day++) {
                                         <p class="text-rose-800 mt-0.5" title="Máximo">▲${dayStats.max.toFixed(4)}</p>
                                         <p class="text-blue-900 border-t border-gray-400/40 mt-1 pt-1" title="Media">μ:${dayStats.avg.toFixed(4)}</p>
                                     </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        monthHtml += `
-                            <div class="bg-gray-100 border border-gray-300 rounded-lg p-1.5 flex flex-col justify-start min-h-[68px] opacity-40">
-                                <span class="text-[10px] font-semibold text-gray-400 text-left">${day}</span>
-                                <span class="text-[8px] text-gray-400 mt-auto text-right">Sin datos</span>
-                            </div>
-                        `;
-                    }
-                }
-
-                    if (dayStats) {
-                        const cellBgColor = getTemperatureColor(dayStats.avg, minDailyAvg, maxDailyAvg);
-
-                        monthHtml += `
-                            <div class="border-2 border-gray-400/80 hover:border-blue-600 rounded-lg p-1.5 flex flex-col justify-between shadow-xs hover:shadow transition-all cursor-pointer min-h-[68px]"
-                                 style="background-color: ${cellBgColor};"
-                                 onclick="openDayDetail('${dateKey}')">
-                                <span class="text-[10px] font-black text-slate-900 bg-white/70 backdrop-blur-xs rounded px-1.5 py-0.5 self-start">${day}</span>
-                                <div class="text-[9px] leading-tight text-right mt-1 font-mono font-bold">
-                                    <p class="text-emerald-800" title="Mínimo">▼${dayStats.min.toFixed(4)}</p>
-                                    <p class="text-rose-800" title="Máximo">▲${dayStats.max.toFixed(4)}</p>
-                                    <p class="text-blue-900 border-t border-gray-400/40 mt-1 pt-1" title="Media">μ:${dayStats.avg.toFixed(4)}</p>
                                 </div>
                             </div>
                         `;
