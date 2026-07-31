@@ -862,17 +862,24 @@
             </p>
 
             <!-- MODAL: Datos Identificativos CUPS -->
+<!-- MODAL: Datos Identificativos CUPS (Reutilizado dinámicamente para los Picos de Potencia) -->
     <div id="cupsDetailModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
-<div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
+            <!-- Cabecera del modal -->
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
                 <h3 class="font-bold text-gray-900 text-sm sm:text-base flex items-center gap-1.5">
+                    <!-- Este span cambia dinámicamente con JS -->
                     <span id="cupsModalTitle">📋 Datos Identificativos del Suministro</span>
                 </h3>
                 <button id="closeCupsDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 leading-none">&times;</button>
             </div>
+            
+            <!-- Cuerpo del modal (Se rellena con el contrato o con las potencias según corresponda) -->
             <div class="p-6 overflow-y-auto space-y-4 text-xs text-gray-700" id="cupsDetailContent">
                 <!-- Rellenado dinámicamente -->
             </div>
+            
+            <!-- Pie del modal -->
             <div class="p-4 bg-gray-50 border-t flex justify-end shrink-0">
                 <button id="closeCupsDetailModalBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
                     Cerrar
