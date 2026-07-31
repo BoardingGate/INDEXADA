@@ -5235,7 +5235,7 @@ datadisContractsBtn.addEventListener('click', async () => {
                     return;
                 }
 
-                // Extraer el contrato/objeto de la respuesta
+                // Extraer el contrato de la respuesta
                 const contracts = data.contracts || data.consumptionData || data; 
                 const contract = Array.isArray(contracts) ? contracts[0] : contracts;
 
@@ -5269,7 +5269,7 @@ datadisContractsBtn.addEventListener('click', async () => {
                     return;
                 }
 
-                // --- FLUJO ESTÁNDAR SI EL PROXY DEVOLVIERA UN CONTRATO REAL (Mapeo basado en Manual Pág. 8) ---
+                // --- FLUJO ESTÁNDAR SI EL PROXY DEVUELVE UN CONTRATO REAL (Manual Pág. 8) ---
                 const findValue = (keys, fallback = 'No disponible') => {
                     for (let k of keys) {
                         if (contract[k] !== undefined && contract[k] !== null && contract[k] !== '') {
@@ -5289,14 +5289,36 @@ datadisContractsBtn.addEventListener('click', async () => {
                 const provinceVal = findValue(['province', 'provincia'], '-');
                 const municipalityVal = findValue(['municipality', 'municipio', 'town', 'city'], '-');
 
-                let p1Val = 'No disponible';
-                let p2Val = 'No disponible';
+                // Obtención de Potencias contratadas (Arrays y formatos planos)
+                let p1Num = null;
+                let p2Num = null;
                 const rawPowerArray = contract.contractedPowerkW || contract.contractedPower || contract.potencias;
+
                 if (rawPowerArray && Array.isArray(rawPowerArray)) {
-                    if (rawPowerArray.length > 0 && rawPowerArray[0] !== undefined) p1Val = parseFloat(rawPowerArray[0]).toFixed(2) + ' kW';
-                    if (rawPowerArray.length > 1 && rawPowerArray[1] !== undefined) p2Val = parseFloat(rawPowerArray[1]).toFixed(2) + ' kW';
+                    if (rawPowerArray.length > 0 && rawPowerArray[0] !== undefined) p1Num = parseFloat(rawPowerArray[0]);
+                    if (rawPowerArray.length > 1 && rawPowerArray[1] !== undefined) p2Num = parseFloat(rawPowerArray[1]);
+                    else if (rawPowerArray.length === 1) p2Num = p1Num;
+                } else {
+                    const p1Flat = findValue(['contractedPowerActiveP1', 'powerP1', 'potenciaP1', 'power_p1'], null);
+                    const p2Flat = findValue(['contractedPowerActiveP2', 'powerP2', 'potenciaP2', 'power_p2'], null);
+                    if (p1Flat !== null) p1Num = parseFloat(p1Flat);
+                    if (p2Flat !== null) p2Num = parseFloat(p2Flat);
                 }
 
+                let p1Val = p1Num !== null ? p1Num.toFixed(2) + ' kW' : 'No disponible';
+                let p2Val = p2Num !== null ? p2Num.toFixed(2) + ' kW' : 'No disponible';
+
+                const nifVal = username; 
+                const holderVal = 'No provisto por la API de Datadis por seguridad';
+
+                // Botón condicional para importar las potencias
+                const powerApplyButtonHtml = (p1Num !== null || p2Num !== null) ? `
+                    <button onclick="applyPowerToConfig(${p1Num || 0}, ${p2Num || 0})" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-xs mt-3">
+                        ⚡ Importar potencias recuperadas al Panel de Configuración
+                    </button>
+                ` : '';
+
+                // Renderizar la información en el modal
                 cupsDetailContent.innerHTML = `
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
@@ -5305,11 +5327,11 @@ datadisContractsBtn.addEventListener('click', async () => {
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Titular del Contrato</span>
-                            <span class="text-xs font-bold text-gray-400 italic">No provisto por la API de Datadis por seguridad</span>
+                            <span class="text-xs font-bold text-gray-400 italic">${holderVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">NIF / NIE Suministro</span>
-                            <span class="text-xs font-bold text-gray-900 font-mono">${username}</span>
+                            <span class="text-xs font-bold text-gray-900 font-mono">${nifVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Comercializadora actual</span>
@@ -5342,6 +5364,12 @@ datadisContractsBtn.addEventListener('click', async () => {
                             </span>
                         </div>
                     </div>
+                    
+                    ${powerApplyButtonHtml}
+                    
+                    <div class="p-3 bg-amber-50 rounded-lg text-[10px] text-amber-800 border border-amber-200 mt-2 leading-relaxed">
+                        ⚠️ <strong>Nota sobre Privacidad:</strong> La API de Datadis no expone el nombre completo del titular ni su DNI por motivos de seguridad y RGPD.
+                    </div>
                     <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
                         <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver Respuesta JSON Original</summary>
                         <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(contract, null, 2)}</pre>
@@ -5355,6 +5383,29 @@ datadisContractsBtn.addEventListener('click', async () => {
                 datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
             }
         });
+
+        // --- FUNCIÓN PARA APLICAR POTENCIAS DEL CONTRATO ---
+        window.applyPowerToConfig = function(p1, p2) {
+            let p1Num = parseFloat(p1);
+            let p2Num = parseFloat(p2);
+
+            if (!isNaN(p1Num) && p1Num > 0) {
+                document.getElementById('powerP1').value = p1Num.toFixed(2);
+            }
+            if (!isNaN(p2Num) && p2Num > 0) {
+                document.getElementById('powerP2').value = p2Num.toFixed(2);
+            }
+
+            // Guardar configuración, actualizar paneles de ayuda y recalcular si hay datos cargados
+            saveConfig();
+            updatePowerPriceHelpers();
+            
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+
+            alert(`✅ Potencias aplicadas correctamente:\nP1: ${p1Num.toFixed(2)} kW\nP2: ${p2Num.toFixed(2)} kW`);
+        };
 
     </script>
 </body>
