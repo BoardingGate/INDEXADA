@@ -5432,6 +5432,176 @@ datadisContractsBtn.addEventListener('click', async () => {
             alert(`✅ Potencias aplicadas correctamente:\nP1: ${p1Num.toFixed(2)} kW\nP2: ${p2Num.toFixed(2)} kW`);
         };
 
+        // --- CONTROLADOR PARA PETICIÓN DE POTENCIAS MÁXIMAS DE DATADIS ---
+        const datadisMaxPowerBtn = document.getElementById('datadisMaxPowerBtn');
+        if (datadisMaxPowerBtn) {
+            datadisMaxPowerBtn.addEventListener('click', async () => {
+                const username = document.getElementById('datadisUser').value.trim();
+                const password = document.getElementById('datadisPass').value;
+                const cups = document.getElementById('datadisCups').value.trim();
+
+                // Intentar recuperar el rango de fechas de los filtros o del panel de descarga
+                let startRaw = document.getElementById('filterStartDate').value || document.getElementById('datadisStart').value;
+                let endRaw = document.getElementById('filterEndDate').value || document.getElementById('datadisEnd').value;
+
+                // Fallback: Si no hay fecha seleccionada pero sí hay un CSV cargado, extraer fechas de allí
+                if (!startRaw && window.rawCsvData && window.rawCsvData.length > 0) {
+                    const dates = window.rawCsvData.map(r => {
+                        const colFecha = Object.keys(r).find(k => k.toLowerCase().includes('fech') || k.toLowerCase().includes('date'));
+                        return r[colFecha];
+                    }).filter(Boolean);
+                    if (dates.length > 0) {
+                        dates.sort();
+                        startRaw = dates[0];
+                        endRaw = dates[dates.length - 1];
+                    }
+                }
+
+                if (!username || !password) {
+                    alert('⚠️ Por favor, introduzca sus credenciales de Datadis (Usuario y Contraseña) en el panel de Descarga Directa.');
+                    return;
+                }
+
+                if (!startRaw || !endRaw) {
+                    alert('⚠️ Especifique un rango de fechas válido (puede usar los Filtros del Periodo o las Fechas de Descarga Directa).');
+                    return;
+                }
+
+                // Convertir cualquier formato de fecha estándar (YYYY-MM-DD) a YYYY/MM para la API de potencias
+                const getYearMonth = (str) => {
+                    const clean = str.trim().split(/[ T]/)[0];
+                    const parts = clean.split(/[-/.]/).map(p => p.trim());
+                    if (parts.length === 3) {
+                        if (parts[0].length === 4) return `${parts[0]}/${parts[1].padStart(2, '0')}`;
+                        return `${parts[2]}/${parts[1].padStart(2, '0')}`;
+                    }
+                    if (parts.length === 2) {
+                        return `${parts[0]}/${parts[1].padStart(2, '0')}`;
+                    }
+                    return '';
+                };
+
+                const formattedStart = getYearMonth(startRaw);
+                const formattedEnd = getYearMonth(endRaw);
+
+                if (!formattedStart || !formattedEnd) {
+                    alert('⚠️ Las fechas provistas no son válidas para la consulta.');
+                    return;
+                }
+
+                const statusEl = document.getElementById('datadisDirectStatus');
+                if (statusEl) {
+                    statusEl.textContent = '⏳ Solicitando registro histórico de potencias máximas a Datadis...';
+                    statusEl.className = 'text-xs mt-2 text-gray-600';
+                }
+
+                try {
+                    const resp = await fetch(DATADIS_PROXY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username,
+                            password,
+                            cups: cups || undefined,
+                            startDate: formattedStart,
+                            endDate: formattedEnd,
+                            action: 'max-power'
+                        }),
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok || data.error) {
+                        if (statusEl) {
+                            statusEl.textContent = '❌ Error al consultar potencias máximas.';
+                            statusEl.className = 'text-xs mt-2 text-red-600';
+                        }
+                        alert('Error del Servidor Proxy: ' + (data.error || 'Respuesta inesperada.'));
+                        return;
+                    }
+
+                    if (statusEl) {
+                        statusEl.textContent = '✅ Datos de potencias máximas obtenidos con éxito.';
+                        statusEl.className = 'text-xs mt-2 text-emerald-700';
+                    }
+
+                    // AQUÍ ESTÁ LA LÍNEA QUE MODIFICA EL TÍTULO DEL MODAL
+                    const modalTitle = document.getElementById('cupsModalTitle');
+                    if (modalTitle) {
+                        modalTitle.textContent = '📊 Picos Máximos de Potencia Registrados (Datadis)';
+                    }
+
+                    let contentHtml = `
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4 leading-relaxed">
+                            <p class="font-bold text-xs uppercase mb-1">Periodo Consultado: ${formattedStart} a ${formattedEnd}</p>
+                            <p class="text-[11px]">Se muestran las lecturas máximas registradas por su contador de telegestión para cada tramo tarifario (P1, P2, P3).</p>
+                        </div>
+                    `;
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        contentHtml += `<p class="text-center font-bold text-amber-600">No se obtuvieron registros de potencias máximas para el periodo seleccionado.</p>`;
+                    } else {
+                        // Agrupar lecturas para obtener el pico máximo de potencia de cada periodo tarifario
+                        const maxPeaks = {};
+                        data.forEach(item => {
+                            const p = item.period || 'Desconocido';
+                            const powerVal = parseFloat(item.maxPower);
+                            if (!isNaN(powerVal)) {
+                                if (!maxPeaks[p] || powerVal > maxPeaks[p].maxPower) {
+                                    maxPeaks[p] = {
+                                        maxPower: powerVal,
+                                        date: item.date,
+                                        time: item.time
+                                    };
+                                }
+                            }
+                        });
+
+                        contentHtml += `<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">`;
+                        Object.keys(maxPeaks).sort().forEach(p => {
+                            const peak = maxPeaks[p];
+                            contentHtml += `
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    <span class="block text-[10px] uppercase font-black text-red-600">Periodo P${p}</span>
+                                    <span class="block text-xl font-black text-gray-900 mt-1">${peak.maxPower.toFixed(3)} kW</span>
+                                    <span class="block text-[10px] text-gray-500 mt-1.5">📅 Ocurrido el: ${peak.date} a las ${peak.time}</span>
+                                </div>
+                            `;
+                        });
+                        contentHtml += `</div>`;
+
+                        // Si existen lecturas para P1 y P2, permitir su aplicación a la simulación actual
+                        const p1Peak = maxPeaks['1'] ? maxPeaks['1'].maxPower : null;
+                        const p2Peak = maxPeaks['2'] ? maxPeaks['2'].maxPower : null;
+                        if (p1Peak || p2Peak) {
+                            contentHtml += `
+                                <button onclick="applyPowerToConfig(${p1Peak || 0}, ${p2Peak || 0})" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-xs mt-4">
+                                    ⚡ Aplicar estos picos máximos como Potencias Contratadas (kW)
+                                </button>
+                            `;
+                        }
+                    }
+
+                    contentHtml += `
+                        <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
+                            <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver JSON Original de Datadis</summary>
+                            <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    `;
+
+                    document.getElementById('cupsDetailContent').innerHTML = contentHtml;
+                    toggleCupsModal(true);
+
+                } catch (err) {
+                    if (statusEl) {
+                        statusEl.textContent = '❌ Error de conexión al consultar potencias máximas: ' + err.message;
+                        statusEl.className = 'text-xs mt-2 text-red-600';
+                    }
+                    alert('Error en la comunicación con la API: ' + err.message);
+                }
+            });
+        }
+
     </script>
 </body>
 </html>
