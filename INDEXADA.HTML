@@ -168,15 +168,20 @@
                         <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                        ⬇️ Descargar y analizar directamente
+
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
+                    <div class="flex flex-wrap gap-2">
+                        <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                            ⬇️ Descargar y analizar directamente
+                        </button>
+                        <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                            💾 Guardar como archivo CSV
+                        </button>
+                    </div>
+                    <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                        📋 Datos Identificativos CUPS
                     </button>
-                    <!-- Botón para guardar CSV localmente -->
-                    <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                        💾 Guardar como archivo CSV
-                    </button>
-                </div>
+                </div>              
                 <p id="datadisDirectStatus" class="text-xs mt-2"></p>
             </div>
         </div>
@@ -850,6 +855,27 @@
                 Analizador de Consumo Eléctrico •  • Contacto: 
                 <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
             </p>
+
+            <!-- MODAL: Datos Identificativos CUPS -->
+    <div id="cupsDetailModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-gray-900 text-sm sm:text-base flex items-center gap-1.5">
+                    <span>📋 Datos Identificativos del Suministro</span>
+                </h3>
+                <button id="closeCupsDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-xs text-gray-700" id="cupsDetailContent">
+                <!-- Rellenado dinámicamente -->
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end shrink-0">
+                <button id="closeCupsDetailModalBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
         </footer>
     </div>
 
@@ -5148,6 +5174,129 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
                 e.target.value = ''; // Resetear input de archivo
             };
             reader.readAsText(file);
+        });
+
+        // --- CONSULTA DE DATOS IDENTIFICATIVOS CUPS (DATADIS) ---
+        const datadisContractsBtn = document.getElementById('datadisContractsBtn');
+        const cupsDetailModal = document.getElementById('cupsDetailModal');
+        const closeCupsDetailModal = document.getElementById('closeCupsDetailModal');
+        const closeCupsDetailModalBtn = document.getElementById('closeCupsDetailModalBtn');
+        const cupsDetailContent = document.getElementById('cupsDetailContent');
+        const datadisDirectStatus = document.getElementById('datadisDirectStatus');
+
+        function toggleCupsModal(show) {
+            if (show) {
+                cupsDetailModal.classList.remove('hidden');
+            } else {
+                cupsDetailModal.classList.add('hidden');
+            }
+        }
+
+        [closeCupsDetailModal, closeCupsDetailModalBtn].forEach(btn => {
+            btn.addEventListener('click', () => toggleCupsModal(false));
+        });
+
+        datadisContractsBtn.addEventListener('click', async () => {
+            const username = document.getElementById('datadisUser').value.trim();
+            const password = document.getElementById('datadisPass').value;
+            const cups = document.getElementById('datadisCups').value.trim();
+
+            if (!username || !password) {
+                datadisDirectStatus.textContent = '⚠️ Introduzca usuario y contraseña de Datadis para consultar el contrato.';
+                datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
+                return;
+            }
+
+            datadisDirectStatus.textContent = '⏳ Solicitando datos de contrato a Datadis...';
+            datadisDirectStatus.className = 'text-xs mt-2 text-gray-600';
+
+            try {
+                const resp = await fetch(DATADIS_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        cups: cups || undefined,
+                        action: 'contracts' // Flag para indicar al proxy que consulte contratos
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || data.error) {
+                    datadisDirectStatus.textContent = '❌ ' + (data.error || 'Error al obtener datos del suministro.');
+                    datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
+                    return;
+                }
+
+                // Intentar extraer el array de contratos de la respuesta
+                const contracts = data.contracts || data.consumptionData || data; 
+                const contract = Array.isArray(contracts) ? contracts[0] : contracts;
+
+                if (!contract || typeof contract !== 'object') {
+                    datadisDirectStatus.textContent = '⚠️ Datadis no devolvió ningún contrato válido para estas credenciales.';
+                    datadisDirectStatus.className = 'text-xs mt-2 text-amber-600';
+                    return;
+                }
+
+                datadisDirectStatus.textContent = '✅ Datos de contrato cargados con éxito.';
+                datadisDirectStatus.className = 'text-xs mt-2 text-emerald-700';
+
+                // Renderizar los datos en el Modal (sin persistencia en localStorage)
+                cupsDetailContent.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">CUPS</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">${contract.cups || contract.cupsId || 'No disponible'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Titular del Contrato</span>
+                            <span class="text-xs font-bold text-gray-900">${contract.holder || contract.nombreTitular || 'No disponible'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">NIF / NIE</span>
+                            <span class="text-xs font-bold text-gray-900">${contract.nif || contract.documentoTitular || 'No disponible'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Comercializadora actual</span>
+                            <span class="text-xs font-bold text-gray-900">${contract.comercializadora || contract.comercializadoraName || 'No disponible'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Distribuidora</span>
+                            <span class="text-xs font-bold text-gray-900">${contract.distributor || contract.distribuidoraName || 'No disponible'}</span>
+                        </div>
+                        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
+                            <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P1 (Punta)</span>
+                            <span class="text-xs font-black text-blue-900">${contract.contractedPowerActiveP1 !== undefined ? contract.contractedPowerActiveP1 + ' kW' : 'No disponible'}</span>
+                        </div>
+                        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
+                            <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P2 (Valle)</span>
+                            <span class="text-xs font-black text-blue-900">${contract.contractedPowerActiveP2 !== undefined ? contract.contractedPowerActiveP2 + ' kW' : 'No disponible'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Tarifa de Acceso</span>
+                            <span class="text-xs font-bold text-gray-900">${contract.accessTariff || '2.0TD'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Estado del Contrato</span>
+                            <span class="text-xs font-bold text-emerald-700">${contract.state || 'ACTIVO'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Localización</span>
+                            <span class="text-xs font-bold text-gray-900">
+                                CP: ${contract.postalCode || '-'} | Provincia: ${contract.province || '-'} | Municipio: ${contract.municipality || '-'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                toggleCupsModal(true);
+
+            } catch (err) {
+                datadisDirectStatus.textContent = '❌ Error de conexión al consultar el contrato: ' + err.message;
+                datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
+            }
         });
 
     </script>
