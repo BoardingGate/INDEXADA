@@ -5196,10 +5196,14 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
             btn.addEventListener('click', () => toggleCupsModal(false));
         });
 
-        datadisContractsBtn.addEventListener('click', async () => {
+datadisContractsBtn.addEventListener('click', async () => {
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
+            
+            // Capturar las fechas configuradas para cumplir con la validación estricta del proxy
+            const startDateRaw = document.getElementById('datadisStart').value || new Date().toISOString().split('T')[0];
+            const endDateRaw = document.getElementById('datadisEnd').value || new Date().toISOString().split('T')[0];
 
             if (!username || !password) {
                 datadisDirectStatus.textContent = '⚠️ Introduzca usuario y contraseña de Datadis para consultar el contrato.';
@@ -5218,7 +5222,9 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
                         username,
                         password,
                         cups: cups || undefined,
-                        action: 'contracts' // Flag para indicar al proxy que consulte contratos
+                        startDate: toDatadisDate(startDateRaw), // Satisfacer validación del proxy
+                        endDate: toDatadisDate(endDateRaw),     // Satisfacer validación del proxy
+                        action: 'contracts'
                     }),
                 });
 
@@ -5230,7 +5236,7 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
                     return;
                 }
 
-                // Intentar extraer el array de contratos de la respuesta
+                // Extraer el contrato de la respuesta
                 const contracts = data.contracts || data.consumptionData || data; 
                 const contract = Array.isArray(contracts) ? contracts[0] : contracts;
 
@@ -5243,7 +5249,7 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
                 datadisDirectStatus.textContent = '✅ Datos de contrato cargados con éxito.';
                 datadisDirectStatus.className = 'text-xs mt-2 text-emerald-700';
 
-                // Renderizar los datos en el Modal (sin persistencia en localStorage)
+                // Renderizar los datos en el Modal
                 cupsDetailContent.innerHTML = `
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
