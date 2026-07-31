@@ -5235,20 +5235,41 @@ datadisContractsBtn.addEventListener('click', async () => {
                     return;
                 }
 
-                // Extraer el contrato de la respuesta
+                // Extraer el contrato/objeto de la respuesta
                 const contracts = data.contracts || data.consumptionData || data; 
                 const contract = Array.isArray(contracts) ? contracts[0] : contracts;
 
                 if (!contract || typeof contract !== 'object') {
-                    datadisDirectStatus.textContent = '⚠️ Datadis no devolvió ningún contrato válido para estas credenciales.';
+                    datadisDirectStatus.textContent = '⚠️ Datadis no devolvió datos legibles para estas credenciales.';
                     datadisDirectStatus.className = 'text-xs mt-2 text-amber-600';
                     return;
                 }
 
-                datadisDirectStatus.textContent = '✅ Datos de contrato cargados con éxito.';
+                datadisDirectStatus.textContent = '✅ Consulta finalizada.';
                 datadisDirectStatus.className = 'text-xs mt-2 text-emerald-700';
 
-                // Buscador de claves de espectro amplio (mapea cualquier variación de nombres de campos)
+                // DETECCIÓN: Si el proxy devuelve consumo en lugar de contrato
+                if (contract.consumptionKWh !== undefined || contract.obtainMethod !== undefined) {
+                    cupsDetailContent.innerHTML = `
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-red-900 leading-relaxed mb-4">
+                            <p class="font-bold text-xs uppercase mb-1">⚠️ Limitación del Servidor Proxy Detectada</p>
+                            <p class="text-[11px] mb-2">El servidor proxy utilizado (<code>datadis-proxy.vercel.app</code>) está desarrollado para gestionar únicamente lecturas de consumo.</p>
+                            <p class="text-[11px]">Al solicitar los datos del contrato, el proxy ha ignorado la instrucción y ha devuelto un registro de consumo horario convencional. Por este motivo, campos como la Comercializadora, Distribuidora y Potencias Contratadas no se encuentran disponibles para mostrar.</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">CUPS Identificado por el Suministro</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">${contract.cups || 'No disponible'}</span>
+                        </div>
+                        <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono" open>
+                            <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ JSON de consumo devuelto por su proxy</summary>
+                            <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(contract, null, 2)}</pre>
+                        </details>
+                    `;
+                    toggleCupsModal(true);
+                    return;
+                }
+
+                // --- FLUJO ESTÁNDAR SI EL PROXY DEVOLVIERA UN CONTRATO REAL (Mapeo basado en Manual Pág. 8) ---
                 const findValue = (keys, fallback = 'No disponible') => {
                     for (let k of keys) {
                         if (contract[k] !== undefined && contract[k] !== null && contract[k] !== '') {
@@ -5268,83 +5289,59 @@ datadisContractsBtn.addEventListener('click', async () => {
                 const provinceVal = findValue(['province', 'provincia'], '-');
                 const municipalityVal = findValue(['municipality', 'municipio', 'town', 'city'], '-');
 
-                // Obtención de Potencias contratadas (soporta tanto arrays como valores planos)
                 let p1Val = 'No disponible';
                 let p2Val = 'No disponible';
-
                 const rawPowerArray = contract.contractedPowerkW || contract.contractedPower || contract.potencias;
                 if (rawPowerArray && Array.isArray(rawPowerArray)) {
-                    if (rawPowerArray.length > 0 && rawPowerArray[0] !== undefined) {
-                        p1Val = parseFloat(rawPowerArray[0]).toFixed(2) + ' kW';
-                    }
-                    if (rawPowerArray.length > 1 && rawPowerArray[1] !== undefined) {
-                        p2Val = parseFloat(rawPowerArray[1]).toFixed(2) + ' kW';
-                    } else if (rawPowerArray.length === 1) {
-                        p2Val = parseFloat(rawPowerArray[0]).toFixed(2) + ' kW';
-                    }
-                } else {
-                    // Fallback si la API o proxy devolvió potencias en formato plano
-                    const p1Flat = findValue(['contractedPowerActiveP1', 'powerP1', 'potenciaP1', 'power_p1'], null);
-                    const p2Flat = findValue(['contractedPowerActiveP2', 'powerP2', 'potenciaP2', 'power_p2'], null);
-                    if (p1Flat !== null) p1Val = parseFloat(p1Flat).toFixed(2) + ' kW';
-                    if (p2Flat !== null) p2Val = parseFloat(p2Flat).toFixed(2) + ' kW';
+                    if (rawPowerArray.length > 0 && rawPowerArray[0] !== undefined) p1Val = parseFloat(rawPowerArray[0]).toFixed(2) + ' kW';
+                    if (rawPowerArray.length > 1 && rawPowerArray[1] !== undefined) p2Val = parseFloat(rawPowerArray[1]).toFixed(2) + ' kW';
                 }
 
-                const nifVal = username; 
-                const holderVal = 'No provisto por la API de Datadis por seguridad';
-
-                // Renderizar la información en el modal
                 cupsDetailContent.innerHTML = `
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">CUPS</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">CUPS</span>
                             <span class="font-mono text-xs font-bold text-gray-900">${cupsVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">Titular del Contrato</span>
-                            <span class="text-xs font-bold text-gray-400 italic">${holderVal}</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Titular del Contrato</span>
+                            <span class="text-xs font-bold text-gray-400 italic">No provisto por la API de Datadis por seguridad</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">NIF / NIE Suministro</span>
-                            <span class="text-xs font-bold text-gray-900 font-mono">${nifVal}</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">NIF / NIE Suministro</span>
+                            <span class="text-xs font-bold text-gray-900 font-mono">${username}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">Comercializadora actual</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Comercializadora actual</span>
                             <span class="text-xs font-bold text-gray-900">${comercializadoraVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">Distribuidora</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Distribuidora</span>
                             <span class="text-xs font-bold text-gray-900">${distributorVal}</span>
                         </div>
                         <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
-                            <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P1 (Punta)</span>
+                            <span class="block text-[10px] uppercase font-bold text-blue-700 font-sans">Potencia P1 (Punta)</span>
                             <span class="text-xs font-black text-blue-900">${p1Val}</span>
                         </div>
                         <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
-                            <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P2 (Valle)</span>
+                            <span class="block text-[10px] uppercase font-bold text-blue-700 font-sans">Potencia P2 (Valle)</span>
                             <span class="text-xs font-black text-blue-900">${p2Val}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">Tarifa de Acceso</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Tarifa de Acceso</span>
                             <span class="text-xs font-bold text-gray-900">${accessTariffVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">Estado del Suministro</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Estado del Suministro</span>
                             <span class="text-xs font-bold text-emerald-700">${stateVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400">Localización</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Localización</span>
                             <span class="text-xs font-bold text-gray-900">
                                 CP: ${cpVal} | Provincia: ${provinceVal} | Municipio: ${municipalityVal}
                             </span>
                         </div>
                     </div>
-                    
-                    <div class="p-3 bg-amber-50 rounded-lg text-[10px] text-amber-800 border border-amber-200 mt-2 leading-relaxed">
-                        ⚠️ <strong>Nota sobre Privacidad:</strong> La API de Datadis no expone el nombre completo del titular ni su DNI por motivos de seguridad y RGPD.
-                    </div>
-
-                    <!-- VISOR DE DIAGNÓSTICO (Para comprobar la respuesta exacta recibida del Proxy) -->
                     <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
                         <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver Respuesta JSON Original</summary>
                         <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(contract, null, 2)}</pre>
