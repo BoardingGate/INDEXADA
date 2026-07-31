@@ -168,15 +168,20 @@
                         <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-2 mt-3">
-                    <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                        ⬇️ Descargar y analizar directamente
+
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
+                    <div class="flex flex-wrap gap-2">
+                        <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                            ⬇️ Descargar y analizar directamente
+                        </button>
+                        <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                            💾 Guardar como archivo CSV
+                        </button>
+                    </div>
+                    <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                        📋 Datos Identificativos CUPS
                     </button>
-                    <!-- Botón para guardar CSV localmente -->
-                    <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                        💾 Guardar como archivo CSV
-                    </button>
-                </div>
+                </div>              
                 <p id="datadisDirectStatus" class="text-xs mt-2"></p>
             </div>
         </div>
@@ -347,22 +352,22 @@
 
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.67" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="14.38" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="35.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
+                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
                     <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="15.00" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
+                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
                     <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
                 </div>   
             </div>
@@ -811,6 +816,22 @@
                 </div>
             </div>
 
+            <!-- Panel de Exportar/Importar Configuración y Datos -->
+            <div class="mt-8 max-w-4xl mx-auto bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
+                <h5 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">💾 Copia de Seguridad (Exportar/Importar Configuración y Datos)</h5>
+                <p class="text-[11px] text-gray-500 mb-3 leading-relaxed">Permite descargar todos los ajustes, perfiles de tarifas y los datos de consumo activos para transferirlos a otro dispositivo o navegador.</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button id="exportStateBtn" type="button" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs">
+                        <span>📤 Exportar Todo (.json)</span>
+                    </button>
+                    <button id="importStateBtnClick" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs">
+                        <span>📥 Importar Todo (.json)</span>
+                    </button>
+                    <input type="file" id="importStateFile" accept=".json" class="hidden">
+                </div>
+                <p id="importStateStatus" class="text-[10px] mt-2 text-center font-semibold hidden"></p>
+            </div>
+
             <!-- Accesos Directos a Utilidades Adicionales (Añadido) -->
             <div class="mt-8 flex flex-wrap justify-center gap-4">
                 <a href="https://boardinggate.github.io/BGUTIL/index.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
@@ -834,6 +855,27 @@
                 Analizador de Consumo Eléctrico •  • Contacto: 
                 <a href="https://x.com/boardinggate" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-400 transition-colors">@boardinggate</a>
             </p>
+
+            <!-- MODAL: Datos Identificativos CUPS -->
+    <div id="cupsDetailModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-gray-900 text-sm sm:text-base flex items-center gap-1.5">
+                    <span>📋 Datos Identificativos del Suministro</span>
+                </h3>
+                <button id="closeCupsDetailModal" class="text-gray-400 hover:text-gray-600 text-xl font-bold p-1 leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-xs text-gray-700" id="cupsDetailContent">
+                <!-- Rellenado dinámicamente -->
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end shrink-0">
+                <button id="closeCupsDetailModalBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1.5 px-4 rounded-md text-xs transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
         </footer>
     </div>
 
@@ -2052,8 +2094,9 @@
                 dayOfWeekCount[dayOfWeek]++;
             });
 
-            const avgDailyKwh = totalKwh / numDays;
+const avgDailyKwh = totalKwh / numDays;
             const avgPeriodPrice = totalKwh > 0 ? (totalCost / totalKwh) : 0;
+            const avgPeriodPriceWithPower = totalKwh > 0 ? (grandTotalActive / totalKwh) : 0;
 
             totalKwhEl.textContent = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
@@ -2087,7 +2130,17 @@
             `;
 
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
-            avgPriceKwhTextEl.textContent = `${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh`;
+            
+            avgPriceKwhTextEl.innerHTML = `
+                <div class="leading-tight">
+                    <span class="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Sólo Energía</span>
+                    <span class="font-bold text-gray-950 text-base">${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                    <div class="mt-1.5 pt-1.5 border-t border-gray-100">
+                        <span class="text-[10px] text-indigo-500 font-bold block uppercase tracking-wider" title="Coste total (Energía + Término de Potencia prorrateado) dividido por los kWh del periodo">Con Potencia</span>
+                        <span class="font-bold text-indigo-900 text-sm block mt-0.5">${avgPeriodPriceWithPower.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                    </div>
+                </div>
+            `;
 
             const dailyKwhValues = Object.values(dailyStats).map(d => d.kwh);
             const minDailyKwh = dailyKwhValues.length > 0 ? Math.min(...dailyKwhValues) : 0;
@@ -2347,7 +2400,7 @@
                                     <td class="py-2 text-right font-mono font-semibold ${diffPowerClass} leading-tight">${diffPowerText}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Margen de Comercialización</td>
+                                    <td class="py-1.5 font-medium text-gray-700">Margen Comercialización y Bono Social</td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
                                     <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
@@ -5021,6 +5074,338 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
                 datadisHelpIcon.textContent = isHidden ? '(+) Mostrar ayuda' : '(-) Ocultar ayuda';
             });
         }  
+
+    // --- MÓDULO DE EXPORTACIÓN E IMPORTACIÓN DE DATOS (BACKUP) ---
+        document.getElementById('exportStateBtn').addEventListener('click', () => {
+            saveConfig(); // Asegurar persistencia de la UI en localStorage
+            
+            const configRaw = localStorage.getItem(STORAGE_KEY);
+            let configObj = {};
+            if (configRaw) {
+                try {
+                    configObj = JSON.parse(configRaw);
+                } catch (e) {
+                    console.error("Error al leer la sesión actual", e);
+                }
+            }
+
+            const backupData = {
+                version: "1.0",
+                timestamp: new Date().toISOString(),
+                config: configObj,
+                rawCsvData: window.rawCsvData || null,
+                lastDatadisCsv: window.lastDatadisCsv || null,
+                fileName: fileNameSpan.textContent || ""
+            };
+
+            const jsonString = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const tempLink = document.createElement('a');
+            tempLink.href = url;
+            tempLink.setAttribute('download', `BG_analizador_consumo_backup_${new Date().toISOString().split('T')[0]}.json`);
+            tempLink.style.visibility = 'hidden';
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+        });
+
+        document.getElementById('importStateBtnClick').addEventListener('click', () => {
+            document.getElementById('importStateFile').click();
+        });
+
+        document.getElementById('importStateFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('importStateStatus');
+            statusEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
+            statusEl.classList.add('text-gray-600');
+            statusEl.textContent = "⏳ Procesando archivo de importación...";
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    if (!data || !data.config) {
+                        throw new Error("El archivo no contiene un formato de copia de seguridad válido.");
+                    }
+
+                    // Guardar configuración en localStorage
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data.config));
+                    
+                    // Restaurar variables globales en memoria
+                    window.rawCsvData = data.rawCsvData || null;
+                    window.lastDatadisCsv = data.lastDatadisCsv || null;
+                    
+                    // Cargar configuración en la interfaz
+                    loadConfig();
+                    updatePowerPriceHelpers();
+
+                    // Reconstruir indicador visual del archivo cargado
+                    if (data.fileName && data.fileName !== "") {
+                        dropZonePrompt.classList.add('hidden');
+                        fileSuccessText.classList.remove('hidden');
+                        fileNameSpan.textContent = data.fileName;
+                        dropZone.classList.add('border-green-400', 'bg-green-50');
+                        dropZone.classList.remove('border-blue-300', 'bg-gray-50');
+                    } else {
+                        dropZonePrompt.classList.remove('hidden');
+                        fileSuccessText.classList.add('hidden');
+                        dropZone.classList.remove('border-green-400', 'bg-green-50');
+                        dropZone.classList.add('border-blue-300', 'bg-gray-50');
+                    }
+
+                    // Procesar automáticamente si contiene datos de consumos
+                    if (window.rawCsvData && window.rawCsvData.length > 0) {
+                        processData(window.rawCsvData);
+                    } else {
+                        resultsSection.classList.add('hidden');
+                    }
+
+                    statusEl.textContent = "✅ Configuración y datos importados con éxito.";
+                    statusEl.className = "text-[10px] mt-2 text-center font-bold text-emerald-600";
+                } catch (err) {
+                    statusEl.textContent = "❌ Error al importar: " + err.message;
+                    statusEl.className = "text-[10px] mt-2 text-center font-bold text-red-600";
+                    console.error(err);
+                }
+                e.target.value = ''; // Resetear input de archivo
+            };
+            reader.readAsText(file);
+        });
+
+        // --- CONSULTA DE DATOS IDENTIFICATIVOS CUPS (DATADIS) ---
+        const datadisContractsBtn = document.getElementById('datadisContractsBtn');
+        const cupsDetailModal = document.getElementById('cupsDetailModal');
+        const closeCupsDetailModal = document.getElementById('closeCupsDetailModal');
+        const closeCupsDetailModalBtn = document.getElementById('closeCupsDetailModalBtn');
+        const cupsDetailContent = document.getElementById('cupsDetailContent');
+        const datadisDirectStatus = document.getElementById('datadisDirectStatus');
+
+        function toggleCupsModal(show) {
+            if (show) {
+                cupsDetailModal.classList.remove('hidden');
+            } else {
+                cupsDetailModal.classList.add('hidden');
+            }
+        }
+
+        [closeCupsDetailModal, closeCupsDetailModalBtn].forEach(btn => {
+            btn.addEventListener('click', () => toggleCupsModal(false));
+        });
+
+datadisContractsBtn.addEventListener('click', async () => {
+            const username = document.getElementById('datadisUser').value.trim();
+            const password = document.getElementById('datadisPass').value;
+            const cups = document.getElementById('datadisCups').value.trim();
+            
+            const startDateRaw = document.getElementById('datadisStart').value || new Date().toISOString().split('T')[0];
+            const endDateRaw = document.getElementById('datadisEnd').value || new Date().toISOString().split('T')[0];
+
+            if (!username || !password) {
+                datadisDirectStatus.textContent = '⚠️ Introduzca usuario y contraseña de Datadis para consultar el contrato.';
+                datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
+                return;
+            }
+
+            datadisDirectStatus.textContent = '⏳ Solicitando datos de contrato a Datadis...';
+            datadisDirectStatus.className = 'text-xs mt-2 text-gray-600';
+
+            try {
+                const resp = await fetch(DATADIS_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        cups: cups || undefined,
+                        startDate: toDatadisDate(startDateRaw), 
+                        endDate: toDatadisDate(endDateRaw),     
+                        action: 'contracts'
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || data.error) {
+                    datadisDirectStatus.textContent = '❌ ' + (data.error || 'Error al obtener datos del suministro.');
+                    datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
+                    return;
+                }
+
+                // Extraer el contrato de la respuesta
+                const contracts = data.contracts || data.consumptionData || data; 
+                const contract = Array.isArray(contracts) ? contracts[0] : contracts;
+
+                if (!contract || typeof contract !== 'object') {
+                    datadisDirectStatus.textContent = '⚠️ Datadis no devolvió datos legibles para estas credenciales.';
+                    datadisDirectStatus.className = 'text-xs mt-2 text-amber-600';
+                    return;
+                }
+
+                datadisDirectStatus.textContent = '✅ Consulta finalizada.';
+                datadisDirectStatus.className = 'text-xs mt-2 text-emerald-700';
+
+                // DETECCIÓN: Si el proxy devuelve consumo en lugar de contrato
+                if (contract.consumptionKWh !== undefined || contract.obtainMethod !== undefined) {
+                    cupsDetailContent.innerHTML = `
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-red-900 leading-relaxed mb-4">
+                            <p class="font-bold text-xs uppercase mb-1">⚠️ Limitación del Servidor Proxy Detectada</p>
+                            <p class="text-[11px] mb-2">El servidor proxy utilizado (<code>datadis-proxy.vercel.app</code>) está desarrollado para gestionar únicamente lecturas de consumo.</p>
+                            <p class="text-[11px]">Al solicitar los datos del contrato, el proxy ha ignorado la instrucción y ha devuelto un registro de consumo horario convencional. Por este motivo, campos como la Comercializadora, Distribuidora y Potencias Contratadas no se encuentran disponibles para mostrar.</p>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">CUPS Identificado por el Suministro</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">${contract.cups || 'No disponible'}</span>
+                        </div>
+                        <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono" open>
+                            <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ JSON de consumo devuelto por su proxy</summary>
+                            <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(contract, null, 2)}</pre>
+                        </details>
+                    `;
+                    toggleCupsModal(true);
+                    return;
+                }
+
+                // --- FLUJO ESTÁNDAR SI EL PROXY DEVUELVE UN CONTRATO REAL (Manual Pág. 8) ---
+                const findValue = (keys, fallback = 'No disponible') => {
+                    for (let k of keys) {
+                        if (contract[k] !== undefined && contract[k] !== null && contract[k] !== '') {
+                            return contract[k];
+                        }
+                    }
+                    return fallback;
+                };
+
+                const cupsVal = findValue(['cups', 'cupsId', 'cups_id', 'cupsVal']);
+                const distributorVal = findValue(['distributor', 'distribuidora', 'distribuidoraName', 'distribuidora_name', 'distributorName']);
+                const comercializadoraVal = findValue(['marketer', 'comercializadora', 'comercializadoraName', 'comercializadora_name', 'retailer', 'retailerName', 'retailer_name', 'comercializador']);
+                const accessTariffVal = findValue(['accessFare', 'accessTariff', 'access_tariff', 'tariff', 'tarifa', 'tarifaAcceso', 'tarifa_acceso', 'codeFare']);
+                const stateVal = findValue(['state', 'status', 'estado'], 'ACTIVO');
+                
+                const cpVal = findValue(['postalCode', 'postal_code', 'zipCode', 'zip_code', 'cp', 'codigoPostal'], '-');
+                const provinceVal = findValue(['province', 'provincia'], '-');
+                const municipalityVal = findValue(['municipality', 'municipio', 'town', 'city'], '-');
+
+                // Obtención de Potencias contratadas (Arrays y formatos planos)
+                let p1Num = null;
+                let p2Num = null;
+                const rawPowerArray = contract.contractedPowerkW || contract.contractedPower || contract.potencias;
+
+                if (rawPowerArray && Array.isArray(rawPowerArray)) {
+                    if (rawPowerArray.length > 0 && rawPowerArray[0] !== undefined) p1Num = parseFloat(rawPowerArray[0]);
+                    if (rawPowerArray.length > 1 && rawPowerArray[1] !== undefined) p2Num = parseFloat(rawPowerArray[1]);
+                    else if (rawPowerArray.length === 1) p2Num = p1Num;
+                } else {
+                    const p1Flat = findValue(['contractedPowerActiveP1', 'powerP1', 'potenciaP1', 'power_p1'], null);
+                    const p2Flat = findValue(['contractedPowerActiveP2', 'powerP2', 'potenciaP2', 'power_p2'], null);
+                    if (p1Flat !== null) p1Num = parseFloat(p1Flat);
+                    if (p2Flat !== null) p2Num = parseFloat(p2Flat);
+                }
+
+                let p1Val = p1Num !== null ? p1Num.toFixed(2) + ' kW' : 'No disponible';
+                let p2Val = p2Num !== null ? p2Num.toFixed(2) + ' kW' : 'No disponible';
+
+                const nifVal = username; 
+                const holderVal = 'No provisto por la API de Datadis por seguridad';
+
+                // Botón condicional para importar las potencias
+                const powerApplyButtonHtml = (p1Num !== null || p2Num !== null) ? `
+                    <button onclick="applyPowerToConfig(${p1Num || 0}, ${p2Num || 0})" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-xs mt-3">
+                        ⚡ Importar potencias recuperadas al Panel de Configuración
+                    </button>
+                ` : '';
+
+                // Renderizar la información en el modal
+                cupsDetailContent.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">CUPS</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">${cupsVal}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Titular del Contrato</span>
+                            <span class="text-xs font-bold text-gray-400 italic">${holderVal}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">NIF / NIE Suministro</span>
+                            <span class="text-xs font-bold text-gray-900 font-mono">${nifVal}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Comercializadora actual</span>
+                            <span class="text-xs font-bold text-gray-900">${comercializadoraVal}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Distribuidora</span>
+                            <span class="text-xs font-bold text-gray-900">${distributorVal}</span>
+                        </div>
+                        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
+                            <span class="block text-[10px] uppercase font-bold text-blue-700 font-sans">Potencia P1 (Punta)</span>
+                            <span class="text-xs font-black text-blue-900">${p1Val}</span>
+                        </div>
+                        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
+                            <span class="block text-[10px] uppercase font-bold text-blue-700 font-sans">Potencia P2 (Valle)</span>
+                            <span class="text-xs font-black text-blue-900">${p2Val}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Tarifa de Acceso</span>
+                            <span class="text-xs font-bold text-gray-900">${accessTariffVal}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Estado del Suministro</span>
+                            <span class="text-xs font-bold text-emerald-700">${stateVal}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
+                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Localización</span>
+                            <span class="text-xs font-bold text-gray-900">
+                                CP: ${cpVal} | Provincia: ${provinceVal} | Municipio: ${municipalityVal}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    ${powerApplyButtonHtml}
+                    
+                    <div class="p-3 bg-amber-50 rounded-lg text-[10px] text-amber-800 border border-amber-200 mt-2 leading-relaxed">
+                        ⚠️ <strong>Nota sobre Privacidad:</strong> La API de Datadis no expone el nombre completo del titular ni su DNI por motivos de seguridad y RGPD.
+                    </div>
+                    <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
+                        <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver Respuesta JSON Original</summary>
+                        <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(contract, null, 2)}</pre>
+                    </details>
+                `;
+
+                toggleCupsModal(true);
+
+            } catch (err) {
+                datadisDirectStatus.textContent = '❌ Error de conexión al consultar el contrato: ' + err.message;
+                datadisDirectStatus.className = 'text-xs mt-2 text-red-600';
+            }
+        });
+
+        // --- FUNCIÓN PARA APLICAR POTENCIAS DEL CONTRATO ---
+        window.applyPowerToConfig = function(p1, p2) {
+            let p1Num = parseFloat(p1);
+            let p2Num = parseFloat(p2);
+
+            if (!isNaN(p1Num) && p1Num > 0) {
+                document.getElementById('powerP1').value = p1Num.toFixed(2);
+            }
+            if (!isNaN(p2Num) && p2Num > 0) {
+                document.getElementById('powerP2').value = p2Num.toFixed(2);
+            }
+
+            // Guardar configuración, actualizar paneles de ayuda y recalcular si hay datos cargados
+            saveConfig();
+            updatePowerPriceHelpers();
+            
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+
+            alert(`✅ Potencias aplicadas correctamente:\nP1: ${p1Num.toFixed(2)} kW\nP2: ${p2Num.toFixed(2)} kW`);
+        };
 
     </script>
 </body>
