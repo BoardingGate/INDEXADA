@@ -5201,7 +5201,6 @@ datadisContractsBtn.addEventListener('click', async () => {
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
             
-            // Capturar las fechas del formulario para satisfacer el validador del proxy
             const startDateRaw = document.getElementById('datadisStart').value || new Date().toISOString().split('T')[0];
             const endDateRaw = document.getElementById('datadisEnd').value || new Date().toISOString().split('T')[0];
 
@@ -5249,86 +5248,107 @@ datadisContractsBtn.addEventListener('click', async () => {
                 datadisDirectStatus.textContent = '✅ Datos de contrato cargados con éxito.';
                 datadisDirectStatus.className = 'text-xs mt-2 text-emerald-700';
 
-                // Extracción estricta basada en el Manual de la API Datadis (Pág. 8)
-                const cupsVal = contract.cups || 'No disponible';
-                const distributorVal = contract.distributor || 'No disponible';
-                const comercializadoraVal = contract.marketer || 'No disponible'; // Mapeado a "marketer"
-                const accessTariffVal = contract.accessFare || 'No disponible';   // Mapeado a "accessFare"
-                const stateVal = contract.state || 'ACTIVO';
-                
-                const cpVal = contract.postalCode || '-';
-                const provinceVal = contract.province || '-';
-                const municipalityVal = contract.municipality || '-';
+                // Buscador de claves de espectro amplio (mapea cualquier variación de nombres de campos)
+                const findValue = (keys, fallback = 'No disponible') => {
+                    for (let k of keys) {
+                        if (contract[k] !== undefined && contract[k] !== null && contract[k] !== '') {
+                            return contract[k];
+                        }
+                    }
+                    return fallback;
+                };
 
-                // Tratamiento de Potencias Contratadas (Array "contractedPowerkW" de la API)
+                const cupsVal = findValue(['cups', 'cupsId', 'cups_id', 'cupsVal']);
+                const distributorVal = findValue(['distributor', 'distribuidora', 'distribuidoraName', 'distribuidora_name', 'distributorName']);
+                const comercializadoraVal = findValue(['marketer', 'comercializadora', 'comercializadoraName', 'comercializadora_name', 'retailer', 'retailerName', 'retailer_name', 'comercializador']);
+                const accessTariffVal = findValue(['accessFare', 'accessTariff', 'access_tariff', 'tariff', 'tarifa', 'tarifaAcceso', 'tarifa_acceso', 'codeFare']);
+                const stateVal = findValue(['state', 'status', 'estado'], 'ACTIVO');
+                
+                const cpVal = findValue(['postalCode', 'postal_code', 'zipCode', 'zip_code', 'cp', 'codigoPostal'], '-');
+                const provinceVal = findValue(['province', 'provincia'], '-');
+                const municipalityVal = findValue(['municipality', 'municipio', 'town', 'city'], '-');
+
+                // Obtención de Potencias contratadas (soporta tanto arrays como valores planos)
                 let p1Val = 'No disponible';
                 let p2Val = 'No disponible';
-                
-                if (contract.contractedPowerkW && Array.isArray(contract.contractedPowerkW)) {
-                    if (contract.contractedPowerkW.length > 0 && contract.contractedPowerkW[0] !== undefined) {
-                        p1Val = parseFloat(contract.contractedPowerkW[0]).toFixed(2) + ' kW';
+
+                const rawPowerArray = contract.contractedPowerkW || contract.contractedPower || contract.potencias;
+                if (rawPowerArray && Array.isArray(rawPowerArray)) {
+                    if (rawPowerArray.length > 0 && rawPowerArray[0] !== undefined) {
+                        p1Val = parseFloat(rawPowerArray[0]).toFixed(2) + ' kW';
                     }
-                    if (contract.contractedPowerkW.length > 1 && contract.contractedPowerkW[1] !== undefined) {
-                        p2Val = parseFloat(contract.contractedPowerkW[1]).toFixed(2) + ' kW';
-                    } else if (contract.contractedPowerkW.length === 1) {
-                        // Si solo viene un término (tarifa monomía) se asigna el mismo valor
-                        p2Val = parseFloat(contract.contractedPowerkW[0]).toFixed(2) + ' kW';
+                    if (rawPowerArray.length > 1 && rawPowerArray[1] !== undefined) {
+                        p2Val = parseFloat(rawPowerArray[1]).toFixed(2) + ' kW';
+                    } else if (rawPowerArray.length === 1) {
+                        p2Val = parseFloat(rawPowerArray[0]).toFixed(2) + ' kW';
                     }
+                } else {
+                    // Fallback si la API o proxy devolvió potencias en formato plano
+                    const p1Flat = findValue(['contractedPowerActiveP1', 'powerP1', 'potenciaP1', 'power_p1'], null);
+                    const p2Flat = findValue(['contractedPowerActiveP2', 'powerP2', 'potenciaP2', 'power_p2'], null);
+                    if (p1Flat !== null) p1Val = parseFloat(p1Flat).toFixed(2) + ' kW';
+                    if (p2Flat !== null) p2Val = parseFloat(p2Flat).toFixed(2) + ' kW';
                 }
 
-                // Variables de Privacidad no expuestas en el JSON de la API
-                const nifVal = username; // Usamos el login introducido (NIF) como dato identificativo
+                const nifVal = username; 
                 const holderVal = 'No provisto por la API de Datadis por seguridad';
 
-                // Renderizar los datos validados en el Modal
+                // Renderizar la información en el modal
                 cupsDetailContent.innerHTML = `
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">CUPS</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">CUPS</span>
                             <span class="font-mono text-xs font-bold text-gray-900">${cupsVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Titular del Contrato</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Titular del Contrato</span>
                             <span class="text-xs font-bold text-gray-400 italic">${holderVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">NIF / NIE Suministro</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">NIF / NIE Suministro</span>
                             <span class="text-xs font-bold text-gray-900 font-mono">${nifVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Comercializadora actual (Marketer)</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Comercializadora actual</span>
                             <span class="text-xs font-bold text-gray-900">${comercializadoraVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Distribuidora</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Distribuidora</span>
                             <span class="text-xs font-bold text-gray-900">${distributorVal}</span>
                         </div>
                         <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
-                            <span class="block text-[10px] uppercase font-bold text-blue-700 font-sans">Potencia P1 (Punta)</span>
+                            <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P1 (Punta)</span>
                             <span class="text-xs font-black text-blue-900">${p1Val}</span>
                         </div>
                         <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
-                            <span class="block text-[10px] uppercase font-bold text-blue-700 font-sans">Potencia P2 (Valle)</span>
+                            <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P2 (Valle)</span>
                             <span class="text-xs font-black text-blue-900">${p2Val}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Tarifa de Acceso (Access Fare)</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Tarifa de Acceso</span>
                             <span class="text-xs font-bold text-gray-900">${accessTariffVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Estado del Suministro</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Estado del Suministro</span>
                             <span class="text-xs font-bold text-emerald-700">${stateVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
-                            <span class="block text-[10px] uppercase font-bold text-gray-400 font-sans">Localización</span>
+                            <span class="block text-[10px] uppercase font-bold text-gray-400">Localización</span>
                             <span class="text-xs font-bold text-gray-900">
                                 CP: ${cpVal} | Provincia: ${provinceVal} | Municipio: ${municipalityVal}
                             </span>
                         </div>
                     </div>
-                    <div class="p-3 bg-amber-50 rounded-lg text-[10px] text-amber-800 border border-amber-200 mt-2">
-                        💡 <strong>Nota sobre Privacidad:</strong> La API privada de Datadis no expone el nombre completo del titular del contrato por motivos de seguridad y de protección de datos personales.
+                    
+                    <div class="p-3 bg-amber-50 rounded-lg text-[10px] text-amber-800 border border-amber-200 mt-2 leading-relaxed">
+                        ⚠️ <strong>Nota sobre Privacidad:</strong> La API de Datadis no expone el nombre completo del titular ni su DNI por motivos de seguridad y RGPD.
                     </div>
+
+                    <!-- VISOR DE DIAGNÓSTICO (Para comprobar la respuesta exacta recibida del Proxy) -->
+                    <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
+                        <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver Respuesta JSON Original</summary>
+                        <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(contract, null, 2)}</pre>
+                    </details>
                 `;
 
                 toggleCupsModal(true);
