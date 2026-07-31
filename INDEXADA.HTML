@@ -5222,8 +5222,8 @@ datadisContractsBtn.addEventListener('click', async () => {
                         username,
                         password,
                         cups: cups || undefined,
-                        startDate: toDatadisDate(startDateRaw), // Satisfacer validación del proxy
-                        endDate: toDatadisDate(endDateRaw),     // Satisfacer validación del proxy
+                        startDate: toDatadisDate(startDateRaw), 
+                        endDate: toDatadisDate(endDateRaw),     
                         action: 'contracts'
                     }),
                 });
@@ -5236,7 +5236,7 @@ datadisContractsBtn.addEventListener('click', async () => {
                     return;
                 }
 
-                // Extraer el contrato de la respuesta
+                // Extraer el contrato del JSON recibido (puede venir directo, en un array o anidado en variables del proxy)
                 const contracts = data.contracts || data.consumptionData || data; 
                 const contract = Array.isArray(contracts) ? contracts[0] : contracts;
 
@@ -5249,49 +5249,91 @@ datadisContractsBtn.addEventListener('click', async () => {
                 datadisDirectStatus.textContent = '✅ Datos de contrato cargados con éxito.';
                 datadisDirectStatus.className = 'text-xs mt-2 text-emerald-700';
 
-                // Renderizar los datos en el Modal
+                // Función adaptativa para rastrear variantes de propiedades en el JSON de Datadis
+                const findValue = (keys, fallback = 'No disponible') => {
+                    for (let k of keys) {
+                        if (contract[k] !== undefined && contract[k] !== null && contract[k] !== '') {
+                            return contract[k];
+                        }
+                    }
+                    return fallback;
+                };
+
+                // Lectura robusta con mapeo multivariante
+                const cupsVal = findValue(['cups', 'cupsId', 'cups_id', 'cupsVal']);
+                const holderVal = findValue(['holder', 'holderName', 'holder_name', 'titular', 'nombreTitular', 'nombre_titular', 'customerName', 'customer_name', 'cliente']);
+                const nifVal = findValue(['nif', 'nie', 'document', 'documentId', 'document_id', 'nifTitular', 'nif_titular', 'documentoTitular', 'holderId', 'holder_id']);
+                const comercializadoraVal = findValue(['comercializadora', 'comercializadoraName', 'comercializadora_name', 'retailer', 'retailerName', 'retailer_name', 'comercializador', 'comercializadoraId']);
+                const distributorVal = findValue(['distributor', 'distributorName', 'distributor_name', 'distribuidora', 'distribuidoraName', 'distribuidora_name', 'distribuidor']);
+                
+                let p1Val = findValue([
+                    'contractedPowerActiveP1', 'contracted_power_active_p1', 
+                    'contractedPowerP1', 'contracted_power_p1', 
+                    'powerActiveP1', 'powerP1', 'power_p1', 
+                    'potenciaP1', 'potencia_p1', 'potenciaContratadaP1'
+                ], null);
+                if (p1Val !== null) p1Val = parseFloat(p1Val).toFixed(2) + ' kW';
+                else p1Val = 'No disponible';
+
+                let p2Val = findValue([
+                    'contractedPowerActiveP2', 'contracted_power_active_p2', 
+                    'contractedPowerP2', 'contracted_power_p2', 
+                    'powerActiveP2', 'powerP2', 'power_p2', 
+                    'potenciaP2', 'potencia_p2', 'potenciaContratadaP2'
+                ], null);
+                if (p2Val !== null) p2Val = parseFloat(p2Val).toFixed(2) + ' kW';
+                else p2Val = 'No disponible';
+
+                const accessTariffVal = findValue(['accessTariff', 'access_tariff', 'tariff', 'tarifa', 'tarifaAcceso', 'tarifa_acceso', 'peajeAcceso'], '2.0TD');
+                const stateVal = findValue(['state', 'status', 'estado', 'situation'], 'ACTIVO');
+                
+                const cpVal = findValue(['postalCode', 'postal_code', 'zipCode', 'zip_code', 'cp', 'codigoPostal'], '-');
+                const provinceVal = findValue(['province', 'provincia'], '-');
+                const municipalityVal = findValue(['municipality', 'municipio', 'town', 'city'], '-');
+
+                // Renderizar los datos mapeados en el Modal
                 cupsDetailContent.innerHTML = `
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">CUPS</span>
-                            <span class="font-mono text-xs font-bold text-gray-900">${contract.cups || contract.cupsId || 'No disponible'}</span>
+                            <span class="font-mono text-xs font-bold text-gray-900">${cupsVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">Titular del Contrato</span>
-                            <span class="text-xs font-bold text-gray-900">${contract.holder || contract.nombreTitular || 'No disponible'}</span>
+                            <span class="text-xs font-bold text-gray-900">${holderVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">NIF / NIE</span>
-                            <span class="text-xs font-bold text-gray-900">${contract.nif || contract.documentoTitular || 'No disponible'}</span>
+                            <span class="text-xs font-bold text-gray-900">${nifVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">Comercializadora actual</span>
-                            <span class="text-xs font-bold text-gray-900">${contract.comercializadora || contract.comercializadoraName || 'No disponible'}</span>
+                            <span class="text-xs font-bold text-gray-900">${comercializadoraVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">Distribuidora</span>
-                            <span class="text-xs font-bold text-gray-900">${contract.distributor || contract.distribuidoraName || 'No disponible'}</span>
+                            <span class="text-xs font-bold text-gray-900">${distributorVal}</span>
                         </div>
                         <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
                             <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P1 (Punta)</span>
-                            <span class="text-xs font-black text-blue-900">${contract.contractedPowerActiveP1 !== undefined ? contract.contractedPowerActiveP1 + ' kW' : 'No disponible'}</span>
+                            <span class="text-xs font-black text-blue-900">${p1Val}</span>
                         </div>
                         <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-150">
                             <span class="block text-[10px] uppercase font-bold text-blue-700">Potencia P2 (Valle)</span>
-                            <span class="text-xs font-black text-blue-900">${contract.contractedPowerActiveP2 !== undefined ? contract.contractedPowerActiveP2 + ' kW' : 'No disponible'}</span>
+                            <span class="text-xs font-black text-blue-900">${p2Val}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">Tarifa de Acceso</span>
-                            <span class="text-xs font-bold text-gray-900">${contract.accessTariff || '2.0TD'}</span>
+                            <span class="text-xs font-bold text-gray-900">${accessTariffVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">Estado del Contrato</span>
-                            <span class="text-xs font-bold text-emerald-700">${contract.state || 'ACTIVO'}</span>
+                            <span class="text-xs font-bold text-emerald-700">${stateVal}</span>
                         </div>
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-150 col-span-1 sm:col-span-2">
                             <span class="block text-[10px] uppercase font-bold text-gray-400">Localización</span>
                             <span class="text-xs font-bold text-gray-900">
-                                CP: ${contract.postalCode || '-'} | Provincia: ${contract.province || '-'} | Municipio: ${contract.municipality || '-'}
+                                CP: ${cpVal} | Provincia: ${provinceVal} | Municipio: ${municipalityVal}
                             </span>
                         </div>
                     </div>
