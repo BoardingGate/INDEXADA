@@ -5433,7 +5433,7 @@ datadisContractsBtn.addEventListener('click', async () => {
         };
 
         // --- CONTROLADOR PARA PETICIÓN DE POTENCIAS MÁXIMAS DE DATADIS ---
-        const datadisMaxPowerBtn = document.getElementById('datadisMaxPowerBtn');
+       const datadisMaxPowerBtn = document.getElementById('datadisMaxPowerBtn');
         if (datadisMaxPowerBtn) {
             datadisMaxPowerBtn.addEventListener('click', async () => {
                 const username = document.getElementById('datadisUser').value.trim();
@@ -5525,7 +5525,6 @@ datadisContractsBtn.addEventListener('click', async () => {
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                     }
 
-                    // AQUÍ ESTÁ LA LÍNEA QUE MODIFICA EL TÍTULO DEL MODAL
                     const modalTitle = document.getElementById('cupsModalTitle');
                     if (modalTitle) {
                         modalTitle.textContent = '📊 Picos Máximos de Potencia Registrados (Datadis)';
@@ -5534,14 +5533,14 @@ datadisContractsBtn.addEventListener('click', async () => {
                     let contentHtml = `
                         <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4 leading-relaxed">
                             <p class="font-bold text-xs uppercase mb-1">Periodo Consultado: ${formattedStart} a ${formattedEnd}</p>
-                            <p class="text-[11px]">Se muestran las lecturas máximas registradas por su contador de telegestión para cada tramo tarifario (P1, P2, P3).</p>
+                            <p class="text-[11px]">Se muestran las lecturas máximas de potencia (kW) registradas por su contador de telegestión para cada periodo tarifario.</p>
                         </div>
                     `;
 
                     if (!Array.isArray(data) || data.length === 0) {
                         contentHtml += `<p class="text-center font-bold text-amber-600">No se obtuvieron registros de potencias máximas para el periodo seleccionado.</p>`;
                     } else {
-                        // Agrupar lecturas para obtener el pico máximo de potencia de cada periodo tarifario
+                        // 1. OBTENER LOS PICOS MÁXIMOS ABSOLUTOS
                         const maxPeaks = {};
                         data.forEach(item => {
                             const p = item.period || 'Desconocido';
@@ -5557,11 +5556,12 @@ datadisContractsBtn.addEventListener('click', async () => {
                             }
                         });
 
-                        contentHtml += `<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">`;
+                        contentHtml += `<h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Picos Máximos Absolutos Detectados</h4>`;
+                        contentHtml += `<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">`;
                         Object.keys(maxPeaks).sort().forEach(p => {
                             const peak = maxPeaks[p];
                             contentHtml += `
-                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-250">
                                     <span class="block text-[10px] uppercase font-black text-red-600">Periodo P${p}</span>
                                     <span class="block text-xl font-black text-gray-900 mt-1">${peak.maxPower.toFixed(3)} kW</span>
                                     <span class="block text-[10px] text-gray-500 mt-1.5">📅 Ocurrido el: ${peak.date} a las ${peak.time}</span>
@@ -5570,12 +5570,45 @@ datadisContractsBtn.addEventListener('click', async () => {
                         });
                         contentHtml += `</div>`;
 
+                        // 2. CALCULAR MEDIAS HISTÓRICAS DEL PERIODO
+                        // Media para P1 + P2 Combinada
+                        const p1p2Powers = data
+                            .filter(item => item.period === '1' || item.period === '2')
+                            .map(item => parseFloat(item.maxPower))
+                            .filter(val => !isNaN(val));
+                        const p1p2Average = p1p2Powers.length > 0 ? (p1p2Powers.reduce((a, b) => a + b, 0) / p1p2Powers.length) : 0;
+
+                        // Media para P3 (Valle)
+                        const p3Powers = data
+                            .filter(item => item.period === '3')
+                            .map(item => parseFloat(item.maxPower))
+                            .filter(val => !isNaN(val));
+                        const p3Average = p3Powers.length > 0 ? (p3Powers.reduce((a, b) => a + b, 0) / p3Powers.length) : 0;
+
+                        contentHtml += `
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Medias Históricas de los Picos del Periodo</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-150">
+                                        <span class="block text-[10px] uppercase font-bold text-indigo-700">Media P1 + P2 Combinada (Punta)</span>
+                                        <span class="block text-base font-bold text-gray-950 mt-1">${p1p2Average.toFixed(3)} kW</span>
+                                        <p class="text-[9px] text-gray-500 mt-1 leading-normal">Promedio de los picos mensuales en horas punta y llano.</p>
+                                    </div>
+                                    <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-150">
+                                        <span class="block text-[10px] uppercase font-bold text-emerald-700">Media P3 (Valle)</span>
+                                        <span class="block text-base font-bold text-gray-950 mt-1">${p3Average.toFixed(3)} kW</span>
+                                        <p class="text-[9px] text-gray-500 mt-1 leading-normal">Promedio de los picos mensuales en horas de noche y fines de semana.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
                         // Si existen lecturas para P1 y P2, permitir su aplicación a la simulación actual
                         const p1Peak = maxPeaks['1'] ? maxPeaks['1'].maxPower : null;
                         const p2Peak = maxPeaks['2'] ? maxPeaks['2'].maxPower : null;
                         if (p1Peak || p2Peak) {
                             contentHtml += `
-                                <button onclick="applyPowerToConfig(${p1Peak || 0}, ${p2Peak || 0})" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-xs mt-4">
+                                <button onclick="applyPowerToConfig(${p1Peak || 0}, ${p2Peak || 0})" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-xs mt-5">
                                     ⚡ Aplicar estos picos máximos como Potencias Contratadas (kW)
                                 </button>
                             `;
@@ -5583,8 +5616,8 @@ datadisContractsBtn.addEventListener('click', async () => {
                     }
 
                     contentHtml += `
-                        <details class="mt-4 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
-                            <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver JSON Original de Datadis</summary>
+                        <details class="mt-5 bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-[10px] text-gray-600 font-mono">
+                            <summary class="cursor-pointer font-bold select-none text-gray-700 uppercase tracking-wider">🛠️ Ver Respuesta JSON Original de Datadis</summary>
                             <pre class="mt-2 overflow-x-auto max-h-40 whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>
                         </details>
                     `;
