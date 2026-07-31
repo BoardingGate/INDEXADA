@@ -811,6 +811,22 @@
                 </div>
             </div>
 
+            <!-- Panel de Exportar/Importar Configuración y Datos -->
+            <div class="mt-8 max-w-4xl mx-auto bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
+                <h5 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">💾 Copia de Seguridad (Exportar/Importar Configuración y Datos)</h5>
+                <p class="text-[11px] text-gray-500 mb-3 leading-relaxed">Permite descargar todos los ajustes, perfiles de tarifas y los datos de consumo activos para transferirlos a otro dispositivo o navegador.</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button id="exportStateBtn" type="button" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs">
+                        <span>📤 Exportar Todo (.json)</span>
+                    </button>
+                    <button id="importStateBtnClick" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs">
+                        <span>📥 Importar Todo (.json)</span>
+                    </button>
+                    <input type="file" id="importStateFile" accept=".json" class="hidden">
+                </div>
+                <p id="importStateStatus" class="text-[10px] mt-2 text-center font-semibold hidden"></p>
+            </div>
+
             <!-- Accesos Directos a Utilidades Adicionales (Añadido) -->
             <div class="mt-8 flex flex-wrap justify-center gap-4">
                 <a href="https://boardinggate.github.io/BGUTIL/index.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
@@ -5032,6 +5048,107 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
                 datadisHelpIcon.textContent = isHidden ? '(+) Mostrar ayuda' : '(-) Ocultar ayuda';
             });
         }  
+
+    // --- MÓDULO DE EXPORTACIÓN E IMPORTACIÓN DE DATOS (BACKUP) ---
+        document.getElementById('exportStateBtn').addEventListener('click', () => {
+            saveConfig(); // Asegurar persistencia de la UI en localStorage
+            
+            const configRaw = localStorage.getItem(STORAGE_KEY);
+            let configObj = {};
+            if (configRaw) {
+                try {
+                    configObj = JSON.parse(configRaw);
+                } catch (e) {
+                    console.error("Error al leer la sesión actual", e);
+                }
+            }
+
+            const backupData = {
+                version: "1.0",
+                timestamp: new Date().toISOString(),
+                config: configObj,
+                rawCsvData: window.rawCsvData || null,
+                lastDatadisCsv: window.lastDatadisCsv || null,
+                fileName: fileNameSpan.textContent || ""
+            };
+
+            const jsonString = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const tempLink = document.createElement('a');
+            tempLink.href = url;
+            tempLink.setAttribute('download', `BG_analizador_consumo_backup_${new Date().toISOString().split('T')[0]}.json`);
+            tempLink.style.visibility = 'hidden';
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+        });
+
+        document.getElementById('importStateBtnClick').addEventListener('click', () => {
+            document.getElementById('importStateFile').click();
+        });
+
+        document.getElementById('importStateFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('importStateStatus');
+            statusEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
+            statusEl.classList.add('text-gray-600');
+            statusEl.textContent = "⏳ Procesando archivo de importación...";
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    if (!data || !data.config) {
+                        throw new Error("El archivo no contiene un formato de copia de seguridad válido.");
+                    }
+
+                    // Guardar configuración en localStorage
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data.config));
+                    
+                    // Restaurar variables globales en memoria
+                    window.rawCsvData = data.rawCsvData || null;
+                    window.lastDatadisCsv = data.lastDatadisCsv || null;
+                    
+                    // Cargar configuración en la interfaz
+                    loadConfig();
+                    updatePowerPriceHelpers();
+
+                    // Reconstruir indicador visual del archivo cargado
+                    if (data.fileName && data.fileName !== "") {
+                        dropZonePrompt.classList.add('hidden');
+                        fileSuccessText.classList.remove('hidden');
+                        fileNameSpan.textContent = data.fileName;
+                        dropZone.classList.add('border-green-400', 'bg-green-50');
+                        dropZone.classList.remove('border-blue-300', 'bg-gray-50');
+                    } else {
+                        dropZonePrompt.classList.remove('hidden');
+                        fileSuccessText.classList.add('hidden');
+                        dropZone.classList.remove('border-green-400', 'bg-green-50');
+                        dropZone.classList.add('border-blue-300', 'bg-gray-50');
+                    }
+
+                    // Procesar automáticamente si contiene datos de consumos
+                    if (window.rawCsvData && window.rawCsvData.length > 0) {
+                        processData(window.rawCsvData);
+                    } else {
+                        resultsSection.classList.add('hidden');
+                    }
+
+                    statusEl.textContent = "✅ Configuración y datos importados con éxito.";
+                    statusEl.className = "text-[10px] mt-2 text-center font-bold text-emerald-600";
+                } catch (err) {
+                    statusEl.textContent = "❌ Error al importar: " + err.message;
+                    statusEl.className = "text-[10px] mt-2 text-center font-bold text-red-600";
+                    console.error(err);
+                }
+                e.target.value = ''; // Resetear input de archivo
+            };
+            reader.readAsText(file);
+        });
 
     </script>
 </body>
