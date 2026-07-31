@@ -3305,7 +3305,7 @@ const avgDailyKwh = totalKwh / numDays;
             'evEfficiency'
         ];
 
-       inputsToWatch.forEach(id => {
+inputsToWatch.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 const triggerHandler = () => {
@@ -3319,6 +3319,15 @@ const avgDailyKwh = totalKwh / numDays;
                     if (isManualField) {
                         saveActiveProfileToMemory();
                     }
+
+                    // CORRECCIÓN: Si el usuario cambia las fechas del filtro manual, 
+                    // se limpia la selección previa del calendario para evitar conflictos.
+                    if (id === 'filterStartDate' || id === 'filterEndDate') {
+                        if (window.calendarSelectedDates) {
+                            window.calendarSelectedDates.clear();
+                        }
+                    }
+
                     saveConfig();
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
