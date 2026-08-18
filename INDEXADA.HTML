@@ -28,11 +28,19 @@
             </p>
         </header>
 
-        <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
+       <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
             <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div>
-                    <h3 id="todayPricesTitle" class="text-md font-bold text-amber-700">Precios de la Luz de Hoy</h3>
-                    <p id="todayPricesSubtitle" class="text-xs text-gray-500 mt-1">Precio regulado oficial (se publican a las 20:30 horas)</p>
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button id="prevMainDayBtn" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2 py-1 rounded text-xs transition-colors shrink-0 shadow-xs" title="Día anterior">
+                        &larr; <span class="hidden sm:inline">Anterior</span>
+                    </button>
+                    <div>
+                        <h3 id="todayPricesTitle" class="text-md font-bold text-amber-700">Precios de la Luz</h3>
+                        <p id="todayPricesSubtitle" class="text-xs text-gray-500 mt-0.5">Precio regulado oficial (se publican a las 20:30 horas)</p>
+                    </div>
+                    <button id="nextMainDayBtn" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2 py-1 rounded text-xs transition-colors shrink-0 shadow-xs" title="Día siguiente">
+                        <span class="hidden sm:inline">Siguiente</span> &rarr;
+                    </button>
                 </div>
                 <div id="todayAvgBadge" class="shrink-0">
                     <!-- Se carga dinámicamente -->
@@ -3344,12 +3352,8 @@ inputsToWatch.forEach(id => {
                     if (window.rawCsvData) {
                         processData(window.rawCsvData);
                     }
-                    if (window.todayPricesMap) {
-                        const now = new Date();
-                        const yyyy = now.getFullYear();
-                        const mm = String(now.getMonth() + 1).padStart(2, '0');
-                        const dd = String(now.getDate()).padStart(2, '0');
-                        renderTodayPricesChart(`${yyyy}-${mm}-${dd}`);
+                    if (window.todayPricesMap && window.currentMainPriceDate) {
+                        renderTodayPricesChart(window.currentMainPriceDate);
                     }
                     updatePowerPriceHelpers();
                 };
@@ -3712,30 +3716,71 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
 
         // --- INICIALIZACIÓN Y RENDERIZADO DE LA GRÁFICA DE HOY ---
 
-        async function initTodayPrices() {
+        window.currentMainPriceDate = null;
+
+        async function loadAndRenderMainDayPrices(dateStr) {
             const todayLabelEl = document.getElementById('todayPricesTitle');
             const subtitleEl = document.getElementById('todayPricesSubtitle');
-            
+
+            window.currentMainPriceDate = dateStr;
+            todayLabelEl.textContent = `Precios: ${formatFriendlyDate(dateStr)}`;
+            subtitleEl.textContent = "Cargando precios de Red Eléctrica de España...";
+
+            try {
+                // Si ya lo tenemos en caché en queryPricesDb, lo usamos directamente
+                let prices = {};
+                let missing = false;
+                for (let h = 0; h < 24; h++) {
+                    const k = `${dateStr}_T${String(h).padStart(2, '0')}`;
+                    if (window.queryPricesDb && window.queryPricesDb[k] !== undefined) {
+                        prices[k] = window.queryPricesDb[k];
+                    } else {
+                        missing = true;
+                        break;
+                    }
+                }
+
+                if (missing) {
+                    const fetched = await fetchPreciosPVPC(dateStr, dateStr);
+                    if (fetched && Object.keys(fetched).length > 0) {
+                        prices = fetched;
+                        Object.assign(window.queryPricesDb, fetched);
+                    }
+                }
+
+                if (prices && Object.keys(prices).length > 0) {
+                    window.todayPricesMap = prices;
+                    subtitleEl.textContent = "Precio regulado oficial (se publican a las 20:30 horas)";
+                    renderTodayPricesChart(dateStr);
+                } else {
+                    subtitleEl.textContent = `⚠️ No hay precios disponibles para el día ${formatFriendlyDate(dateStr)}.`;
+                }
+            } catch (err) {
+                subtitleEl.textContent = "⚠️ Error al conectar con REE para este día.";
+                console.error(err);
+            }
+        }
+
+        function navigateMainDay(offset) {
+            if (!window.currentMainPriceDate) return;
+            const parts = window.currentMainPriceDate.split('-').map(Number);
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            d.setDate(d.getDate() + offset);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            loadAndRenderMainDayPrices(`${yyyy}-${mm}-${dd}`);
+        }
+
+        document.getElementById('prevMainDayBtn').addEventListener('click', () => navigateMainDay(-1));
+        document.getElementById('nextMainDayBtn').addEventListener('click', () => navigateMainDay(1));
+
+        async function initTodayPrices() {
             const now = new Date();
             const yyyy = now.getFullYear();
             const mm = String(now.getMonth() + 1).padStart(2, '0');
             const dd = String(now.getDate()).padStart(2, '0');
-            const dateStr = `${yyyy}-${mm}-${dd}`;
-            
-            todayLabelEl.textContent = `Precios para hoy (${formatFriendlyDate(dateStr)})`;
-
-            try {
-                const prices = await fetchPreciosPVPC(dateStr, dateStr);
-                if (prices && Object.keys(prices).length > 0) {
-                    window.todayPricesMap = prices;
-                    renderTodayPricesChart(dateStr);
-                } else {
-                    subtitleEl.textContent = "⚠️ No se han podido obtener los precios de hoy. Compruebe su conexión o reintente más tarde.";
-                }
-            } catch (err) {
-                subtitleEl.textContent = "⚠️ Error de conexión al cargar precios del día de hoy.";
-                console.error(err);
-            }
+            await loadAndRenderMainDayPrices(`${yyyy}-${mm}-${dd}`);
         }
 
         function renderTodayPricesChart(dateStr) {
@@ -3783,7 +3828,7 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
 
             document.getElementById('todayAvgBadge').innerHTML = `
                 <span class="bg-blue-600 text-white font-black px-2.5 py-1 rounded-md text-xs sm:text-sm block text-center font-mono">
-                    MEDIA DE HOY: ${avgVal.toFixed(5)} €/kWh
+                   MEDIA DÍA: ${avgVal.toFixed(5)} €/kWh
                 </span>
             `;
 
