@@ -1094,9 +1094,11 @@
 
 
     <script>
-        window.todayPricesMap = null;
+        window.todayPricesMap = {};
+        window.queryPricesDb = {}; // Inicializado desde el inicio para evitar errores
         window.todayChartInstance = null;
         window.annualChartInstance = null;
+        window.currentMainPriceDate = null;
 
         // Variables globales
         window.rawCsvData = null;
@@ -3717,63 +3719,64 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
         // --- INICIALIZACIÓN Y RENDERIZADO DE LA GRÁFICA DE HOY ---
 
         window.currentMainPriceDate = null;
-
-        async function loadAndRenderMainDayPrices(dateStr) {
+async function loadAndRenderMainDayPrices(dateStr) {
             const todayLabelEl = document.getElementById('todayPricesTitle');
             const subtitleEl = document.getElementById('todayPricesSubtitle');
 
             window.currentMainPriceDate = dateStr;
-            todayLabelEl.textContent = `Precios: ${formatFriendlyDate(dateStr)}`;
-            subtitleEl.textContent = "Cargando precios de Red Eléctrica de España...";
+            if (todayLabelEl) todayLabelEl.textContent = `Precios: ${formatFriendlyDate(dateStr)}`;
+            if (subtitleEl) subtitleEl.textContent = "⏳ Consultando precios a Red Eléctrica de España...";
 
             try {
-                // Si ya lo tenemos en caché en queryPricesDb, lo usamos directamente
-                let prices = {};
-                let missing = false;
+                // Comprobar si ya disponemos de las 24 horas en caché
+                let hasAllHours = true;
                 for (let h = 0; h < 24; h++) {
                     const k = `${dateStr}_T${String(h).padStart(2, '0')}`;
-                    if (window.queryPricesDb && window.queryPricesDb[k] !== undefined) {
-                        prices[k] = window.queryPricesDb[k];
-                    } else {
-                        missing = true;
+                    if (window.queryPricesDb[k] === undefined) {
+                        hasAllHours = false;
                         break;
                     }
                 }
 
-                if (missing) {
+                if (!hasAllHours) {
                     const fetched = await fetchPreciosPVPC(dateStr, dateStr);
                     if (fetched && Object.keys(fetched).length > 0) {
-                        prices = fetched;
                         Object.assign(window.queryPricesDb, fetched);
                     }
                 }
 
-                if (prices && Object.keys(prices).length > 0) {
-                    window.todayPricesMap = prices;
-                    subtitleEl.textContent = "Precio regulado oficial (se publican a las 20:30 horas)";
-                    renderTodayPricesChart(dateStr);
-                } else {
-                    subtitleEl.textContent = `⚠️ No hay precios disponibles para el día ${formatFriendlyDate(dateStr)}.`;
-                }
+                window.todayPricesMap = window.queryPricesDb;
+                renderTodayPricesChart(dateStr);
             } catch (err) {
-                subtitleEl.textContent = "⚠️ Error al conectar con REE para este día.";
-                console.error(err);
+                if (subtitleEl) subtitleEl.textContent = "⚠️ Error al conectar con REE para esta fecha.";
+                console.error("Error al cargar día:", err);
             }
         }
 
         function navigateMainDay(offset) {
-            if (!window.currentMainPriceDate) return;
+            if (!window.currentMainPriceDate) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                window.currentMainPriceDate = `${yyyy}-${mm}-${dd}`;
+            }
+
             const parts = window.currentMainPriceDate.split('-').map(Number);
             const d = new Date(parts[0], parts[1] - 1, parts[2]);
             d.setDate(d.getDate() + offset);
+
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
-            loadAndRenderMainDayPrices(`${yyyy}-${mm}-${dd}`);
+            const newDateStr = `${yyyy}-${mm}-${dd}`;
+
+            loadAndRenderMainDayPrices(newDateStr);
         }
 
-        document.getElementById('prevMainDayBtn').addEventListener('click', () => navigateMainDay(-1));
-        document.getElementById('nextMainDayBtn').addEventListener('click', () => navigateMainDay(1));
+        // Asignación de eventos a los botones
+        document.getElementById('prevMainDayBtn')?.addEventListener('click', () => navigateMainDay(-1));
+        document.getElementById('nextMainDayBtn')?.addEventListener('click', () => navigateMainDay(1));
 
         async function initTodayPrices() {
             const now = new Date();
@@ -3783,20 +3786,34 @@ Object.keys(monthsMap).sort().forEach(yyyymm => {
             await loadAndRenderMainDayPrices(`${yyyy}-${mm}-${dd}`);
         }
 
-        function renderTodayPricesChart(dateStr) {
+         function renderTodayPricesChart(dateStr) {
             const canvas = document.getElementById('todayHourlyPricesChart');
-            if (!canvas || !window.todayPricesMap) return;
+            const subtitleEl = document.getElementById('todayPricesSubtitle');
+            const badgeEl = document.getElementById('todayAvgBadge');
+            if (!canvas) return;
 
             const hourlyData = [];
             for (let h = 0; h < 24; h++) {
                 const key = `${dateStr}_T${String(h).padStart(2, '0')}`;
-                const price = window.todayPricesMap[key];
+                const price = window.queryPricesDb ? window.queryPricesDb[key] : undefined;
                 if (price !== undefined) {
                     hourlyData.push({ hour: h, price: price });
                 }
             }
 
-            if (hourlyData.length === 0) return;
+            // Si no hay datos (fecha futura o no publicada)
+            if (hourlyData.length === 0) {
+                if (window.todayChartInstance) {
+                    window.todayChartInstance.destroy();
+                    window.todayChartInstance = null;
+                }
+                if (subtitleEl) subtitleEl.textContent = "⚠️ Precios no disponibles aún para esta fecha (REE los publica a las 20:30h).";
+                if (badgeEl) badgeEl.innerHTML = `<span class="bg-gray-400 text-white font-bold px-2 py-1 rounded text-xs">SIN DATOS</span>`;
+                document.getElementById('todayChartLegend').innerHTML = '';
+                return;
+            }
+
+            if (subtitleEl) subtitleEl.textContent = "Precio regulado oficial (se publican a las 20:30 horas)";
 
             const prices = hourlyData.map(d => d.price);
             const minVal = Math.min(...prices);
