@@ -1017,7 +1017,19 @@
         window.todayChartInstance = null;
         window.annualChartInstance = null;
         window.currentMainPriceDate = null;
+        
+        // Variables para la equiparación y actualización instantánea
+        window.lastFilteredData = null;
         window.assumeEquivalentTranches = false;
+
+        window.toggleAssumeEquivalentTranches = function(checked) {
+            window.assumeEquivalentTranches = checked;
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            } else if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        };
 
         // Variables globales
         window.rawCsvData = null;
@@ -1749,6 +1761,7 @@
         }
 
         function renderResultsAndCharts(data) {
+            window.lastFilteredData = data; 
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
@@ -1967,24 +1980,29 @@
             const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
             const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
 
-            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
             const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
 
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
 
-            const avgP1IndexedPrice = p1KwhIndexedTime > 0 ? (p1CostIndexedTime / p1KwhIndexedTime) : 0;
-            const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
-            const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
+            // Precios medios unitarios de PVPC según la clasificación de Coste Real (Grupo 2: Caras, Medias, Baratas)
+            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+            const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : pvpcHigh;
+            const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : ((pvpcHigh + pvpcLow) / 2);
+            const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : pvpcLow;
 
             let compEnergyPvpc = totalCostPvpc;
             let compEnergyManual = totalCostManual;
 
             if (window.assumeEquivalentTranches) {
                 if (mode === 'pvpc') {
-                    compEnergyManual = (p1KwhIndexedTime * pPunta) + (p2KwhIndexedTime * pLlano) + (p3KwhIndexedTime * pValle);
+                    // Si la tarifa activa es PVPC: aplicamos los kWh de las horas Caras, Medias y Baratas (Grupo 2) a los precios de la Tarifa Manual (Punta, Llano, Valle)
+                    compEnergyManual = (p1KwhPrice * pPunta) + (p2KwhPrice * pLlano) + (p3KwhPrice * pValle);
                 } else {
-                    compEnergyPvpc = (p1KwhTime * avgP1IndexedPrice) + (p2KwhTime * avgP2IndexedPrice) + (p3KwhTime * avgP3IndexedPrice);
+                    // Si la tarifa activa es Manual: aplicamos los kWh de las horas Punta, Llano y Valle (Grupo 1) a los precios medios de PVPC (Caras, Medias, Baratas)
+                    compEnergyPvpc = (p1KwhTime * avgP1Price) + (p2KwhTime * avgP2Price) + (p3KwhTime * avgP3Price);
                 }
             }
 
@@ -2305,7 +2323,8 @@
                             </label>
                             <span class="text-[9px] text-blue-700 mt-0.5 italic">* Estos datos solo se recalculan a efectos de mostrar el desglose de la factura en este panel.</span>
                         </div>
-                    </div>
+                    </div> 
+         
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
