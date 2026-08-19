@@ -1050,9 +1050,12 @@
         window.annualChartInstance = null;
         window.currentMainPriceDate = null;
         
-        // Control de equiparación de tramos
+     // Control del simulador de reparto por porcentajes P1, P2 y P3
         window.lastFilteredData = null;
         window.assumeEquivalentTranches = false;
+        window.customTrancheP1 = null;
+        window.customTrancheP2 = null;
+        window.customTrancheP3 = null;
 
         window.toggleAssumeEquivalentTranches = function(checked) {
             window.assumeEquivalentTranches = checked;
@@ -1060,6 +1063,27 @@
                 renderResultsAndCharts(window.lastFilteredData);
             } else if (window.rawCsvData) {
                 processData(window.rawCsvData);
+            }
+        };
+
+        window.updateTranchePercent = function(tranche, value) {
+            const val = parseFloat(value) || 0;
+            if (tranche === 'P1') window.customTrancheP1 = val;
+            if (tranche === 'P2') window.customTrancheP2 = val;
+            if (tranche === 'P3') window.customTrancheP3 = val;
+
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        };
+
+        window.resetTranchePercents = function() {
+            window.customTrancheP1 = null;
+            window.customTrancheP2 = null;
+            window.customTrancheP3 = null;
+
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
             }
         };
 
@@ -2006,7 +2030,7 @@
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
 
-            // Precios medios para equiparación
+// Precios medios unitarios de PVPC (Grupo 2: Caras, Medias, Baratas)
             const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : pvpcHigh;
             const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : ((pvpcHigh + pvpcLow) / 2);
             const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : pvpcLow;
@@ -2015,14 +2039,45 @@
             const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
             const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
 
+            // Obtener porcentajes reales actuales del periodo
+            let realPctP1 = 0, realPctP2 = 0, realPctP3 = 0;
+            if (totalKwh > 0) {
+                if (mode === 'pvpc') {
+                    realPctP1 = (p1KwhPrice / totalKwh) * 100;
+                    realPctP2 = (p2KwhPrice / totalKwh) * 100;
+                    realPctP3 = (p3KwhPrice / totalKwh) * 100;
+                } else {
+                    realPctP1 = (p1KwhTime / totalKwh) * 100;
+                    realPctP2 = (p2KwhTime / totalKwh) * 100;
+                    realPctP3 = (p3KwhTime / totalKwh) * 100;
+                }
+            }
+
+            // Inicializar porcentajes simulados si es la primera vez
+            if (window.customTrancheP1 === null) window.customTrancheP1 = parseFloat(realPctP1.toFixed(1));
+            if (window.customTrancheP2 === null) window.customTrancheP2 = parseFloat(realPctP2.toFixed(1));
+            if (window.customTrancheP3 === null) window.customTrancheP3 = parseFloat(realPctP3.toFixed(1));
+
+            const simPctP1 = window.customTrancheP1;
+            const simPctP2 = window.customTrancheP2;
+            const simPctP3 = window.customTrancheP3;
+
             let compEnergyPvpc = totalCostPvpc;
             let compEnergyManual = totalCostManual;
 
             if (window.assumeEquivalentTranches) {
                 if (mode === 'pvpc') {
-                    compEnergyManual = (p1KwhPrice * pPunta) + (p2KwhPrice * pLlano) + (p3KwhPrice * pValle);
+                    // Calculamos la tarifa Manual aplicando los % personalizados al total de kWh
+                    const kwhSimP1 = totalKwh * (simPctP1 / 100);
+                    const kwhSimP2 = totalKwh * (simPctP2 / 100);
+                    const kwhSimP3 = totalKwh * (simPctP3 / 100);
+                    compEnergyManual = (kwhSimP1 * pPunta) + (kwhSimP2 * pLlano) + (kwhSimP3 * pValle);
                 } else {
-                    compEnergyPvpc = (p1KwhTime * avgP1Price) + (p2KwhTime * avgP2Price) + (p3KwhTime * avgP3Price);
+                    // Calculamos el PVPC aplicando los % personalizados a los precios medios de PVPC
+                    const kwhSimP1 = totalKwh * (simPctP1 / 100);
+                    const kwhSimP2 = totalKwh * (simPctP2 / 100);
+                    const kwhSimP3 = totalKwh * (simPctP3 / 100);
+                    compEnergyPvpc = (kwhSimP1 * avgP1Price) + (kwhSimP2 * avgP2Price) + (kwhSimP3 * avgP3Price);
                 }
             }
 
@@ -2341,19 +2396,58 @@
 
             const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
 
+const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
+            const isSumOk = Math.abs(sumPercents - 100.0) <= 0.1;
+            const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
+
             let comparisonHtml = `
                 <div class="w-full">
-                    <div class="border-b pb-3 mb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                    <div class="border-b pb-3 mb-3 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
                         <div>
                             <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
                             <p class="text-[11px] text-gray-500">Desglose integral de conceptos simulados con sus respectivas desviaciones.</p>
                         </div>
-                        <div class="bg-blue-50/80 border border-blue-200 rounded-lg px-3 py-1.5 flex flex-col text-left">
-                            <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-blue-950">
-                                <input type="checkbox" id="assumeEquivalentTranchesCheckbox" onchange="toggleAssumeEquivalentTranches(this.checked)" ${window.assumeEquivalentTranches ? 'checked' : ''} class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
-                                <span>Asumir que el consumo en P1, P2 Y P3 de la tarifa EN USO en la tarifa a COMPARAR se ha realizado al precio del mismo tramo horas P1, P2 y P3 de esa TARIFA</span>
-                            </label>
-                            <span class="text-[9px] text-blue-700 mt-0.5 italic">* Estos datos solo se recalculan a efectos de mostrar el desglose de la factura en este panel.</span>
+                        
+                        <!-- Panel de Simulación de Reparto por Porcentajes -->
+                        <div class="bg-blue-50/90 border border-blue-200 rounded-xl p-2.5 flex flex-col gap-2 w-full xl:w-auto shadow-xs">
+                            <div class="flex items-center justify-between gap-3">
+                                <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-blue-950">
+                                    <input type="checkbox" id="assumeEquivalentTranchesCheckbox" onchange="toggleAssumeEquivalentTranches(this.checked)" ${window.assumeEquivalentTranches ? 'checked' : ''} class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                    <span>Simular % de consumo asignado a P1, P2 y P3 en la tarifa <strong>${targetTariffTitle}</strong></span>
+                                </label>
+                                ${window.assumeEquivalentTranches ? `
+                                    <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales del periodo">
+                                        ↺ % Reales
+                                    </button>
+                                ` : ''}
+                            </div>
+
+                            ${window.assumeEquivalentTranches ? `
+                                <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-blue-200/60 text-xs">
+                                    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-red-200">
+                                        <span class="text-[10px] font-bold text-red-800 uppercase">% P1:</span>
+                                        <input type="number" step="0.5" min="0" max="100" value="${simPctP1}" onchange="updateTranchePercent('P1', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-red-500">
+                                        <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP1 / 100)).toFixed(1)} kWh)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-amber-200">
+                                        <span class="text-[10px] font-bold text-amber-800 uppercase">% P2:</span>
+                                        <input type="number" step="0.5" min="0" max="100" value="${simPctP2}" onchange="updateTranchePercent('P2', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                        <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP2 / 100)).toFixed(1)} kWh)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-emerald-200">
+                                        <span class="text-[10px] font-bold text-emerald-800 uppercase">% P3:</span>
+                                        <input type="number" step="0.5" min="0" max="100" value="${simPctP3}" onchange="updateTranchePercent('P3', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                        <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP3 / 100)).toFixed(1)} kWh)</span>
+                                    </div>
+                                    <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg ${isSumOk ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900 animate-pulse'}" title="La suma de P1+P2+P3 debe ser igual al 100%">
+                                        Suma: ${sumPercents}% ${isSumOk ? '✓' : '⚠️'}
+                                    </span>
+                                </div>
+                            ` : ''}
+
+                            <span class="text-[9px] text-blue-700 italic leading-tight">
+                                * Permite simular cuánto pagarías si adaptas tus hábitos de consumo distribuyendo tus kWh en distintas proporciones de P1, P2 y P3.
+                            </span>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
