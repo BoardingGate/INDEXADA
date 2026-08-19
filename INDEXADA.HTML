@@ -13,7 +13,6 @@
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Cabecera -->
         <header class="mb-8 text-center max-w-xl mx-auto">
-            <!-- Etiqueta BoardingGate -->
             <span class="text-[13px] font-bold tracking-wider bg-blue-50/80 px-3 py-0.5 rounded-full inline-flex items-center mb-2">
                 <span class="text-slate-900">Boarding</span>
                 <span class="text-blue-500 ml-0.7">Gate</span>
@@ -42,17 +41,11 @@
                         <span class="hidden sm:inline">Siguiente</span> &rarr;
                     </button>
                 </div>
-                <div id="todayAvgBadge" class="shrink-0">
-                    <!-- Se carga dinámicamente -->
-                </div>
+                <div id="todayAvgBadge" class="shrink-0"></div>
             </div>
             
-            <!-- Leyenda compacta -->
-            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500">
-                <!-- Se carga dinámicamente -->
-            </div>
+            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500"></div>
             
-            <!-- Gráfica compacta -->
             <div class="relative h-[180px] sm:h-[300px] w-full">
                 <canvas id="todayHourlyPricesChart"></canvas>
             </div>
@@ -84,7 +77,6 @@
             </div>
             <div class="flex flex-col">
                 <label class="block text-sm font-medium text-gray-700 mb-2">5. Archivo CSV Distribuidora</label>
-                <!-- Zona Arrastrar y Soltar (Drag & Drop) -->
                 <div id="dropZone" class="border-2 border-dashed border-blue-300 rounded-lg p-3 text-center cursor-pointer hover:bg-blue-50 transition-colors flex flex-col justify-center items-center h-[42px] relative bg-gray-50">
                     <input type="file" id="csvInput" accept=".csv" class="hidden">
                     <div id="dropZonePrompt" class="text-xs text-gray-500 flex items-center gap-1.5">
@@ -99,7 +91,7 @@
             </div>
         </div>
 
-        <!-- Panel de Importación Datadis (Descarga Directa + Info) -->
+        <!-- Panel de Importación Datadis -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
@@ -108,7 +100,6 @@
                         Descarga tus consumos oficiales desde Datadis.es
                     </p>
                 </div>
-                <!-- Botones de Acción -->
                 <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                     <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
                         <span>Regístrate en Datadis.es</span>
@@ -135,21 +126,21 @@
                 
                 <div id="datadisHelpContent" class="hidden mt-3 pt-3 border-t border-blue-200/60">
                     <p class="text-xs text-gray-700 leading-relaxed mb-2">
-                        Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas (Endesa, Iberdrola, etc.) publican tus curvas de consumo horario reales, con independencia de tu comercializadora.
+                        Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas publican tus curvas de consumo horario reales.
                     </p>
                     <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
                         <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
-                        <li>Usa tu NIF/NIE como usuario y crea una contraseña; recibirás un correo de confirmación.</li>
-                        <li>Localiza tu CUPS (código de tu punto de suministro) en cualquier factura eléctrica, o déjalo en blanco abajo para que se autodetecte.</li>
+                        <li>Usa tu NIF/NIE como usuario y crea una contraseña.</li>
+                        <li>Introduce tu CUPS o déjalo en blanco para autodetectarlo.</li>
                     </ol>
                 </div>
             </div>
 
-            <!-- Panel de Descarga Directa vía Proxy -->
+            <!-- Panel de Descarga Directa -->
             <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
                 <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
                 <p class="text-xs text-gray-600 mb-3">
-                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a la DATADIS y descargará los datos automáticamente
+                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a DATADIS y descargará los datos automáticamente
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     <div>
@@ -191,7 +182,7 @@
             </div>
         </div>
 
-        <!-- Panel de Filtros Temporales y Horarios -->
+        <!-- Filtros de Período y Rango Horario -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
@@ -271,7 +262,7 @@
             </div>
         </div>
 
-        <!-- Configuración Específica de Tarifa Manual -->
+        <!-- Configuración Tarifa Manual -->
         <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
             <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
             
@@ -333,11 +324,11 @@
             </div>
         </div>
 
-        <!-- Panel de Configuración de Potencia Contratada -->
+        <!-- Configuración de Potencia Contratada -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
             <div class="mb-4">
                 <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
-                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo. El precio manual de potencia cambia automáticamente con el perfil seleccionado.</p>
+                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div>
@@ -1018,7 +1009,7 @@
         window.annualChartInstance = null;
         window.currentMainPriceDate = null;
         
-        // Variables para la equiparación y actualización instantánea
+        // Control de equiparación de tramos
         window.lastFilteredData = null;
         window.assumeEquivalentTranches = false;
 
@@ -1205,14 +1196,6 @@
         const requiredPowerTextEl = document.getElementById('requiredPowerText');
         const calendarGridContainer = document.getElementById('calendarGridContainer');
 
-        window.toggleAssumeEquivalentTranches = function(checked) {
-            window.assumeEquivalentTranches = checked;
-            if (window.rawCsvData) {
-                processData(window.rawCsvData);
-            }
-        };
-
-        // Drag & Drop event mapping
         dropZone.addEventListener('click', () => csvInput.click());
 
         csvInput.addEventListener('change', (e) => {
@@ -1577,7 +1560,7 @@
                 
                 const totalPreciosDescargados = Object.keys(preciosMap || {}).length;
                 if (totalPreciosDescargados === 0) {
-                    showStatus(`⚠️ No se han podido obtener precios PVPC para el rango ${fechaInicio} a ${fechaFin}. Compruebe si el archivo contiene fechas futuras o si la API de Red Eléctrica tiene problemas de conexión.`, "error");
+                    showStatus(`⚠️ No se han podido obtener precios PVPC para el rango ${fechaInicio} a ${fechaFin}.`, "error");
                 }
 
                 const pricePunta = parseFloat(document.getElementById('pricePunta').value) || 0;
@@ -1585,7 +1568,6 @@
                 const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
                 const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
-                const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
                 const useWeekendValle = document.getElementById('weekendValle').checked;
                 const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
                 
@@ -1717,10 +1699,7 @@
                     const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${chunk.start}T00:00&end_date=${chunk.end}T23:59&time_trunc=hour`;
                     const response = await fetch(url);
                     
-                    if (!response.ok) {
-                        console.warn(`Fragmento omitido por REE (${chunk.start} a ${chunk.end}): HTTP ${response.status}`);
-                        continue; 
-                    }
+                    if (!response.ok) continue; 
                     
                     const data = await response.json();
                     if (!data.included) continue;
@@ -1754,20 +1733,33 @@
                     await new Promise(resolve => setTimeout(resolve, 100));
 
                 } catch (err) {
-                    console.error(`Fallo de conexión en fragmento REE (${chunk.start} a ${chunk.end}):`, err);
+                    console.error(`Fallo de conexión en fragmento REE:`, err);
                 }
             }
             return preciosMap;
         }
 
         function renderResultsAndCharts(data) {
-            window.lastFilteredData = data; 
+            window.lastFilteredData = data; // Guarda en memoria para actualización instantánea
+
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
             const mode = rateMode.value;
 
             const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
             const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
+
+            const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
 
             let totalKwh = 0;
             let totalCost = 0;
@@ -1802,16 +1794,6 @@
 
             let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
             let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
-
-            const holidaysInputEl = document.getElementById('holidaysInput');
-            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
-
-            const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
-            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
-            const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
-            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
-            const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
-            const useWeekendValle = document.getElementById('weekendValle').checked;
 
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
@@ -1903,9 +1885,6 @@
                     p3IndexedTimeHours++;
                 }
 
-                const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
-                const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
-
                 if (item.precioPvpc >= pvpcHigh) {
                     p1KwhPrice += item.consumo;
                     p1CostPrice += item.costePvpc; 
@@ -1961,7 +1940,7 @@
                             <td class="p-4 border-b">${String(item.hora).padStart(2, '0')}:00</td>
                             <td class="p-4 border-b text-right font-mono">
                                 ${adjustedKwh.toFixed(3)} 
-                                <span class="text-xs text-gray-400 block" title="Original: ${item.consumo.toFixed(3)} kWh">(-${subtractVal.toFixed(2)})</span>
+                                <span class="text-xs text-gray-400 block">(-${subtractVal.toFixed(2)})</span>
                             </td>
                             <td class="p-4 border-b text-right font-mono">${item.precio.toFixed(5)}</td>
                             <td class="p-4 border-b text-right font-mono font-semibold">${adjustedCost.toFixed(3)} €</td>
@@ -1980,28 +1959,28 @@
             const p1PriceManual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
             const p2PriceManual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
 
-const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+            const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
             const totalPowerCostManual = (((p1Kw * p1PriceManual) + (p2Kw * p2PriceManual)) / 365) * numDays;
 
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
 
-            // Precios medios unitarios de PVPC según la clasificación de Coste Real (Grupo 2: Caras, Medias, Baratas)
-            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
-            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+            // Precios medios para equiparación
             const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : pvpcHigh;
             const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : ((pvpcHigh + pvpcLow) / 2);
             const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : pvpcLow;
+
+            const avgP1IndexedPrice = p1KwhIndexedTime > 0 ? (p1CostIndexedTime / p1KwhIndexedTime) : 0;
+            const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
+            const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
 
             let compEnergyPvpc = totalCostPvpc;
             let compEnergyManual = totalCostManual;
 
             if (window.assumeEquivalentTranches) {
                 if (mode === 'pvpc') {
-                    // Si la tarifa activa es PVPC: aplicamos los kWh de las horas Caras, Medias y Baratas (Grupo 2) a los precios de la Tarifa Manual (Punta, Llano, Valle)
                     compEnergyManual = (p1KwhPrice * pPunta) + (p2KwhPrice * pLlano) + (p3KwhPrice * pValle);
                 } else {
-                    // Si la tarifa activa es Manual: aplicamos los kWh de las horas Punta, Llano y Valle (Grupo 1) a los precios medios de PVPC (Caras, Medias, Baratas)
                     compEnergyPvpc = (p1KwhTime * avgP1Price) + (p2KwhTime * avgP2Price) + (p3KwhTime * avgP3Price);
                 }
             }
@@ -2064,7 +2043,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             
             totalCostEl.innerHTML = `
                 ${grandTotalActive.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €
-                <span class="text-xs text-blue-600 font-bold block mt-1" title="Incluye energía neta, potencia contratada, descuentos, impuestos, alquiler de contador prorrateado y margen comercial">
+                <span class="text-xs text-blue-600 font-bold block mt-1">
                     [Factura: ${activeGrandTotalSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €]
                 </span>
                 <span class="text-[10px] text-gray-500 block font-normal mt-2 leading-tight text-left space-y-0.5">
@@ -2096,7 +2075,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                     <span class="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Sólo Energía</span>
                     <span class="font-bold text-gray-950 text-base">${avgPeriodPrice.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
                     <div class="mt-1.5 pt-1.5 border-t border-gray-100">
-                        <span class="text-[10px] text-indigo-500 font-bold block uppercase tracking-wider" title="Coste total (Energía + Término de Potencia prorrateado) dividido por los kWh del periodo">Con Potencia</span>
+                        <span class="text-[10px] text-indigo-500 font-bold block uppercase tracking-wider">Con Potencia</span>
                         <span class="font-bold text-indigo-900 text-sm block mt-0.5">${avgPeriodPriceWithPower.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
                     </div>
                 </div>
@@ -2158,20 +2137,9 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             const evRange = evEfficiency > 0 ? (filteredKwh / evEfficiency) * 100 : 0;
             const evCostPerKm = evRange > 0 ? (filteredCost / evRange) : 0;
 
-            const activeMode = rateMode.value;
-            let activeDescEnergia = 0;
-            let activeImpElec = 0;
-            let activeIva = 0;
-
-            if (activeMode === 'pvpc') {
-                activeDescEnergia = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
-                activeImpElec = parseFloat(document.getElementById('electricityTaxPvpc').value) || 0;
-                activeIva = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
-            } else {
-                activeDescEnergia = parseFloat(document.getElementById('discountEnergyManual').value) || 0;
-                activeImpElec = parseFloat(document.getElementById('electricityTaxManual').value) || 0;
-                activeIva = parseFloat(document.getElementById('vatRateManual').value) || 0;
-            }
+            let activeDescEnergia = (mode === 'pvpc') ? descEnergiaPvpc : descEnergiaManual;
+            let activeImpElec = (mode === 'pvpc') ? impElecPvpc : impElecManual;
+            let activeIva = (mode === 'pvpc') ? tipoIvaPvpc : tipoIvaManual;
 
             const filteredCostNet = filteredCost * (1 - activeDescEnergia / 100);
             const filteredCostSimulated = filteredCostNet * (1 + activeImpElec / 100) * (1 + activeIva / 100);
@@ -2239,10 +2207,6 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
             const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
 
-            const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : 0;
-            const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : 0;
-            const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : 0;
-
             const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
             const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
             const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
@@ -2307,7 +2271,6 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                 : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
 
             const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
-            const compareTargetName = (mode === 'pvpc') ? 'POR TRAMOS' : 'PVPC';
 
             let comparisonHtml = `
                 <div class="w-full">
@@ -2323,8 +2286,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                             </label>
                             <span class="text-[9px] text-blue-700 mt-0.5 italic">* Estos datos solo se recalculan a efectos de mostrar el desglose de la factura en este panel.</span>
                         </div>
-                    </div> 
-         
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
@@ -2336,10 +2298,13 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 text-gray-700">
-                                <tr>
-                                    <td class="py-1.5 font-medium text-gray-500">Término de Energía (Base)</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-400">${compEnergyPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-400">${compEnergyManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                <tr class="${window.assumeEquivalentTranches ? 'bg-blue-50/30' : ''}">
+                                    <td class="py-1.5 font-medium text-gray-700">
+                                        Término de Energía (Base)
+                                        ${window.assumeEquivalentTranches ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded ml-1.5 uppercase">⚡ Equiparado P1/P2/P3</span>' : ''}
+                                    </td>
+                                    <td class="py-1.5 text-right font-mono text-gray-500">${compEnergyPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-500">${compEnergyManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
                                 </tr>
                                 <tr class="bg-gray-50/50">
@@ -2545,7 +2510,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                                 <div class="flex justify-between items-end mt-1.5 w-full">
                                     <div class="text-left leading-none shrink-0 self-end">
                                         <span class="text-[8px] font-bold text-gray-400 block uppercase tracking-wider mb-0.5">Media</span>
-                                        <span class="text-[10px] font-mono ${mediaColorClass}" title="Precio medio real logrado (Coste / kWh). Rojo si supera la media aritmética de la tarifa activa hoy (${daySimpleAvg.toFixed(5)} €), verde si es igual o inferior.">
+                                        <span class="text-[10px] font-mono ${mediaColorClass}">
                                             ${dayAchievedAvg.toFixed(4)}<span class="text-[7px] font-normal opacity-70">€</span>
                                         </span>
                                     </div>
@@ -3006,8 +2971,6 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             });
         }
 
-        // --- SISTEMA DE MANEJO DE PERFILES DE TARIFA ---
-
         function saveActiveProfileToMemory() {
             const index = window.activeProfileIndex;
             if (index < 0 || index >= 6) return;
@@ -3092,7 +3055,6 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             saveConfig();
         });
 
-        // --- SISTEMA DE PERSISTENCIA (localStorage) ---        
         function saveConfig() {
             saveActiveProfileToMemory();
             const config = {
@@ -3238,7 +3200,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
             } else {
-                showStatus("No hay datos cargados para procesar. Suba un archivo CSV utilizando las instrucciones de Datadis o arrastrando un fichero.", "error");
+                showStatus("No hay datos cargados para procesar.", "error");
             }
         });
 
@@ -3290,7 +3252,6 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             }
         });
 
-        // Cargar configuración inicial
         loadConfig();
         updatePowerPriceHelpers();   
         initTodayPrices();
@@ -3325,7 +3286,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
             }
         };
 
-        // --- MÓDULO INTEGRADO DE CONSULTA DE PRECIOS DIARIOS ---
+        // Modal Precios
         const consultPricesBtn = document.getElementById('consultPricesBtn');
         const priceQueryModal = document.getElementById('priceQueryModal');
         const closePriceQueryModal = document.getElementById('closePriceQueryModal');
@@ -3474,6 +3435,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
 
             const queryThreshold = parseFloat(document.getElementById('queryPriceThreshold').value) || 0.08;
             const queryFilteredPrices = allHourlyPrices.filter(p => p <= queryThreshold);
+
             const queryFilteredAvg = queryFilteredPrices.length > 0 
                 ? (queryFilteredPrices.reduce((sum, p) => sum + p, 0) / queryFilteredPrices.length) 
                 : 0;
@@ -5405,7 +5367,7 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                 }
 
                 if (!startRaw || !endRaw) {
-                    alert('⚠️ Especifique un rango de fechas válido (puede usar los Filtros del Periodo o las Fechas de Descarga Directa).');
+                    alert('⚠️ Especifique un rango de fechas válido.');
                     return;
                 }
 
@@ -5426,13 +5388,13 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                 const formattedEnd = getYearMonth(endRaw);
 
                 if (!formattedStart || !formattedEnd) {
-                    alert('⚠️ Las fechas provistas no son válidas para la consulta.');
+                    alert('⚠️ Las fechas provistas no son válidas.');
                     return;
                 }
 
                 const statusEl = document.getElementById('datadisDirectStatus');
                 if (statusEl) {
-                    statusEl.textContent = '⏳ Solicitando registro histórico de potencias máximas a Datadis...';
+                    statusEl.textContent = '⏳ Solicitando registro histórico de potencias máximas...';
                     statusEl.className = 'text-xs mt-2 text-gray-600';
                 }
 
@@ -5570,8 +5532,6 @@ const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365)
                 }
             });
         }
-
     </script>
 </body>
 </html>
-        
