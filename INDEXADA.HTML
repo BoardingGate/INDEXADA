@@ -1100,6 +1100,15 @@
         window.annualChartInstance = null;
         window.currentMainPriceDate = null;
 
+        window.assumeEquivalentTranches = false;
+
+        window.toggleAssumeEquivalentTranches = function(checked) {
+            window.assumeEquivalentTranches = checked;
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+        };
+
         // Variables globales
         window.rawCsvData = null;
         window.lastDatadisCsv = null; 
@@ -2080,8 +2089,28 @@
             const tipoIvaManual = parseFloat(document.getElementById('vatRateManual').value) || 0;
 
             // 1. Simulación PVPC
+// Precios medios unitarios por tramo para equiparación
+            const avgP1IndexedPrice = p1KwhIndexedTime > 0 ? (p1CostIndexedTime / p1KwhIndexedTime) : 0;
+            const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
+            const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
+
+            // Coste de energía base para la comparativa (con o sin equiparación de tramos)
+            let compEnergyPvpc = totalCostPvpc;
+            let compEnergyManual = totalCostManual;
+
+            if (window.assumeEquivalentTranches) {
+                if (mode === 'pvpc') {
+                    // Si la tarifa activa es PVPC, equiparamos el consumo en tramos 2.0TD (P1, P2, P3) a los precios de la Tarifa Manual
+                    compEnergyManual = (p1KwhIndexedTime * pPunta) + (p2KwhIndexedTime * pLlano) + (p3KwhIndexedTime * pValle);
+                } else {
+                    // Si la tarifa activa es Manual, equiparamos el consumo de los tramos manuales a las medias de PVPC
+                    compEnergyPvpc = (p1KwhTime * avgP1IndexedPrice) + (p2KwhTime * avgP2IndexedPrice) + (p3KwhTime * avgP3IndexedPrice);
+                }
+            }
+
+            // 1. Simulación PVPC (Usa compEnergyPvpc para la comparativa)
             const margenComTotalPvpc = margenComDiarioPvpc * numDays;
-            const totalCostPvpcNeto = totalCostPvpc * (1 - descEnergiaPvpc / 100);
+            const totalCostPvpcNeto = compEnergyPvpc * (1 - descEnergiaPvpc / 100);
             const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
             const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotalPvpc + ajustesPvpc;
             const impElecPvpcVal = baseImpElecPvpc * (impElecPvpc / 100);
@@ -2091,9 +2120,9 @@
             const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
             const avgKwhPricePvpcSimulated = totalKwh > 0 ? (grandTotalPvpcSimulated / totalKwh) : 0;
 
-            // 2. Simulación Manual
+            // 2. Simulación Manual (Usa compEnergyManual para la comparativa)
             const margenComTotalManual = margenComDiarioManual * numDays;
-            const totalCostManualNeto = totalCostManual * (1 - descEnergiaManual / 100);
+            const totalCostManualNeto = compEnergyManual * (1 - descEnergiaManual / 100);
             const totalPowerCostManualNeto = totalPowerCostManual * (1 - descPotenciaManual / 100);
             const baseImpElecManual = totalCostManualNeto + totalPowerCostManualNeto + margenComTotalManual + ajustesManual;
             const impElecManualVal = baseImpElecManual * (impElecManual / 100);
@@ -2102,7 +2131,6 @@
             const ivaManualVal = baseIvaManual * (tipoIvaManual / 100);
             const grandTotalManualSimulated = baseIvaManual + ivaManualVal;
             const avgKwhPriceManualSimulated = totalKwh > 0 ? (grandTotalManualSimulated / totalKwh) : 0;
-
             // Selección de totales según modo activo
             const activeGrandTotalSimulated = (mode === 'pvpc') ? grandTotalPvpcSimulated : grandTotalManualSimulated;
             const activeAvgDailySimple = grandTotalActive / numDays;
@@ -2379,13 +2407,25 @@ const avgDailyKwh = totalKwh / numDays;
                 : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
 
             const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
+            const compareTargetName = (mode === 'pvpc') ? 'POR TRAMOS' : 'PVPC';
 
             let comparisonHtml = `
                 <div class="w-full">
-                    <div class="border-b pb-2 mb-3">
-                        <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
-                        <p class="text-[11px] text-gray-500">Desglose integral de conceptos simulados con sus respectivas desviaciones.</p>
+                    <div class="border-b pb-3 mb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
+                            <p class="text-[11px] text-gray-500">Desglose integral de conceptos simulados con sus respectivas desviaciones.</p>
+                        </div>
+                        <!-- Checkbox de equiparación de tramos -->
+                        <div class="bg-blue-50/80 border border-blue-200 rounded-lg px-3 py-1.5 flex flex-col text-left">
+                            <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-blue-950">
+                                <input type="checkbox" id="assumeEquivalentTranchesCheckbox" onchange="toggleAssumeEquivalentTranches(this.checked)" ${window.assumeEquivalentTranches ? 'checked' : ''} class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                <span>Asumir que el consumo en P1, P2 y P3 se ha realizado en las mismas horas que la tarifa <strong>${compareTargetName}</strong></span>
+                            </label>
+                            <span class="text-[9px] text-blue-700 mt-0.5 italic">* Estos datos solo se recalculan a efectos de mostrar el desglose de la factura en este panel.</span>
+                        </div>
                     </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
@@ -2399,10 +2439,10 @@ const avgDailyKwh = totalKwh / numDays;
                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                 <tr>
                                     <td class="py-1.5 font-medium text-gray-500">Término de Energía (Base)</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-400">${compEnergyPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
+                                    <td class="py-1.5 text-right font-mono text-gray-400">${compEnergyManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-300">-</td>
-                                </tr>
+                                </tr>                               
                                 <tr class="bg-gray-50/50">
                                     <td class="py-2 font-semibold text-gray-800">Término de Energía (Neto con Descuento)</td>
                                     <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
