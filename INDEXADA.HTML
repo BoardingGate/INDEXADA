@@ -27,9 +27,11 @@
             </p>
         </header>
 
-       <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
+        <!-- 1. GRÁFICA INICIAL -->
+        <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
             <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div class="flex items-center gap-2 sm:gap-3">
+                    <button type="button" data-target="body-today-prices" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
                     <button id="prevMainDayBtn" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2 py-1 rounded text-xs transition-colors shrink-0 shadow-xs" title="Día anterior">
                         &larr; <span class="hidden sm:inline">Anterior</span>
                     </button>
@@ -44,10 +46,11 @@
                 <div id="todayAvgBadge" class="shrink-0"></div>
             </div>
             
-            <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500"></div>
-            
-            <div class="relative h-[180px] sm:h-[300px] w-full">
-                <canvas id="todayHourlyPricesChart"></canvas>
+            <div id="body-today-prices">
+                <div id="todayChartLegend" class="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] text-gray-500"></div>
+                <div class="relative h-[180px] sm:h-[300px] w-full">
+                    <canvas id="todayHourlyPricesChart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -91,14 +94,15 @@
             </div>
         </div>
 
-        <!-- Panel de Importación Datadis -->
+        <!-- 2. IMPORTACIÓN DATADIS -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
             <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <div>
-                    <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
-                    <p class="text-xs text-gray-500 mt-1">
-                        Descarga tus consumos oficiales desde Datadis.es
-                    </p>
+                <div class="flex items-center gap-2">
+                    <button type="button" data-target="body-datadis" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                    <div>
+                        <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Descarga tus consumos oficiales desde Datadis.es</p>
+                    </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                     <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
@@ -114,83 +118,87 @@
                 </div>
             </div>
 
-           <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
-                <button id="toggleDatadisHelpBtn" type="button" class="w-full flex justify-between items-center text-left focus:outline-none select-none">
-                    <h4 class="font-bold text-xs text-blue-800 uppercase flex items-center gap-1.5">
-                        <span>ℹ️ ¿Qué es Datadis.es y cómo darte de alta?</span>
-                    </h4>
-                    <span id="datadisHelpIcon" class="text-blue-800 font-bold text-xs bg-blue-100 hover:bg-blue-200/80 px-2 py-1 rounded transition-colors select-none">
-                        (+) Mostrar ayuda
-                    </span>
-                </button>
-                
-                <div id="datadisHelpContent" class="hidden mt-3 pt-3 border-t border-blue-200/60">
-                    <p class="text-xs text-gray-700 leading-relaxed mb-2">
-                        Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas publican tus curvas de consumo horario reales.
-                    </p>
-                    <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
-                        <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
-                        <li>Usa tu NIF/NIE como usuario y crea una contraseña.</li>
-                        <li>Introduce tu CUPS o déjalo en blanco para autodetectarlo.</li>
-                    </ol>
-                </div>
-            </div>
-
-            <!-- Panel de Descarga Directa -->
-            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
-                <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
-                <p class="text-xs text-gray-600 mb-3">
-                    Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a DATADIS y descargará los datos automáticamente
-                </p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Usuario Datadis (NIF)</label>
-                        <input type="text" id="datadisUser" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
-                        <input type="password" id="datadisPass" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">CUPS (opcional)</label>
-                        <input type="text" id="datadisCups" placeholder="Autodetectar" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicio</label>
-                        <input type="date" id="datadisStart" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Fecha fin</label>
-                        <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
-                    <div class="flex flex-wrap gap-2">
-                        <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                            ⬇️ Descargar y analizar directamente
-                        </button>
-                        <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                            💾 Guardar como archivo CSV
-                        </button>
-                    </div>
-                    <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                        📋 Datos Identificativos CUPS
+            <div id="body-datadis">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
+                    <button id="toggleDatadisHelpBtn" type="button" class="w-full flex justify-between items-center text-left focus:outline-none select-none">
+                        <h4 class="font-bold text-xs text-blue-800 uppercase flex items-center gap-1.5">
+                            <span>ℹ️ ¿Qué es Datadis.es y cómo darte de alta?</span>
+                        </h4>
+                        <span id="datadisHelpIcon" class="text-blue-800 font-bold text-xs bg-blue-100 hover:bg-blue-200/80 px-2 py-1 rounded transition-colors select-none">
+                            (+) Mostrar ayuda
+                        </span>
                     </button>
-                </div>              
-                <p id="datadisDirectStatus" class="text-xs mt-2"></p>
+                    
+                    <div id="datadisHelpContent" class="hidden mt-3 pt-3 border-t border-blue-200/60">
+                        <p class="text-xs text-gray-700 leading-relaxed mb-2">
+                            Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas publican tus curvas de consumo horario reales.
+                        </p>
+                        <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
+                            <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
+                            <li>Usa tu NIF/NIE como usuario y crea una contraseña.</li>
+                            <li>Introduce tu CUPS o déjalo en blanco para autodetectarlo.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
+                    <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
+                    <p class="text-xs text-gray-600 mb-3">
+                        Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a DATADIS y descargará los datos automáticamente
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Usuario Datadis (NIF)</label>
+                            <input type="text" id="datadisUser" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
+                            <input type="password" id="datadisPass" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">CUPS (opcional)</label>
+                            <input type="text" id="datadisCups" placeholder="Autodetectar" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicio</label>
+                            <input type="date" id="datadisStart" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Fecha fin</label>
+                            <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
+                        <div class="flex flex-wrap gap-2">
+                            <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                                ⬇️ Descargar y analizar directamente
+                            </button>
+                            <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                                💾 Guardar como archivo CSV
+                            </button>
+                        </div>
+                        <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                            📋 Datos Identificativos CUPS
+                        </button>
+                    </div>              
+                    <p id="datadisDirectStatus" class="text-xs mt-2"></p>
+                </div>
             </div>
         </div>
 
-        <!-- Filtros de Período y Rango Horario -->
+        <!-- 3. FILTROS DE PERÍODO Y RANGO HORARIO -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
+                <div class="flex items-center gap-2">
+                    <button type="button" data-target="body-filters" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                    <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
+                </div>
                 <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
                     Limpiar Filtros
                 </button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div id="body-filters" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio (YYYY-MM-DD)</label>
                     <input type="date" id="filterStartDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
@@ -262,105 +270,116 @@
             </div>
         </div>
 
-        <!-- Configuración Tarifa Manual -->
+        <!-- 4. CONFIGURACIÓN DE TARIFA MANUAL -->
         <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
-            <h3 class="text-md font-bold text-green-700 mb-4">Configuración de Tarifa por Tramos</h3>
+            <div class="flex items-center gap-2 mb-4">
+                <button type="button" data-target="body-manual-config" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-green-100 hover:bg-green-200 text-green-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                <h3 class="text-md font-bold text-green-700">Configuración de Tarifa por Tramos</h3>
+            </div>
             
-            <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil de Tarifa (1 de 6)</label>
-                    <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
-                        <option value="0">Perfil 1: Tarifa Manual 1</option>
-                        <option value="1">Perfil 2: Tarifa Manual 2</option>
-                        <option value="2">Perfil 3: Tarifa Manual 3</option>
-                        <option value="3">Perfil 4: Tarifa Manual 4</option>
-                        <option value="4">Perfil 5: Tarifa Manual 5</option>
-                        <option value="5">Perfil 6: Tarifa Manual 6</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
-                    <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                    <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
-                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
-                    <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables (10, es 10 a 11):</label>
-                    <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
+            <div id="body-manual-config">
+                <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil de Tarifa (1 de 6)</label>
+                        <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
+                            <option value="0">Perfil 1: Tarifa Manual 1</option>
+                            <option value="1">Perfil 2: Tarifa Manual 2</option>
+                            <option value="2">Perfil 3: Tarifa Manual 3</option>
+                            <option value="3">Perfil 4: Tarifa Manual 4</option>
+                            <option value="4">Perfil 5: Tarifa Manual 5</option>
+                            <option value="5">Perfil 6: Tarifa Manual 6</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
+                        <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
+                    </div>
                 </div>
 
-                <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                    <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
-                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
-                    <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
-                    <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                    <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                        <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
+                        <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                        <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                        <label class="block text-xs text-gray-600 mb-1">Horas laborables (10, es 10 a 11):</label>
+                        <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
+                    </div>
+
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                        <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
+                        <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                        <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                        <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                        <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
+                    </div>
+
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                        <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
+                        <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                        <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                        <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                        <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs">
+                    </div>
                 </div>
 
-                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                    <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
-                    <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
-                    <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                    <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
-                    <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
-                <div>
-                    <label class="flex items-center space-x-2 text-sm font-medium mt-2">
-                        <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
-                        <span>Fines de semana completos a precio VALLE</span>
-                    </label>
-                </div>
-              <div>
-                    <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (DD-MM separadas por comas):</label>
-                    <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
+                    <div>
+                        <label class="flex items-center space-x-2 text-sm font-medium mt-2">
+                            <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
+                            <span>Fines de semana completos a precio VALLE</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (DD-MM separadas por comas):</label>
+                        <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12">
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Configuración de Potencia Contratada -->
+        <!-- 5. CONFIGURACIÓN DEL TÉRMINO DE POTENCIA -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
-            <div class="mb-4">
-                <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
-                <p class="text-xs text-gray-500 mt-1">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+            <div class="mb-4 flex items-center gap-2">
+                <button type="button" data-target="body-power-config" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                <div>
+                    <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+                </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
-                    <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            
+            <div id="body-power-config">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
+                        <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
+                        <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
+                        <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
+                        <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
+                        <input type="number" id="powerPriceP1Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
+                        <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
+                        <input type="number" id="powerPriceP2Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
+                        <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                    </div>   
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
-                    <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP1Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
-                    <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
-                    <input type="number" id="powerPriceP2Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
-                    <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                </div>   
+                <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
             </div>
-            <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
         </div>
 
         <!-- Botón Recalcular centralizado -->
@@ -375,6 +394,7 @@
 
         <!-- Resultados -->
         <div id="resultsSection" class="hidden">
+            <!-- Métricas Globales (7 indicadores) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-blue-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Total</h3>
@@ -415,16 +435,19 @@
 
             <!-- Gráficas del Análisis -->
             <div class="space-y-6 mb-8">
-                <!-- PANEL: Patrón de Consumo -->
+                <!-- 6. PATRÓN DE CONSUMO -->
                 <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
-                            <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
+                        <div class="flex items-center gap-2">
+                            <button type="button" data-target="body-pattern" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
+                                <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="space-y-6">
+                    <div id="body-pattern" class="space-y-6">
                         <!-- 1. Clasificación por Tramos Horarios -->
                         <div>
                             <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario 2.0TD de 3 tramos o precio fijo (Introducido por el usuario en opción MANUAL POR TRAMOS)</h4>
@@ -501,7 +524,8 @@
                                     </div>
                                 </div>
                             </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
                                     <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
                                     <div class="mt-2 flex flex-col gap-1 text-xs">
@@ -702,99 +726,121 @@
                     </div>
                 </div>
 
-                <!-- PANEL: Consumo Diario por Calendario -->
+                <!-- 7. CONSUMO DIARIO POR CALENDARIO -->
                 <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
-                        <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
+                        <div class="flex items-center gap-2">
+                            <button type="button" data-target="body-calendar" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                            <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
+                        </div>
                         <p class="text-xs text-gray-500">Muestra los kWh totales e importes diarios de manera estructurada por mes.</p>
                     </div>
-                    <div id="calendarGridContainer" class="space-y-8"></div>
-                    <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
-                        <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
-                        <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros. Tambien puedes ver el consumo individual pinchando en el icono de la gráfica en la casilla del día."</strong>.</p>
+                    <div id="body-calendar">
+                        <div id="calendarGridContainer" class="space-y-8"></div>
+                        <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
+                            <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
+                            <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros. Tambien puedes ver el consumo individual pinchando en el icono de la gráfica en la casilla del día."</strong>.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 1. Evolución Cronológica Diaria -->
+                <!-- 8. EVOLUCIÓN CRONOLÓGICA DIARIA -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución Cronológica Diaria</h3>
-                    <div class="relative h-[450px]">
+                    <div class="flex items-center gap-2 mb-4">
+                        <button type="button" data-target="body-chart-daily" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                        <h3 class="text-lg font-semibold text-gray-700">Evolución Cronológica Diaria</h3>
+                    </div>
+                    <div id="body-chart-daily" class="relative h-[450px]">
                         <canvas id="chartDaily"></canvas>
                     </div>
                 </div>
 
-                <!-- 2. Acumulado por Día de la Semana -->
+                <!-- 9. ANÁLISIS POR DÍA DE LA SEMANA -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h3>
-                    <div class="relative h-[450px]">
+                    <div class="flex items-center gap-2 mb-4">
+                        <button type="button" data-target="body-chart-dayofweek" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                        <h3 class="text-lg font-semibold text-gray-700">Análisis por Día de la Semana (Medias y Acumulados)</h3>
+                    </div>
+                    <div id="body-chart-dayofweek" class="relative h-[450px]">
                         <canvas id="chartDayOfWeek"></canvas>
                     </div>
                 </div>
 
-                <!-- 3. Perfil Horario de 24 horas -->
+                <!-- 10. PERFIL HORARIO MEDIO Y ACUMULADO -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h3>
-                    <div class="relative h-[500px]">
-                        <canvas id="chartHourly"></canvas>
+                    <div class="flex items-center gap-2 mb-4">
+                        <button type="button" data-target="body-chart-hourly" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                        <h3 class="text-lg font-semibold text-gray-700">Perfil Horario Medio y Acumulado (24 Horas)</h3>
                     </div>
-                    <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
+                    <div id="body-chart-hourly">
+                        <div class="relative h-[500px]">
+                            <canvas id="chartHourly"></canvas>
+                        </div>
+                        <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Métricas Filtradas con Doble Cálculo Base/Simulado -->
+            <!-- 11. ANÁLISIS DE HORAS QUE SUPERAN EL UMBRAL (VEHÍCULO) -->
             <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
-                <h3 class="text-lg font-semibold text-yellow-800 mb-4">Análisis de horas que superan el umbral</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                    <div>
-                        <span class="text-gray-600 text-sm block">Horas afectadas:</span>
-                        <span id="filteredHours" class="text-2xl font-bold text-yellow-900 font-mono">0 h</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600 text-sm block">Subtotal Consumo (Vehículo):</span>
-                        <span id="filteredKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
-                        <div class="leading-tight">
-                            <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
-                            <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold" title="Coste aislado aplicando los descuentos e impuestos configurados">Simulado: 0.00 €</span>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="text-gray-600 text-sm block">Consumo Medio (Vehículo):</span>
-                        <span id="filteredAvgKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600 text-sm block">Precio Medio (Vehículo):</span>
-                        <span id="filteredAvgPrice" class="text-2xl font-bold text-yellow-900 font-mono">0.00000 €/kWh</span>
-                    </div>
+                <div class="flex items-center gap-2 mb-4">
+                    <button type="button" data-target="body-ev-summary" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-yellow-200 hover:bg-yellow-300 text-yellow-900 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                    <h3 class="text-lg font-semibold text-yellow-800">Análisis de horas que superan el umbral</h3>
                 </div>
-
-                <!-- Autonomía y Coste por Kilómetro -->
-                <div class="mt-6 pt-4 border-t border-yellow-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-yellow-900">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="font-bold uppercase tracking-wider text-[10px]">Parámetro de Consumo Coche:</span>
-                        <div class="flex items-center gap-1 bg-white border border-yellow-200 px-2 py-0.5 rounded shadow-xs">
-                            <input type="number" id="evEfficiency" step="0.1" value="15.4" class="w-12 text-center font-bold text-yellow-950 focus:outline-none bg-transparent">
-                            <span class="text-[10px] text-gray-400 font-semibold">kWh/100km</span>
+                
+                <div id="body-ev-summary">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                        <div>
+                            <span class="text-gray-600 text-sm block">Horas afectadas:</span>
+                            <span id="filteredHours" class="text-2xl font-bold text-yellow-900 font-mono">0 h</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm block">Subtotal Consumo (Vehículo):</span>
+                            <span id="filteredKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
+                            <div class="leading-tight">
+                                <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
+                                <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold" title="Coste aislado aplicando los descuentos e impuestos configurados">Simulado: 0.00 €</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm block">Consumo Medio (Vehículo):</span>
+                            <span id="filteredAvgKwh" class="text-2xl font-bold text-yellow-900 font-mono">0.00 kWh</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600 text-sm block">Precio Medio (Vehículo):</span>
+                            <span id="filteredAvgPrice" class="text-2xl font-bold text-yellow-900 font-mono">0.00000 €/kWh</span>
                         </div>
                     </div>
-                    <div class="flex flex-col sm:items-end text-[11px] leading-tight font-medium">
-                        <div>🚗 Kilómetros estimados recorridos: <span id="evRangeResult" class="font-bold text-sm text-yellow-950">0.0 km</span></div>
-                        <div class="mt-1 text-gray-500 text-[10px] flex flex-col sm:items-end gap-0.5">
-                            <div>💰 Coste estimado (Base): <span id="evCostPerKmResult" class="font-bold text-yellow-900 font-mono text-[11px]">0.0000 €/km</span></div>
-                            <div>💰 Coste estimado (Simulado): <span id="evCostPerKmSimulatedResult" class="font-bold text-yellow-950 font-mono text-[11px]">0.0000 €/km</span></div>
+
+                    <div class="mt-6 pt-4 border-t border-yellow-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-yellow-900">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-bold uppercase tracking-wider text-[10px]">Parámetro de Consumo Coche:</span>
+                            <div class="flex items-center gap-1 bg-white border border-yellow-200 px-2 py-0.5 rounded shadow-xs">
+                                <input type="number" id="evEfficiency" step="0.1" value="15.4" class="w-12 text-center font-bold text-yellow-950 focus:outline-none bg-transparent">
+                                <span class="text-[10px] text-gray-400 font-semibold">kWh/100km</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:items-end text-[11px] leading-tight font-medium">
+                            <div>🚗 Kilómetros estimados recorridos: <span id="evRangeResult" class="font-bold text-sm text-yellow-950">0.0 km</span></div>
+                            <div class="mt-1 text-gray-500 text-[10px] flex flex-col sm:items-end gap-0.5">
+                                <div>💰 Coste estimado (Base): <span id="evCostPerKmResult" class="font-bold text-yellow-900 font-mono text-[11px]">0.0000 €/km</span></div>
+                                <div>💰 Coste estimado (Simulado): <span id="evCostPerKmSimulatedResult" class="font-bold text-yellow-950 font-mono text-[11px]">0.0000 €/km</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabla de Detalles -->
+            <!-- 12. DETALLE DE LAS HORAS QUE SUPERAN EL UMBRAL -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="p-6 border-b">
+                <div class="p-6 border-b flex items-center gap-2">
+                    <button type="button" data-target="body-ev-table" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
                     <h3 class="text-lg font-semibold">Detalle de las horas que superan el umbral</h3>
                 </div>
-                <div class="overflow-x-auto max-h-96">
+                <div id="body-ev-table" class="overflow-x-auto max-h-96">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700 text-sm uppercase">
@@ -1050,12 +1096,59 @@
         window.annualChartInstance = null;
         window.currentMainPriceDate = null;
         
-// Control del simulador de reparto por porcentajes P1, P2 y P3
+        // Control del simulador de reparto por porcentajes P1, P2 y P3
         window.lastFilteredData = null;
         window.assumeEquivalentTranches = false;
         window.customTrancheP1 = null;
         window.customTrancheP2 = null;
         window.customTrancheP3 = null;
+
+        const COLLAPSE_STORAGE_KEY = 'analizador_collapsed_sections_v2';
+        window.collapsedSections = {};
+
+        function initCollapsibleSections() {
+            try {
+                const saved = localStorage.getItem(COLLAPSE_STORAGE_KEY);
+                if (saved) {
+                    window.collapsedSections = JSON.parse(saved) || {};
+                }
+            } catch(e) {}
+
+            document.querySelectorAll('.section-collapse-btn').forEach(btn => {
+                const targetId = btn.getAttribute('data-target');
+                const bodyEl = document.getElementById(targetId);
+                if (!bodyEl) return;
+
+                const isCollapsed = !!window.collapsedSections[targetId];
+                applySectionCollapseState(btn, bodyEl, isCollapsed);
+
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const currentlyCollapsed = bodyEl.classList.contains('hidden');
+                    const newState = !currentlyCollapsed;
+                    window.collapsedSections[targetId] = newState;
+                    try {
+                        localStorage.setItem(COLLAPSE_STORAGE_KEY, JSON.stringify(window.collapsedSections));
+                    } catch(e) {}
+                    applySectionCollapseState(btn, bodyEl, newState);
+                });
+            });
+        }
+
+        function applySectionCollapseState(btn, bodyEl, isCollapsed) {
+            if (isCollapsed) {
+                bodyEl.classList.add('hidden');
+                btn.innerHTML = '▶';
+                btn.title = 'Desplegar sección';
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+                btn.classList.remove('bg-blue-100', 'text-blue-800', 'bg-purple-100', 'text-purple-800', 'bg-green-100', 'text-green-800', 'bg-indigo-100', 'text-indigo-800', 'bg-yellow-200', 'text-yellow-900', 'bg-amber-100', 'text-amber-900');
+            } else {
+                bodyEl.classList.remove('hidden');
+                btn.innerHTML = '▼';
+                btn.title = 'Plegar sección';
+                btn.classList.remove('bg-gray-200', 'text-gray-700');
+            }
+        }
 
         window.toggleAssumeEquivalentTranches = function(checked) {
             window.assumeEquivalentTranches = checked;
@@ -1084,16 +1177,6 @@
             window.customTrancheP2 = null;
             window.customTrancheP3 = null;
             saveConfig();
-
-            if (window.lastFilteredData) {
-                renderResultsAndCharts(window.lastFilteredData);
-            }
-        };
-
-        window.resetTranchePercents = function() {
-            window.customTrancheP1 = null;
-            window.customTrancheP2 = null;
-            window.customTrancheP3 = null;
 
             if (window.lastFilteredData) {
                 renderResultsAndCharts(window.lastFilteredData);
@@ -1235,14 +1318,12 @@
             }
         ];
 
-        // Elementos del DOM
         const rateMode = document.getElementById('rateMode');
         const manualConfig = document.getElementById('manualConfig');
         const thresholdInput = document.getElementById('thresholdInput');
         const subtractInput = document.getElementById('subtractInput');
         const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');
         
-        // Drag & Drop
         const dropZone = document.getElementById('dropZone');
         const csvInput = document.getElementById('csvInput');
         const dropZonePrompt = document.getElementById('dropZonePrompt');
@@ -1646,6 +1727,7 @@
                 const priceLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
                 const priceValle = parseFloat(document.getElementById('priceValle').value) || 0;
+                const hoursValle = document.getElementById('hoursValle').value.split(',').map(n => parseInt(n.trim(), 10));
                 const useWeekendValle = document.getElementById('weekendValle').checked;
                 const holidays = document.getElementById('holidaysInput').value.split(',').map(d => d.trim());
                 
@@ -1818,7 +1900,7 @@
         }
 
         function renderResultsAndCharts(data) {
-            window.lastFilteredData = data; // Guarda en memoria para actualización instantánea
+            window.lastFilteredData = data; 
 
             const threshold = parseFloat(thresholdInput.value) || 0;
             const subtractVal = parseFloat(subtractInput.value) || 0;
@@ -2043,7 +2125,7 @@
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
 
-// Precios medios unitarios de PVPC (Grupo 2: Caras, Medias, Baratas)
+            // Precios medios para equiparación
             const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : pvpcHigh;
             const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : ((pvpcHigh + pvpcLow) / 2);
             const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : pvpcLow;
@@ -2052,7 +2134,6 @@
             const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
             const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
 
-     
             // Obtener porcentajes reales de PVPC SIEMPRE (Grupo 2: Coste Alto, Medio y Bajo)
             let realPctP1 = 0, realPctP2 = 0, realPctP3 = 0;
             if (totalKwh > 0) {
@@ -2065,6 +2146,7 @@
             if (window.customTrancheP1 === null) window.customTrancheP1 = parseFloat(realPctP1.toFixed(1));
             if (window.customTrancheP2 === null) window.customTrancheP2 = parseFloat(realPctP2.toFixed(1));
             if (window.customTrancheP3 === null) window.customTrancheP3 = parseFloat(realPctP3.toFixed(1));
+
             const simPctP1 = window.customTrancheP1;
             const simPctP2 = window.customTrancheP2;
             const simPctP3 = window.customTrancheP3;
@@ -2074,13 +2156,11 @@
 
             if (window.assumeEquivalentTranches) {
                 if (mode === 'pvpc') {
-                    // Calculamos la tarifa Manual aplicando los % personalizados al total de kWh
                     const kwhSimP1 = totalKwh * (simPctP1 / 100);
                     const kwhSimP2 = totalKwh * (simPctP2 / 100);
                     const kwhSimP3 = totalKwh * (simPctP3 / 100);
                     compEnergyManual = (kwhSimP1 * pPunta) + (kwhSimP2 * pLlano) + (kwhSimP3 * pValle);
                 } else {
-                    // Calculamos el PVPC aplicando los % personalizados a los precios medios de PVPC
                     const kwhSimP1 = totalKwh * (simPctP1 / 100);
                     const kwhSimP2 = totalKwh * (simPctP2 / 100);
                     const kwhSimP3 = totalKwh * (simPctP3 / 100);
@@ -2378,7 +2458,6 @@
             const totalCostIndexedTimeEl = document.getElementById('totalCostIndexedTimeText');
             if (totalCostIndexedTimeEl) totalCostIndexedTimeEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
 
-
             // 3. Comparación Global de Sistemas de Facturación
             const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
             const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
@@ -2403,7 +2482,7 @@
 
             const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
 
-const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
+            const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
             const isSumOk = Math.abs(sumPercents - 100.0) <= 0.1;
             const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
 
@@ -2423,9 +2502,9 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
                                     <span>Simular % de consumo asignado a P1, P2 y P3 en la tarifa <strong>${targetTariffTitle}</strong></span>
                                 </label>
                                 ${window.assumeEquivalentTranches ? `
-                                <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales de PVPC (Grupo 2)">
-                                    ↺ % Reales PVPC
-                                </button>
+                                    <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales de PVPC (Grupo 2)">
+                                        ↺ % Reales PVPC
+                                    </button>
                                 ` : ''}
                             </div>
 
@@ -2471,7 +2550,7 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
                                 <tr class="${window.assumeEquivalentTranches ? 'bg-blue-50/30' : ''}">
                                     <td class="py-1.5 font-medium text-gray-700">
                                         Término de Energía (Base)
-                                        ${window.assumeEquivalentTranches ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded ml-1.5 uppercase">⚡ Equiparado P1/P2/P3</span>' : ''}
+                                        ${window.assumeEquivalentTranches ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded ml-1.5 uppercase">⚡ Simulación % P1/P2/P3</span>' : ''}
                                     </td>
                                     <td class="py-1.5 text-right font-mono text-gray-500">${compEnergyPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
                                     <td class="py-1.5 text-right font-mono text-gray-500">${compEnergyManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
@@ -3433,6 +3512,7 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
         loadConfig();
         updatePowerPriceHelpers();   
         initTodayPrices();
+        initCollapsibleSections();
 
         window.handleCalendarDayClick = function(dateStr) {
             if (!window.calendarSelectedDates) {
@@ -3613,7 +3693,6 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
 
             const queryThreshold = parseFloat(document.getElementById('queryPriceThreshold').value) || 0.08;
             const queryFilteredPrices = allHourlyPrices.filter(p => p <= queryThreshold);
-
             const queryFilteredAvg = queryFilteredPrices.length > 0 
                 ? (queryFilteredPrices.reduce((sum, p) => sum + p, 0) / queryFilteredPrices.length) 
                 : 0;
