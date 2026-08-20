@@ -27,7 +27,7 @@
             </p>
         </header>
 
-        <!-- 1. GRÁFICA INICIAL -->
+        <!-- 1. GRÁFICA INICIAL DE PRECIOS -->
         <div id="todayPricesPanel" class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-amber-500">
             <div class="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div class="flex items-center gap-2 sm:gap-3">
@@ -94,291 +94,305 @@
             </div>
         </div>
 
-        <!-- 2. IMPORTACIÓN DATADIS -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
-            <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <!-- ========================================== -->
+        <!-- GRUPO DE SOLAPAS 1: CONFIGURACIÓN E IMPORTACIÓN -->
+        <!-- ========================================== -->
+        <div id="cluster-config" class="bg-white rounded-lg shadow-md mb-6 border-l-4 border-indigo-600 overflow-hidden">
+            <!-- Cabecera de la sección plegable -->
+            <div class="p-4 bg-gray-50/80 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="flex items-center gap-2">
-                    <button type="button" data-target="body-datadis" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
+                    <button type="button" data-target="cluster-config-body" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar menú de configuración">▼</button>
                     <div>
-                        <h3 class="text-md font-bold text-blue-700">Importación desde Datadis.es</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Descarga tus consumos oficiales desde Datadis.es</p>
+                        <h3 class="text-sm sm:text-base font-bold text-indigo-900">Configuración, Importación y Filtros</h3>
+                        <p class="text-[11px] text-gray-500">Accede a Datadis, ajusta tus filtros, configura precios por tramos y potencias contratadas.</p>
                     </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                    <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
-                        <span>Regístrate en Datadis.es</span>
-                        <span class="text-[10px]">↗</span>
-                    </a>
-                    <button id="consultPricesBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
-                        <span>📊 Consultar precios diarios</span>
-                    </button>
-                    <button id="annualTrendBtn" type="button" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
-                        <span>📅 Tendencia Anual</span>
-                    </button>
                 </div>
             </div>
 
-            <div id="body-datadis">
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
-                    <button id="toggleDatadisHelpBtn" type="button" class="w-full flex justify-between items-center text-left focus:outline-none select-none">
-                        <h4 class="font-bold text-xs text-blue-800 uppercase flex items-center gap-1.5">
-                            <span>ℹ️ ¿Qué es Datadis.es y cómo darte de alta?</span>
-                        </h4>
-                        <span id="datadisHelpIcon" class="text-blue-800 font-bold text-xs bg-blue-100 hover:bg-blue-200/80 px-2 py-1 rounded transition-colors select-none">
-                            (+) Mostrar ayuda
-                        </span>
+            <!-- Cuerpo colapsable -->
+            <div id="cluster-config-body">
+                <!-- Barra de Solapas / Tabs -->
+                <div class="flex flex-wrap border-b border-gray-200 bg-gray-100/70 px-4 pt-2 gap-1.5">
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-datadis')" data-tab-target="tab-datadis" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 bg-white text-blue-700 font-bold shadow-xs border-b-2 border-blue-600">
+                        <span>📥 Importación Datadis</span>
                     </button>
-                    
-                    <div id="datadisHelpContent" class="hidden mt-3 pt-3 border-t border-blue-200/60">
-                        <p class="text-xs text-gray-700 leading-relaxed mb-2">
-                            Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas publican tus curvas de consumo horario reales.
-                        </p>
-                        <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
-                            <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
-                            <li>Usa tu NIF/NIE como usuario y crea una contraseña.</li>
-                            <li>Introduce tu CUPS o déjalo en blanco para autodetectarlo.</li>
-                        </ol>
-                    </div>
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-filters')" data-tab-target="tab-filters" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <span>⏱️ Filtros Temporales</span>
+                    </button>
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-manual')" data-tab-target="tab-manual" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <span>⚡ Tarifa por Tramos</span>
+                    </button>
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-power')" data-tab-target="tab-power" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <span>🔌 Potencia Contratada</span>
+                    </button>
                 </div>
 
-                <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
-                    <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
-                    <p class="text-xs text-gray-600 mb-3">
-                        Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a DATADIS y descargará los datos automáticamente
-                    </p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Usuario Datadis (NIF)</label>
-                            <input type="text" id="datadisUser" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <!-- Contenidos de las Solapas -->
+                <div class="p-6">
+                    <!-- Solapa 1: Datadis -->
+                    <div id="tab-datadis" class="tab-pane">
+                        <div class="mb-3 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                            <div>
+                                <h4 class="text-md font-bold text-blue-700">Importación directa desde Datadis.es</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Descarga tus consumos oficiales de tu distribuidora</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                                <a href="https://datadis.es" target="_blank" rel="noopener noreferrer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                                    <span>Regístrate en Datadis.es</span>
+                                    <span class="text-[10px]">↗</span>
+                                </a>
+                                <button id="consultPricesBtn" type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                                    <span>📊 Consultar precios diarios</span>
+                                </button>
+                                <button id="annualTrendBtn" type="button" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors flex items-center gap-1">
+                                    <span>📅 Tendencia Anual</span>
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
-                            <input type="password" id="datadisPass" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">CUPS (opcional)</label>
-                            <input type="text" id="datadisCups" placeholder="Autodetectar" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicio</label>
-                            <input type="date" id="datadisStart" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Fecha fin</label>
-                            <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                    </div>
 
-                    <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
-                        <div class="flex flex-wrap gap-2">
-                            <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                                ⬇️ Descargar y analizar directamente
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-2">
+                            <button id="toggleDatadisHelpBtn" type="button" class="w-full flex justify-between items-center text-left focus:outline-none select-none">
+                                <h4 class="font-bold text-xs text-blue-800 uppercase flex items-center gap-1.5">
+                                    <span>ℹ️ ¿Qué es Datadis.es y cómo darte de alta?</span>
+                                </h4>
+                                <span id="datadisHelpIcon" class="text-blue-800 font-bold text-xs bg-blue-100 hover:bg-blue-200/80 px-2 py-1 rounded transition-colors select-none">
+                                    (+) Mostrar ayuda
+                                </span>
                             </button>
-                            <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                                💾 Guardar como archivo CSV
+                            
+                            <div id="datadisHelpContent" class="hidden mt-3 pt-3 border-t border-blue-200/60">
+                                <p class="text-xs text-gray-700 leading-relaxed mb-2">
+                                    Datadis es la plataforma oficial del Ministerio para la Transición Ecológica donde las distribuidoras eléctricas publican tus curvas de consumo horario reales.
+                                </p>
+                                <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5 leading-relaxed">
+                                    <li>Entra en <strong><a href="https://datadis.es" target="_blank" class="text-blue-600 underline hover:text-blue-800">Datadis.es</a></strong> y pulsa "Registrarse".</li>
+                                    <li>Usa tu NIF/NIE como usuario y crea una contraseña.</li>
+                                    <li>Introduce tu CUPS o déjalo en blanco para autodetectarlo.</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mt-4">
+                            <h4 class="font-bold text-xs text-emerald-800 uppercase mb-2">Descarga directa</h4>
+                            <p class="text-xs text-gray-600 mb-3">
+                                Introduce tus credenciales de Datadis.es y el periodo; la app se conecta a DATADIS y descargará los datos automáticamente
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Usuario Datadis (NIF)</label>
+                                    <input type="text" id="datadisUser" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Contraseña</label>
+                                    <input type="password" id="datadisPass" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">CUPS (opcional)</label>
+                                    <input type="text" id="datadisCups" placeholder="Autodetectar" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha inicio</label>
+                                    <input type="date" id="datadisStart" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha fin</label>
+                                    <input type="date" id="datadisEnd" class="w-full px-2 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
+                                <div class="flex flex-wrap gap-2">
+                                    <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                                        ⬇️ Descargar y analizar directamente
+                                    </button>
+                                    <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                                        💾 Guardar como archivo CSV
+                                    </button>
+                                </div>
+                                <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
+                                    📋 Datos Identificativos CUPS
+                                </button>
+                            </div>              
+                            <p id="datadisDirectStatus" class="text-xs mt-2"></p>
+                        </div>
+                    </div>
+
+                    <!-- Solapa 2: Filtros -->
+                    <div id="tab-filters" class="tab-pane hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h4>
+                            <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
+                                Limpiar Filtros
                             </button>
                         </div>
-                        <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
-                            📋 Datos Identificativos CUPS
-                        </button>
-                    </div>              
-                    <p id="datadisDirectStatus" class="text-xs mt-2"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. FILTROS DE PERÍODO Y RANGO HORARIO -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <button type="button" data-target="body-filters" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                    <h3 class="text-md font-bold text-purple-700">Filtros de Período y Rango Horario (Opcional)</h3>
-                </div>
-                <button id="clearFiltersBtn" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors focus:outline-none">
-                    Limpiar Filtros
-                </button>
-            </div>
-            <div id="body-filters" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio (YYYY-MM-DD)</label>
-                    <input type="date" id="filterStartDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Fin (YYYY-MM-DD)</label>
-                    <input type="date" id="filterEndDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (Opcional)</label>
-                    <select id="filterStartHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Todas las horas</option>
-                        <option value="0">00:00</option>
-                        <option value="1">01:00</option>
-                        <option value="2">02:00</option>
-                        <option value="3">03:00</option>
-                        <option value="4">04:00</option>
-                        <option value="5">05:00</option>
-                        <option value="6">06:00</option>
-                        <option value="7">07:00</option>
-                        <option value="8">08:00</option>
-                        <option value="9">09:00</option>
-                        <option value="10">10:00</option>
-                        <option value="11">11:00</option>
-                        <option value="12">12:00</option>
-                        <option value="13">13:00</option>
-                        <option value="14">14:00</option>
-                        <option value="15">15:00</option>
-                        <option value="16">16:00</option>
-                        <option value="17">17:00</option>
-                        <option value="18">18:00</option>
-                        <option value="19">19:00</option>
-                        <option value="20">20:00</option>
-                        <option value="21">21:00</option>
-                        <option value="22">22:00</option>
-                        <option value="23">23:00</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (Opcional)</label>
-                    <select id="filterEndHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="">Todas las horas</option>
-                        <option value="0">00:00</option>
-                        <option value="1">01:00</option>
-                        <option value="2">02:00</option>
-                        <option value="3">03:00</option>
-                        <option value="4">04:00</option>
-                        <option value="5">05:00</option>
-                        <option value="6">06:00</option>
-                        <option value="7">07:00</option>
-                        <option value="8">08:00</option>
-                        <option value="9">09:00</option>
-                        <option value="10">10:00</option>
-                        <option value="11">11:00</option>
-                        <option value="12">12:00</option>
-                        <option value="13">13:00</option>
-                        <option value="14">14:00</option>
-                        <option value="15">15:00</option>
-                        <option value="16">16:00</option>
-                        <option value="17">17:00</option>
-                        <option value="18">18:00</option>
-                        <option value="19">19:00</option>
-                        <option value="20">20:00</option>
-                        <option value="21">21:00</option>
-                        <option value="22">22:00</option>
-                        <option value="23">23:00</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. CONFIGURACIÓN DE TARIFA MANUAL -->
-        <div id="manualConfig" class="hidden bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-green-500">
-            <div class="flex items-center gap-2 mb-4">
-                <button type="button" data-target="body-manual-config" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-green-100 hover:bg-green-200 text-green-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                <h3 class="text-md font-bold text-green-700">Configuración de Tarifa por Tramos</h3>
-            </div>
-            
-            <div id="body-manual-config">
-                <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil de Tarifa (1 de 6)</label>
-                        <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
-                            <option value="0">Perfil 1: Tarifa Manual 1</option>
-                            <option value="1">Perfil 2: Tarifa Manual 2</option>
-                            <option value="2">Perfil 3: Tarifa Manual 3</option>
-                            <option value="3">Perfil 4: Tarifa Manual 4</option>
-                            <option value="4">Perfil 5: Tarifa Manual 5</option>
-                            <option value="5">Perfil 6: Tarifa Manual 6</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
-                        <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                    <div class="p-4 bg-red-50 rounded-lg border border-red-100">
-                        <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
-                        <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
-                        <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                        <label class="block text-xs text-gray-600 mb-1">Horas laborables (10, es 10 a 11):</label>
-                        <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Inicio (YYYY-MM-DD)</label>
+                                <input type="date" id="filterStartDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Fecha Fin (YYYY-MM-DD)</label>
+                                <input type="date" id="filterEndDate" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Hora Inicio (Opcional)</label>
+                                <select id="filterStartHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Todas las horas</option>
+                                    <option value="0">00:00</option>
+                                    <option value="1">01:00</option>
+                                    <option value="2">02:00</option>
+                                    <option value="3">03:00</option>
+                                    <option value="4">04:00</option>
+                                    <option value="5">05:00</option>
+                                    <option value="6">06:00</option>
+                                    <option value="7">07:00</option>
+                                    <option value="8">08:00</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                    <option value="20">20:00</option>
+                                    <option value="21">21:00</option>
+                                    <option value="22">22:00</option>
+                                    <option value="23">23:00</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Hora Fin (Opcional)</label>
+                                <select id="filterEndHour" class="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Todas las horas</option>
+                                    <option value="0">00:00</option>
+                                    <option value="1">01:00</option>
+                                    <option value="2">02:00</option>
+                                    <option value="3">03:00</option>
+                                    <option value="4">04:00</option>
+                                    <option value="5">05:00</option>
+                                    <option value="6">06:00</option>
+                                    <option value="7">07:00</option>
+                                    <option value="8">08:00</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                    <option value="20">20:00</option>
+                                    <option value="21">21:00</option>
+                                    <option value="22">22:00</option>
+                                    <option value="23">23:00</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                        <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
-                        <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
-                        <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                        <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
-                        <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
+                    <!-- Solapa 3: Tarifa Manual -->
+                    <div id="tab-manual" class="tab-pane hidden">
+                        <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil de Tarifa (1 de 6)</label>
+                                <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
+                                    <option value="0">Perfil 1: Tarifa Manual 1</option>
+                                    <option value="1">Perfil 2: Tarifa Manual 2</option>
+                                    <option value="2">Perfil 3: Tarifa Manual 3</option>
+                                    <option value="3">Perfil 4: Tarifa Manual 4</option>
+                                    <option value="4">Perfil 5: Tarifa Manual 5</option>
+                                    <option value="5">Perfil 6: Tarifa Manual 6</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
+                                <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                            <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                                <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
+                                <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                                <input type="number" id="pricePunta" step="0.00001" value="0.15000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                                <label class="block text-xs text-gray-600 mb-1">Horas laborables (10, es 10 a 11):</label>
+                                <input type="text" id="hoursPunta" value="10,11,12,13,18,19,20,21" class="w-full px-2 py-1 border rounded text-xs">
+                            </div>
+
+                            <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                                <span class="font-bold text-yellow-800 text-sm block mb-2">TRAMO LLANO</span>
+                                <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                                <input type="number" id="priceLlano" step="0.00001" value="0.10000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                                <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                                <input type="text" id="hoursLlano" value="8,9,14,15,16,17,22,23" class="w-full px-2 py-1 border rounded text-xs">
+                            </div>
+
+                            <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                                <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
+                                <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
+                                <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
+                                <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
+                                <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
+                            <div>
+                                <label class="flex items-center space-x-2 text-sm font-medium mt-2">
+                                    <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
+                                    <span>Fines de semana completos a precio VALLE</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (DD-MM separadas por comas):</label>
+                                <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12">
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                        <span class="font-bold text-green-800 text-sm block mb-2">TRAMO VALLE</span>
-                        <label class="block text-xs text-gray-600 mb-1">Precio (€/kWh):</label>
-                        <input type="number" id="priceValle" step="0.00001" value="0.06000" class="w-full px-2 py-1 border rounded text-sm mb-2">
-                        <label class="block text-xs text-gray-600 mb-1">Horas laborables:</label>
-                        <input type="text" id="hoursValle" value="0,1,2,3,4,5,6,7" class="w-full px-2 py-1 border rounded text-xs">
+                    <!-- Solapa 4: Potencia -->
+                    <div id="tab-power" class="tab-pane hidden">
+                        <p class="text-xs text-gray-500 mb-4">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
+                                <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
+                                <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
+                                <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
+                                <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
+                                <input type="number" id="powerPriceP1Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
+                                <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
+                                <input type="number" id="powerPriceP2Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
+                                <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                            </div>   
+                        </div>
+                        <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
-                    <div>
-                        <label class="flex items-center space-x-2 text-sm font-medium mt-2">
-                            <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
-                            <span>Fines de semana completos a precio VALLE</span>
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (DD-MM separadas por comas):</label>
-                        <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. CONFIGURACIÓN DEL TÉRMINO DE POTENCIA -->
-        <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
-            <div class="mb-4 flex items-center gap-2">
-                <button type="button" data-target="body-power-config" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                <div>
-                    <h3 class="text-md font-bold text-indigo-700">Configuración del Término de Potencia Contratada</h3>
-                    <p class="text-xs text-gray-500 mt-0.5">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
-                </div>
-            </div>
-            
-            <div id="body-power-config">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
-                        <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
-                        <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
-                        <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
-                        <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
-                        <input type="number" id="powerPriceP1Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
-                        <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
-                        <input type="number" id="powerPriceP2Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
-                        <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                    </div>   
-                </div>
-                <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
             </div>
         </div>
 
@@ -433,355 +447,371 @@
                 </div>
             </div>
 
-            <!-- Gráficas del Análisis -->
-            <div class="space-y-6 mb-8">
-                <!-- 6. PATRÓN DE CONSUMO -->
-                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
-                        <div class="flex items-center gap-2">
-                            <button type="button" data-target="body-pattern" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
-                                <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="body-pattern" class="space-y-6">
-                        <!-- 1. Clasificación por Tramos Horarios -->
+            <!-- PATRÓN DE CONSUMO (COMPARTIVA) -->
+            <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500 mb-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b pb-4 mb-4 gap-4">
+                    <div class="flex items-center gap-2">
+                        <button type="button" data-target="body-pattern" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
                         <div>
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario 2.0TD de 3 tramos o precio fijo (Introducido por el usuario en opción MANUAL POR TRAMOS)</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p1TimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p1KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                            <span id="p1CostTimeText" class="text-red-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p2TimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p2KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                            <span id="p2CostTimeText" class="text-amber-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p3TimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p3KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                            <span id="p3CostTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- 4ª Tarjeta: Acumulados -->
-                                <div class="p-4 bg-blue-100/80 rounded-xl border-2 border-blue-200 flex flex-col justify-between shadow-sm">
-                                    <span id="totalTimeTitle" class="font-bold text-blue-950 text-[10px] uppercase tracking-wide">ACUMULADOS</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="totalKwhTimeText" class="font-bold text-gray-950">0.00 kWh (100.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                            <span id="totalCostTimeText" class="text-blue-900">0.00 € (100.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 2. Clasificación por Coste Real -->
-                        <div class="pt-4 border-t border-gray-100">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
-                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (PVPC de REE)</h4>
-                                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                    <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
-                                    <div>
-                                        <label class="font-medium mr-1 text-red-700">Caro (P1) si &ge;</label>
-                                        <input type="number" id="pvpcHighThreshold" step="0.005" value="0.150" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
-                                    </div>
-                                    <div>
-                                        <label class="font-medium mr-1 text-green-700">Barato (P3) si &le;</label>
-                                        <input type="number" id="pvpcLowThreshold" step="0.005" value="0.080" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p1KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC:</span>
-                                            <span id="p1CostPriceText" class="text-red-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p2PriceTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p2KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC:</span>
-                                            <span id="p2CostPriceText" class="text-amber-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p3PriceTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">Coste Bajo (Precio Umbral Barato)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p3KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC:</span>
-                                            <span id="p3CostPriceText" class="text-emerald-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- 4ª Tarjeta: Acumulados -->
-                                <div class="p-4 bg-blue-100/80 rounded-xl border-2 border-blue-200 flex flex-col justify-between shadow-sm">
-                                    <span id="totalPriceTitle" class="font-bold text-blue-950 text-[10px] uppercase tracking-wide">ACUMULADOS</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="totalKwhPriceText" class="font-bold text-gray-950">0.00 kWh (100.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC:</span>
-                                            <span id="totalCostPriceText" class="text-blue-900">0.00 € (100.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Clasificación por Tramos Horarios Oficiales 2.0TD -->
-                        <div class="pt-4 border-t border-gray-100 mt-4">
-                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD para comprobar factura PVPC ya que agrupan los kWh por P1,P2 Y P3 igual que 2.0TD</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta (Horas Punta oficial @ PVPC)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p1KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC Real:</span>
-                                            <span id="p1CostIndexedTimeText" class="text-red-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano (Horas Llano oficial @ PVPC)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p2KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC Real:</span>
-                                            <span id="p2CostIndexedTimeText" class="text-amber-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
-                                    <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle (Horas Valle oficial @ PVPC)</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="p3KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC Real:</span>
-                                            <span id="p3CostIndexedTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- 4ª Tarjeta: Acumulados -->
-                                <div class="p-4 bg-blue-100/80 rounded-xl border-2 border-blue-200 flex flex-col justify-between shadow-sm">
-                                    <span id="totalIndexedTimeTitle" class="font-bold text-blue-950 text-[10px] uppercase tracking-wide">ACUMULADOS</span>
-                                    <div class="mt-2 flex flex-col gap-1 text-xs">
-                                        <div class="flex justify-between font-medium">
-                                            <span class="text-gray-600">Consumo:</span>
-                                            <span id="totalKwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (100.0%)</span>
-                                        </div>
-                                        <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
-                                            <span class="text-gray-600">Coste PVPC Real:</span>
-                                            <span id="totalCostIndexedTimeText" class="text-blue-900">0.00 € (100.0%)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Parámetros de Simulación de Factura Continuo -->
-                        <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
-                            <div>
-                                <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC regulada</span>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
-                                        <input type="number" id="discountEnergyPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
-                                        <input type="number" id="discountPowerPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
-                                        <input type="number" id="invoiceAdjustmentsPvpc" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono (€/día)</label>
-                                        <input type="number" id="retailerMarginPvpc" step="0.001" value="0.019" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
-                                        <input type="number" id="electricityTaxPvpc" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
-                                        <input type="number" id="meterRentalPvpc" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
-                                        <input type="number" id="vatRatePvpc" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-3 border-t border-emerald-100">
-                                <span class="text-[10px] font-bold text-green-900 uppercase tracking-wider block mb-1.5">2. Parámetros de Factura Manual (Tarifa por Tramos)</span>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
-                                        <input type="number" id="discountEnergyManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
-                                        <input type="number" id="discountPowerManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
-                                        <input type="number" id="invoiceAdjustmentsManual" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono(€/día)</label>
-                                        <input type="number" id="retailerMarginManual" step="0.001" value="0.142" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
-                                        <input type="number" id="electricityTaxManual" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
-                                        <input type="number" id="meterRentalManual" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
-                                        <input type="number" id="vatRateManual" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Comparación Global de Sistemas de Facturación -->
-                        <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
-                            <div class="text-left">
-                                <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
-                                <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo descargado de tu distribuidora o de Datadis para ver el desglose económico.</p>
-                            </div>
-                            <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
-                                Sin datos
-                            </div>
+                            <h3 class="text-lg font-semibold text-gray-700">Patrón de Consumo (Doble Clasificación Comparativa)</h3>
+                            <p class="text-xs text-gray-500">Sección comparativa fija para evaluar tus consumos según los tramos de precio definidos.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- 7. CONSUMO DIARIO POR CALENDARIO -->
-                <div id="calendarContainer" class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-2">
-                        <div class="flex items-center gap-2">
-                            <button type="button" data-target="body-calendar" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                            <h3 class="text-lg font-semibold text-gray-700">Consumo Diario por Calendario</h3>
+                <div id="body-pattern" class="space-y-6">
+                    <!-- 1. Clasificación por Tramos Horarios -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario 2.0TD de 3 tramos o precio fijo (Introducido por el usuario en opción MANUAL POR TRAMOS)</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
+                                <span id="p1TimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p1KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                        <span id="p1CostTimeText" class="text-red-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
+                                <span id="p2TimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p2KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                        <span id="p2CostTimeText" class="text-amber-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
+                                <span id="p3TimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p3KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                        <span id="p3CostTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-blue-100/80 rounded-xl border-2 border-blue-200 flex flex-col justify-between shadow-sm">
+                                <span id="totalTimeTitle" class="font-bold text-blue-950 text-[10px] uppercase tracking-wide">ACUMULADOS</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="totalKwhTimeText" class="font-bold text-gray-950">0.00 kWh (100.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste Tarifa Manual:</span>
+                                        <span id="totalCostTimeText" class="text-blue-900">0.00 € (100.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-xs text-gray-500">Muestra los kWh totales e importes diarios de manera estructurada por mes.</p>
                     </div>
-                    <div id="body-calendar">
-                        <div id="calendarGridContainer" class="space-y-8"></div>
-                        <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
-                            <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
-                            <p><strong>Mecánica de selección manual libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis (los días excluidos se mostrarán semitransparentes). Puedes seleccionar cualquier combinación de días no continuos a voluntad. Para restablecer el calendario y volver a mostrar todo el periodo, haz clic en el botón superior <strong>"Limpiar Filtros. Tambien puedes ver el consumo individual pinchando en el icono de la gráfica en la casilla del día."</strong>.</p>
+
+                    <!-- 2. Clasificación por Coste Real -->
+                    <div class="pt-4 border-t border-gray-100">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
+                            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Clasificación por Coste Real (PVPC de REE)</h4>
+                            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                <span class="font-bold text-gray-700">Rangos de Coste Real (PVPC):</span>
+                                <div>
+                                    <label class="font-medium mr-1 text-red-700">Caro (P1) si &ge;</label>
+                                    <input type="number" id="pvpcHighThreshold" step="0.005" value="0.150" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
+                                </div>
+                                <div>
+                                    <label class="font-medium mr-1 text-green-700">Barato (P3) si &le;</label>
+                                    <input type="number" id="pvpcLowThreshold" step="0.005" value="0.080" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-center font-bold text-gray-800"> €/kWh
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
+                                <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p1KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC:</span>
+                                        <span id="p1CostPriceText" class="text-red-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
+                                <span id="p2PriceTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p2KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC:</span>
+                                        <span id="p2CostPriceText" class="text-amber-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
+                                <span id="p3PriceTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">Coste Bajo (Precio Umbral Barato)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p3KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC:</span>
+                                        <span id="p3CostPriceText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-blue-100/80 rounded-xl border-2 border-blue-200 flex flex-col justify-between shadow-sm">
+                                <span id="totalPriceTitle" class="font-bold text-blue-950 text-[10px] uppercase tracking-wide">ACUMULADOS</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="totalKwhPriceText" class="font-bold text-gray-950">0.00 kWh (100.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC:</span>
+                                        <span id="totalCostPriceText" class="text-blue-900">0.00 € (100.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 8. EVOLUCIÓN CRONOLÓGICA DIARIA -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <button type="button" data-target="body-chart-daily" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                        <h3 class="text-lg font-semibold text-gray-700">Evolución Cronológica Diaria</h3>
-                    </div>
-                    <div id="body-chart-daily" class="relative h-[450px]">
-                        <canvas id="chartDaily"></canvas>
-                    </div>
-                </div>
-
-                <!-- 9. ANÁLISIS POR DÍA DE LA SEMANA -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <button type="button" data-target="body-chart-dayofweek" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                        <h3 class="text-lg font-semibold text-gray-700">Análisis por Día de la Semana (Medias y Acumulados)</h3>
-                    </div>
-                    <div id="body-chart-dayofweek" class="relative h-[450px]">
-                        <canvas id="chartDayOfWeek"></canvas>
-                    </div>
-                </div>
-
-                <!-- 10. PERFIL HORARIO MEDIO Y ACUMULADO -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex items-center gap-2 mb-4">
-                        <button type="button" data-target="body-chart-hourly" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
-                        <h3 class="text-lg font-semibold text-gray-700">Perfil Horario Medio y Acumulado (24 Horas)</h3>
-                    </div>
-                    <div id="body-chart-hourly">
-                        <div class="relative h-[500px]">
-                            <canvas id="chartHourly"></canvas>
+                    <!-- 3. Clasificación por Tramos Horarios Oficiales 2.0TD -->
+                    <div class="pt-4 border-t border-gray-100 mt-4">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD para comprobar factura PVPC ya que agrupan los kWh por P1,P2 Y P3 igual que 2.0TD</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
+                                <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta (Horas Punta oficial @ PVPC)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p1KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC Real:</span>
+                                        <span id="p1CostIndexedTimeText" class="text-red-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
+                                <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano (Horas Llano oficial @ PVPC)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p2KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC Real:</span>
+                                        <span id="p2CostIndexedTimeText" class="text-amber-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
+                                <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle (Horas Valle oficial @ PVPC)</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="p3KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC Real:</span>
+                                        <span id="p3CostIndexedTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-blue-100/80 rounded-xl border-2 border-blue-200 flex flex-col justify-between shadow-sm">
+                                <span id="totalIndexedTimeTitle" class="font-bold text-blue-950 text-[10px] uppercase tracking-wide">ACUMULADOS</span>
+                                <div class="mt-2 flex flex-col gap-1 text-xs">
+                                    <div class="flex justify-between font-medium">
+                                        <span class="text-gray-600">Consumo:</span>
+                                        <span id="totalKwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (100.0%)</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
+                                        <span class="text-gray-600">Coste PVPC Real:</span>
+                                        <span id="totalCostIndexedTimeText" class="text-blue-900">0.00 € (100.0%)</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
+                    </div>
+
+                    <!-- Parámetros de Factura -->
+                    <div class="mt-6 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-4">
+                        <div>
+                            <span class="text-[10px] font-bold text-blue-900 uppercase tracking-wider block mb-1.5">1. Parámetros de Factura PVPC regulada</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                    <input type="number" id="discountEnergyPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                    <input type="number" id="discountPowerPvpc" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                    <input type="number" id="invoiceAdjustmentsPvpc" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono (€/día)</label>
+                                    <input type="number" id="retailerMarginPvpc" step="0.001" value="0.019" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                    <input type="number" id="electricityTaxPvpc" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
+                                    <input type="number" id="meterRentalPvpc" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                    <input type="number" id="vatRatePvpc" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-emerald-100">
+                            <span class="text-[10px] font-bold text-green-900 uppercase tracking-wider block mb-1.5">2. Parámetros de Factura Manual (Tarifa por Tramos)</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                    <input type="number" id="discountEnergyManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                    <input type="number" id="discountPowerManual" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                    <input type="number" id="invoiceAdjustmentsManual" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono(€/día)</label>
+                                    <input type="number" id="retailerMarginManual" step="0.001" value="0.142" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                    <input type="number" id="electricityTaxManual" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€)</label>
+                                    <input type="number" id="meterRentalManual" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                    <input type="number" id="vatRateManual" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparación Global de Sistemas -->
+                    <div id="comparisonBox" class="mt-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm bg-gray-50 border-gray-200">
+                        <div class="text-left">
+                            <h5 class="font-bold text-gray-800 text-sm">Comparativa Global del Periodo</h5>
+                            <p class="text-xs text-gray-500 mt-1">Sube un archivo de consumo descargado de tu distribuidora o de Datadis para ver el desglose económico.</p>
+                        </div>
+                        <div class="bg-gray-200/50 text-gray-600 px-4 py-2 rounded-xl font-bold text-xs">
+                            Sin datos
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 11. ANÁLISIS DE HORAS QUE SUPERAN EL UMBRAL (VEHÍCULO) -->
+            <!-- ========================================== -->
+            <!-- GRUPO DE SOLAPAS 2: ANÁLISIS GRÁFICO Y CALENDARIO -->
+            <!-- ========================================== -->
+            <div id="cluster-charts" class="bg-white rounded-lg shadow-md mb-6 border-l-4 border-blue-600 overflow-hidden">
+                <!-- Cabecera de la sección plegable -->
+                <div class="p-4 bg-gray-50/80 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <button type="button" data-target="cluster-charts-body" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar menú de análisis gráfico">▼</button>
+                        <div>
+                            <h3 class="text-sm sm:text-base font-bold text-blue-900">Análisis Gráfico y Calendario de Consumo</h3>
+                            <p class="text-[11px] text-gray-500">Visualiza tu calendario diario, cronología, perfiles de semana y distribución horaria de 24 horas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuerpo colapsable -->
+                <div id="cluster-charts-body">
+                    <!-- Barra de Solapas / Tabs -->
+                    <div class="flex flex-wrap border-b border-gray-200 bg-gray-100/70 px-4 pt-2 gap-1.5">
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-calendar')" data-tab-target="tab-calendar" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 bg-white text-blue-700 font-bold shadow-xs border-b-2 border-blue-600">
+                            <span>📅 Calendario Diario</span>
+                        </button>
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-daily')" data-tab-target="tab-chart-daily" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                            <span>📈 Evolución Diaria</span>
+                        </button>
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-dayofweek')" data-tab-target="tab-chart-dayofweek" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                            <span>📊 Día de la Semana</span>
+                        </button>
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-hourly')" data-tab-target="tab-chart-hourly" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                            <span>🕒 Perfil Horario 24h</span>
+                        </button>
+                    </div>
+
+                    <!-- Contenidos de las Solapas -->
+                    <div class="p-6">
+                        <!-- Solapa 1: Calendario -->
+                        <div id="tab-calendar" class="tab-pane">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-4 gap-2">
+                                <h4 class="text-md font-bold text-gray-700">Consumo Diario por Calendario</h4>
+                                <p class="text-xs text-gray-500">Muestra los kWh e importes estructurados por mes.</p>
+                            </div>
+                            <div id="calendarGridContainer" class="space-y-8"></div>
+                            <div class="mt-4 pt-3 border-t border-gray-200 flex items-start gap-2 text-[11px] text-gray-500 leading-relaxed">
+                                <span class="inline-flex items-center justify-center shrink-0 bg-blue-100 text-blue-700 font-bold rounded-full h-4.5 w-4.5 text-[9px] mt-0.5">i</span>
+                                <p><strong>Mecánica de selección libre:</strong> Haz clic sobre cualquier día para activarlo o desactivarlo del análisis. Para restablecer el calendario, usa <strong>"Limpiar Filtros"</strong>.</p>
+                            </div>
+                        </div>
+
+                        <!-- Solapa 2: Evolución Diaria -->
+                        <div id="tab-chart-daily" class="tab-pane hidden">
+                            <h4 class="text-md font-bold text-gray-700 mb-4">Evolución Cronológica Diaria</h4>
+                            <div class="relative h-[450px]">
+                                <canvas id="chartDaily"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Solapa 3: Día de la Semana -->
+                        <div id="tab-chart-dayofweek" class="tab-pane hidden">
+                            <h4 class="text-md font-bold text-gray-700 mb-4">Análisis por Día de la Semana (Medias y Acumulados)</h4>
+                            <div class="relative h-[450px]">
+                                <canvas id="chartDayOfWeek"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Solapa 4: Perfil Horario -->
+                        <div id="tab-chart-hourly" class="tab-pane hidden">
+                            <h4 class="text-md font-bold text-gray-700 mb-4">Perfil Horario Medio y Acumulado (24 Horas)</h4>
+                            <div class="relative h-[500px]">
+                                <canvas id="chartHourly"></canvas>
+                            </div>
+                            <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANÁLISIS DE HORAS QUE SUPERAN EL UMBRAL (VEHÍCULO) -->
             <div class="bg-yellow-50 p-6 rounded-lg shadow-md border border-yellow-200 mb-8">
                 <div class="flex items-center gap-2 mb-4">
                     <button type="button" data-target="body-ev-summary" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-yellow-200 hover:bg-yellow-300 text-yellow-900 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
@@ -802,7 +832,7 @@
                             <span class="text-gray-600 text-sm block">Subtotal Coste (Vehículo):</span>
                             <div class="leading-tight">
                                 <span id="filteredCost" class="text-2xl font-bold text-yellow-900 font-mono">0.00 €</span>
-                                <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold" title="Coste aislado aplicando los descuentos e impuestos configurados">Simulado: 0.00 €</span>
+                                <span id="filteredCostSimulated" class="text-[10px] text-gray-500 block mt-1 font-semibold">Simulado: 0.00 €</span>
                             </div>
                         </div>
                         <div>
@@ -834,7 +864,7 @@
                 </div>
             </div>
 
-            <!-- 12. DETALLE DE LAS HORAS QUE SUPERAN EL UMBRAL -->
+            <!-- DETALLE DE LAS HORAS QUE SUPERAN EL UMBRAL (TABLA) -->
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="p-6 border-b flex items-center gap-2">
                     <button type="button" data-target="body-ev-table" class="section-collapse-btn shrink-0 w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-xs flex items-center justify-center transition-all shadow-xs select-none" title="Plegar/Desplegar sección">▼</button>
@@ -1103,7 +1133,8 @@
         window.customTrancheP2 = null;
         window.customTrancheP3 = null;
 
-        const COLLAPSE_STORAGE_KEY = 'analizador_collapsed_sections_v2';
+        // Gestión de Colapso de Secciones
+        const COLLAPSE_STORAGE_KEY = 'analizador_collapsed_sections_v3';
         window.collapsedSections = {};
 
         function initCollapsibleSections() {
@@ -1141,7 +1172,6 @@
                 btn.innerHTML = '▶';
                 btn.title = 'Desplegar sección';
                 btn.classList.add('bg-gray-200', 'text-gray-700');
-                btn.classList.remove('bg-blue-100', 'text-blue-800', 'bg-purple-100', 'text-purple-800', 'bg-green-100', 'text-green-800', 'bg-indigo-100', 'text-indigo-800', 'bg-yellow-200', 'text-yellow-900', 'bg-amber-100', 'text-amber-900');
             } else {
                 bodyEl.classList.remove('hidden');
                 btn.innerHTML = '▼';
@@ -1149,6 +1179,66 @@
                 btn.classList.remove('bg-gray-200', 'text-gray-700');
             }
         }
+
+        // Gestión de Solapas (Tabs)
+        const TAB_STORAGE_KEY = 'analizador_active_tabs_v2';
+        window.activeTabs = {
+            'cluster-config': 'tab-datadis',
+            'cluster-charts': 'tab-calendar'
+        };
+
+        function initTabs() {
+            try {
+                const saved = localStorage.getItem(TAB_STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed['cluster-config']) window.activeTabs['cluster-config'] = parsed['cluster-config'];
+                    if (parsed['cluster-charts']) window.activeTabs['cluster-charts'] = parsed['cluster-charts'];
+                }
+            } catch(e) {}
+
+            switchTab('cluster-config', window.activeTabs['cluster-config'], false);
+            switchTab('cluster-charts', window.activeTabs['cluster-charts'], false);
+        }
+
+        window.switchTab = function(clusterId, tabPaneId, save = true) {
+            const cluster = document.getElementById(clusterId);
+            if (!cluster) return;
+
+            window.activeTabs[clusterId] = tabPaneId;
+            if (save) {
+                try {
+                    localStorage.setItem(TAB_STORAGE_KEY, JSON.stringify(window.activeTabs));
+                } catch(e) {}
+            }
+
+            // Cambiar aspecto de los botones
+            cluster.querySelectorAll('.tab-btn').forEach(btn => {
+                const target = btn.getAttribute('data-tab-target');
+                if (target === tabPaneId) {
+                    btn.className = 'tab-btn py-2 px-3 sm:px-4 text-xs font-bold rounded-t-lg transition-all flex items-center gap-1.5 bg-white text-blue-700 shadow-xs border-b-2 border-blue-600';
+                } else {
+                    btn.className = 'tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100';
+                }
+            });
+
+            // Ocultar / Mostrar paneles
+            cluster.querySelectorAll('.tab-pane').forEach(pane => {
+                if (pane.id === tabPaneId) {
+                    pane.classList.remove('hidden');
+                } else {
+                    pane.classList.add('hidden');
+                }
+            });
+
+            // Forzar resize de Chart.js si se hace visible una solapa de gráfica
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+                if (window.chartInstance1) window.chartInstance1.resize();
+                if (window.chartInstance2) window.chartInstance2.resize();
+                if (window.chartInstance3) window.chartInstance3.resize();
+            }, 60);
+        };
 
         window.toggleAssumeEquivalentTranches = function(checked) {
             window.assumeEquivalentTranches = checked;
@@ -1319,7 +1409,6 @@
         ];
 
         const rateMode = document.getElementById('rateMode');
-        const manualConfig = document.getElementById('manualConfig');
         const thresholdInput = document.getElementById('thresholdInput');
         const subtractInput = document.getElementById('subtractInput');
         const dailyEvThresholdInput = document.getElementById('dailyEvThresholdInput');
@@ -2125,7 +2214,6 @@
             const activePowerCost = (mode === 'pvpc') ? totalPowerCostPvpc : totalPowerCostManual;
             const grandTotalActive = totalCost + activePowerCost;
 
-            // Precios medios para equiparación
             const avgP1Price = p1KwhPrice > 0 ? (p1CostPrice / p1KwhPrice) : pvpcHigh;
             const avgP2Price = p2KwhPrice > 0 ? (p2CostPrice / p2KwhPrice) : ((pvpcHigh + pvpcLow) / 2);
             const avgP3Price = p3KwhPrice > 0 ? (p3CostPrice / p3KwhPrice) : pvpcLow;
@@ -2134,7 +2222,6 @@
             const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
             const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
 
-            // Obtener porcentajes reales de PVPC SIEMPRE (Grupo 2: Coste Alto, Medio y Bajo)
             let realPctP1 = 0, realPctP2 = 0, realPctP3 = 0;
             if (totalKwh > 0) {
                 realPctP1 = (p1KwhPrice / totalKwh) * 100;
@@ -2142,7 +2229,6 @@
                 realPctP3 = (p3KwhPrice / totalKwh) * 100;
             }
 
-            // Inicializar porcentajes con los valores reales de PVPC si no hay nada guardado en memoria
             if (window.customTrancheP1 === null) window.customTrancheP1 = parseFloat(realPctP1.toFixed(1));
             if (window.customTrancheP2 === null) window.customTrancheP2 = parseFloat(realPctP2.toFixed(1));
             if (window.customTrancheP3 === null) window.customTrancheP3 = parseFloat(realPctP3.toFixed(1));
@@ -3349,7 +3435,6 @@
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) {
                 loadProfileFromMemory(0);
-                toggleRatePanels();
                 return;
             }
             try {
@@ -3410,24 +3495,13 @@
                 }
 
                 loadProfileFromMemory(window.activeProfileIndex);
-                toggleRatePanels();
             } catch (e) {
                 console.error("Error al restaurar la sesión guardada:", e);
                 loadProfileFromMemory(0);
             }
         }
 
-        function toggleRatePanels() {
-            const mode = document.getElementById('rateMode').value;
-            if (mode === 'pvpc') {
-                document.getElementById('manualConfig').classList.add('hidden');
-            } else {
-                document.getElementById('manualConfig').classList.remove('hidden');
-            }
-        }
-
         document.getElementById('rateMode').addEventListener('change', () => {
-            toggleRatePanels();
             saveConfig();
             if (window.rawCsvData) {
                 processData(window.rawCsvData);
@@ -3513,6 +3587,7 @@
         updatePowerPriceHelpers();   
         initTodayPrices();
         initCollapsibleSections();
+        initTabs();
 
         window.handleCalendarDayClick = function(dateStr) {
             if (!window.calendarSelectedDates) {
@@ -5792,3 +5867,4 @@
     </script>
 </body>
 </html>
+              
