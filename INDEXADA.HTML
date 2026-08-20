@@ -1050,7 +1050,7 @@
         window.annualChartInstance = null;
         window.currentMainPriceDate = null;
         
-     // Control del simulador de reparto por porcentajes P1, P2 y P3
+// Control del simulador de reparto por porcentajes P1, P2 y P3
         window.lastFilteredData = null;
         window.assumeEquivalentTranches = false;
         window.customTrancheP1 = null;
@@ -1059,6 +1059,7 @@
 
         window.toggleAssumeEquivalentTranches = function(checked) {
             window.assumeEquivalentTranches = checked;
+            saveConfig();
             if (window.lastFilteredData) {
                 renderResultsAndCharts(window.lastFilteredData);
             } else if (window.rawCsvData) {
@@ -1071,6 +1072,18 @@
             if (tranche === 'P1') window.customTrancheP1 = val;
             if (tranche === 'P2') window.customTrancheP2 = val;
             if (tranche === 'P3') window.customTrancheP3 = val;
+            saveConfig();
+
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        };
+
+        window.resetTranchePercents = function() {
+            window.customTrancheP1 = null;
+            window.customTrancheP2 = null;
+            window.customTrancheP3 = null;
+            saveConfig();
 
             if (window.lastFilteredData) {
                 renderResultsAndCharts(window.lastFilteredData);
@@ -2039,25 +2052,19 @@
             const avgP2IndexedPrice = p2KwhIndexedTime > 0 ? (p2CostIndexedTime / p2KwhIndexedTime) : 0;
             const avgP3IndexedPrice = p3KwhIndexedTime > 0 ? (p3CostIndexedTime / p3KwhIndexedTime) : 0;
 
-            // Obtener porcentajes reales actuales del periodo
+     
+            // Obtener porcentajes reales de PVPC SIEMPRE (Grupo 2: Coste Alto, Medio y Bajo)
             let realPctP1 = 0, realPctP2 = 0, realPctP3 = 0;
             if (totalKwh > 0) {
-                if (mode === 'pvpc') {
-                    realPctP1 = (p1KwhPrice / totalKwh) * 100;
-                    realPctP2 = (p2KwhPrice / totalKwh) * 100;
-                    realPctP3 = (p3KwhPrice / totalKwh) * 100;
-                } else {
-                    realPctP1 = (p1KwhTime / totalKwh) * 100;
-                    realPctP2 = (p2KwhTime / totalKwh) * 100;
-                    realPctP3 = (p3KwhTime / totalKwh) * 100;
-                }
+                realPctP1 = (p1KwhPrice / totalKwh) * 100;
+                realPctP2 = (p2KwhPrice / totalKwh) * 100;
+                realPctP3 = (p3KwhPrice / totalKwh) * 100;
             }
 
-            // Inicializar porcentajes simulados si es la primera vez
+            // Inicializar porcentajes con los valores reales de PVPC si no hay nada guardado en memoria
             if (window.customTrancheP1 === null) window.customTrancheP1 = parseFloat(realPctP1.toFixed(1));
             if (window.customTrancheP2 === null) window.customTrancheP2 = parseFloat(realPctP2.toFixed(1));
             if (window.customTrancheP3 === null) window.customTrancheP3 = parseFloat(realPctP3.toFixed(1));
-
             const simPctP1 = window.customTrancheP1;
             const simPctP2 = window.customTrancheP2;
             const simPctP3 = window.customTrancheP3;
@@ -2416,9 +2423,9 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
                                     <span>Simular % de consumo asignado a P1, P2 y P3 en la tarifa <strong>${targetTariffTitle}</strong></span>
                                 </label>
                                 ${window.assumeEquivalentTranches ? `
-                                    <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales del periodo">
-                                        ↺ % Reales
-                                    </button>
+                                <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales de PVPC (Grupo 2)">
+                                    ↺ % Reales PVPC
+                                </button>
                                 ` : ''}
                             </div>
 
@@ -3249,6 +3256,10 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
                 meterRentalPvpc: document.getElementById('meterRentalPvpc').value,
                 vatRatePvpc: document.getElementById('vatRatePvpc').value,
                 evEfficiency: document.getElementById('evEfficiency').value,
+                assumeEquivalentTranches: window.assumeEquivalentTranches,
+                customTrancheP1: window.customTrancheP1,
+                customTrancheP2: window.customTrancheP2,
+                customTrancheP3: window.customTrancheP3,
                 tariffProfiles: window.tariffProfiles,
                 activeProfileIndex: window.activeProfileIndex
             };
@@ -3281,6 +3292,10 @@ const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
                 if (config.meterRentalPvpc !== undefined) document.getElementById('meterRentalPvpc').value = config.meterRentalPvpc;
                 if (config.vatRatePvpc !== undefined) document.getElementById('vatRatePvpc').value = config.vatRatePvpc;
                 if (config.evEfficiency !== undefined) document.getElementById('evEfficiency').value = config.evEfficiency;
+                if (config.assumeEquivalentTranches !== undefined) window.assumeEquivalentTranches = !!config.assumeEquivalentTranches;
+                if (config.customTrancheP1 !== undefined && config.customTrancheP1 !== null) window.customTrancheP1 = config.customTrancheP1;
+                if (config.customTrancheP2 !== undefined && config.customTrancheP2 !== null) window.customTrancheP2 = config.customTrancheP2;
+                if (config.customTrancheP3 !== undefined && config.customTrancheP3 !== null) window.customTrancheP3 = config.customTrancheP3;
                 
                 if (config.pvpcHighThreshold !== undefined) {
                     const elHigh = document.getElementById('pvpcHighThreshold');
