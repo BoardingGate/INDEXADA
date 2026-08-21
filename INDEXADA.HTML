@@ -1066,7 +1066,11 @@
                 <span id="annualTrendStatus" class="text-xs text-gray-500 self-center ml-2"></span>
             </div>
 
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+           <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <!-- CONTENEDORES DE MÉTRICAS ANUALES Y RECOMENDACIÓN IA -->
+                <div id="annualPeriodMetrics" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4"></div>
+                <div id="annualAiRecommendation" class="hidden mb-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
+
                 <div class="bg-white p-3 rounded-xl border border-gray-200 mb-3 shadow-xs">
                     <div class="relative h-[185px] sm:h-[335px] w-full">
                         <canvas id="annualTrendChart"></canvas>
@@ -4726,8 +4730,11 @@
             }
         }
 
-        function renderAnnualTrendGrid(year) {
+  function renderAnnualTrendGrid(year) {
             annualTrendGrid.innerHTML = "";
+            const metricsContainer = document.getElementById('annualPeriodMetrics');
+            if (metricsContainer) metricsContainer.innerHTML = "";
+
             const monthNames = [
                 "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -4740,17 +4747,89 @@
             }));
 
             const allHourlyPrices = [];
+            const dailyStatsList = [];
+            const annualPricesForAi = [];
 
-            Object.keys(window.queryPricesDb).forEach(key => {
-                if (key.startsWith(year)) {
-                    const monthPart = parseInt(key.substring(5, 7), 10) - 1;
-                    const price = window.queryPricesDb[key];
-                    if (price !== undefined && monthPart >= 0 && monthPart < 12) {
-                        monthlyData[monthPart].prices.push(price);
+            // Recorrido cronológico día a día del año para recopilar métricas diarias y datos para la IA
+            const startDate = new Date(parseInt(year, 10), 0, 1);
+            const endDate = new Date(parseInt(year, 10), 11, 31);
+            let iterDate = new Date(startDate);
+
+            while (iterDate <= endDate) {
+                const yyyy = iterDate.getFullYear();
+                const mm = String(iterDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(iterDate.getDate()).padStart(2, '0');
+                const dateKey = `${yyyy}-${mm}-${dd}`;
+                const monthIndex = iterDate.getMonth();
+                const isWeekend = (iterDate.getDay() === 0 || iterDate.getDay() === 6);
+
+                const dayPrices = [];
+                for (let h = 0; h < 24; h++) {
+                    const priceKey = `${dateKey}_T${String(h).padStart(2, '0')}`;
+                    const price = window.queryPricesDb[priceKey];
+                    if (price !== undefined) {
+                        dayPrices.push(price);
                         allHourlyPrices.push(price);
+                        monthlyData[monthIndex].prices.push(price);
+                        annualPricesForAi.push({
+                            hour: h,
+                            price: price,
+                            isWeekend: isWeekend
+                        });
                     }
                 }
-            });
+
+                if (dayPrices.length > 0) {
+                    dailyStatsList.push({
+                        dateKey: dateKey,
+                        min: Math.min(...dayPrices),
+                        max: Math.max(...dayPrices),
+                        avg: dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length
+                    });
+                }
+
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+
+            // --- RENDERIZADO DE LAS 5 MÉTRICAS GLOBALES DEL AÑO ---
+            if (metricsContainer && allHourlyPrices.length > 0) {
+                const globalMin = Math.min(...allHourlyPrices);
+                const globalMax = Math.max(...allHourlyPrices);
+                const globalAvg = allHourlyPrices.reduce((a, b) => a + b, 0) / allHourlyPrices.length;
+
+                const avgOfDailyMins = dailyStatsList.length > 0 
+                    ? (dailyStatsList.reduce((sum, d) => sum + d.min, 0) / dailyStatsList.length) 
+                    : 0;
+                const avgOfDailyMaxs = dailyStatsList.length > 0 
+                    ? (dailyStatsList.reduce((sum, d) => sum + d.max, 0) / dailyStatsList.length) 
+                    : 0;
+
+                metricsContainer.innerHTML = `
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <span class="text-[9px] text-blue-800 font-extrabold uppercase block leading-none">Precio Medio Periodo</span>
+                        <p class="text-sm font-bold text-blue-950 mt-1 font-mono">${globalAvg.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                        <span class="text-[9px] text-emerald-800 font-extrabold uppercase block leading-none">Precio Mínimo Absoluto</span>
+                        <p class="text-sm font-bold text-emerald-950 mt-1 font-mono">${globalMin.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                    </div>
+                    <div class="bg-rose-50 p-3 rounded-lg border border-rose-200">
+                        <span class="text-[9px] text-rose-800 font-extrabold uppercase block leading-none">Precio Máximo Absoluto</span>
+                        <p class="text-sm font-bold text-rose-950 mt-1 font-mono">${globalMax.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                    </div>
+                    <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                        <span class="text-[9px] text-emerald-700 font-extrabold uppercase block leading-none">Media de los Mínimos</span>
+                        <p class="text-sm font-semibold text-emerald-900 mt-1 font-mono">${avgOfDailyMins.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                    </div>
+                    <div class="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                        <span class="text-[9px] text-rose-700 font-extrabold uppercase block leading-none">Media de los Máximos</span>
+                        <p class="text-sm font-semibold text-rose-900 mt-1 font-mono">${avgOfDailyMaxs.toFixed(5)} <span class="text-[9px] font-normal">€/kWh</span></p>
+                    </div>
+                `;
+            }
+
+            // --- RECOMENDACIÓN DE IA PARA TODO EL AÑO ---
+            updateAiRecommendation(annualPricesForAi, 'annualAiRecommendation');
 
             const calculatedMonths = monthlyData.map(m => {
                 if (m.prices.length === 0) return { ...m, hasData: false };
