@@ -4059,7 +4059,7 @@
                 </span>
             `;
 
-// --- CÁLCULO DE HORAS POR DEBAJO DE TARIFA EN CADA TRAMO DEL DÍA ---
+// --- CÁLCULO DE HORAS POR DEBAJO DE TARIFA EN CADA TRAMO Y TOTAL DÍA ---
             let puntaHoursCount = 0, puntaBelowCount = 0;
             let llanoHoursCount = 0, llanoBelowCount = 0;
             let valleHoursCount = 0, valleBelowCount = 0;
@@ -4082,6 +4082,10 @@
                     if (d.price < priceP3) valleBelowCount++;
                 }
             });
+
+            const totalBelowCount = puntaBelowCount + llanoBelowCount + valleBelowCount;
+            const totalDayHours = hourlyData.length || 24;
+            const totalBelowPct = totalDayHours > 0 ? (totalBelowCount / totalDayHours) * 100 : 0;
 
             document.getElementById('todayChartLegend').innerHTML = `
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-2 w-full">
@@ -4115,8 +4119,17 @@
                             <span class="block text-[9px] font-bold text-emerald-700">${valleBelowCount} de ${valleHoursCount} h &lt; tarifa</span>
                         </div>
                     </div>
+
+                    <!-- TARJETA TOTAL DÍA (GLOBAL) -->
+                    <div class="inline-flex items-start gap-1.5 shrink-0 bg-blue-50/90 border border-blue-300 px-2 py-0.5 rounded shadow-2xs">
+                        <span class="w-3.5 h-1 bg-blue-600 inline-block mt-1.5 rounded-xs"></span>
+                        <div class="leading-tight">
+                            <span class="font-black text-blue-900 text-[10px]">Total Día &lt; Tarifa</span>
+                            <span class="block text-[9px] font-black text-blue-700">${totalBelowCount} de ${totalDayHours} h (${totalBelowPct.toFixed(1)}%)</span>
+                        </div>
+                    </div>
                 </div>
-            `;
+            `;          
 
             const backgroundColors = hourlyData.map(d => {
                 if (d.hour === minHour) return 'rgba(16, 185, 129, 0.9)';
