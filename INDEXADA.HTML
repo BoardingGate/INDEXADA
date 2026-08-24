@@ -3760,6 +3760,9 @@ function handleFiles(files) {
         initTodayPrices();
         initCollapsibleSections();
         initTabs();
+        if (window.rawCsvData && window.rawCsvData.length > 0) {
+            processData(window.rawCsvData);
+        }
 
         window.handleCalendarDayClick = function(dateStr) {
             if (!window.calendarSelectedDates) {
