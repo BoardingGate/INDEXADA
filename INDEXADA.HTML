@@ -1713,7 +1713,7 @@
             document.getElementById('datadisStart').value = toIso(hace30);
         })();
 
-        function handleFiles(files) {
+function handleFiles(files) {
             const file = files[0];
             if (!file) return;
 
@@ -1728,13 +1728,13 @@
             if (window.calendarSelectedDates) {
                 window.calendarSelectedDates.clear();
             }
-            saveConfig();
 
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
                     window.rawCsvData = results.data;
+                    saveConfig(); // Guarda la configuración, nombre del archivo y datos en memoria local
                     processData(window.rawCsvData);
                 },
                 error: function(err) {
@@ -3595,6 +3595,8 @@
                 customTrancheP3: window.customTrancheP3,
                 tariffProfiles: window.tariffProfiles,
                 activeProfileIndex: window.activeProfileIndex
+                savedFileName: fileNameSpan.textContent || "",
+                rawCsvData: window.rawCsvData || null
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
         }
@@ -3661,6 +3663,8 @@
                 if (config.activeProfileIndex !== undefined) {
                     window.activeProfileIndex = config.activeProfileIndex;
                 }
+
+                
 
                 loadProfileFromMemory(window.activeProfileIndex);
             } catch (e) {
