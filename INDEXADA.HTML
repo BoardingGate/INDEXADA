@@ -2064,7 +2064,10 @@
 
             let hourlyFilteredKwhP1 = 0;
             let hourlyFilteredKwhP2 = 0;
-            let hourlyFilteredKwhP3 = 0;          
+            let hourlyFilteredKwhP3 = 0;
+            let hourlyFilteredCostP1 = 0;
+            let hourlyFilteredCostP2 = 0;
+            let hourlyFilteredCostP3 = 0;
             
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
@@ -2206,10 +2209,13 @@
 
                     if (itemSlot === 'P1') {
                         hourlyFilteredKwhP1 += item.consumo;
+                        hourlyFilteredCostP1 += item.coste;
                     } else if (itemSlot === 'P2') {
                         hourlyFilteredKwhP2 += item.consumo;
+                        hourlyFilteredCostP2 += item.coste;
                     } else {
                         hourlyFilteredKwhP3 += item.consumo;
+                        hourlyFilteredCostP3 += item.coste;
                     }
                 }
 
@@ -2928,40 +2934,63 @@
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
 
             // Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario
+// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con kWh y Coste (€)
             const summaryContainer = document.getElementById('hourlyTrancheSummary');
             if (summaryContainer) {
                 const totalHourlyKwh = hourlyFilteredKwhP1 + hourlyFilteredKwhP2 + hourlyFilteredKwhP3;
-                const p1Pct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
-                const p2Pct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP2 / totalHourlyKwh) * 100 : 0;
-                const p3Pct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP3 / totalHourlyKwh) * 100 : 0;
+                const totalHourlyCost = hourlyFilteredCostP1 + hourlyFilteredCostP2 + hourlyFilteredCostP3;
+
+                const p1KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
+                const p2KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP2 / totalHourlyKwh) * 100 : 0;
+                const p3KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP3 / totalHourlyKwh) * 100 : 0;
+
+                const p1CostPct = totalHourlyCost > 0 ? (hourlyFilteredCostP1 / totalHourlyCost) * 100 : 0;
+                const p2CostPct = totalHourlyCost > 0 ? (hourlyFilteredCostP2 / totalHourlyCost) * 100 : 0;
+                const p3CostPct = totalHourlyCost > 0 ? (hourlyFilteredCostP3 / totalHourlyCost) * 100 : 0;
 
                 summaryContainer.innerHTML = `
-                    <div class="p-2 bg-red-50 border border-red-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                    <div class="p-2.5 bg-red-50 border border-red-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <span class="text-[9px] font-bold text-red-800 uppercase tracking-wider">P1 Punta</span>
-                        <div class="mt-0.5 flex items-baseline justify-between">
+                        <div class="mt-1 flex items-baseline justify-between">
                             <span class="text-xs font-black text-red-950 font-mono">${hourlyFilteredKwhP1.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
-                            <span class="text-[10px] font-bold text-red-700">(${p1Pct.toFixed(1)}%)</span>
+                            <span class="text-[10px] font-bold text-red-700">(${p1KwhPct.toFixed(1)}%)</span>
+                        </div>
+                        <div class="mt-0.5 pt-0.5 border-t border-red-200/60 flex items-baseline justify-between">
+                            <span class="text-xs font-bold text-red-900 font-mono">${hourlyFilteredCostP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                            <span class="text-[9px] font-semibold text-red-600">(${p1CostPct.toFixed(1)}%)</span>
                         </div>
                     </div>
-                    <div class="p-2 bg-amber-50 border border-amber-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                    <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <span class="text-[9px] font-bold text-amber-800 uppercase tracking-wider">P2 Llano</span>
-                        <div class="mt-0.5 flex items-baseline justify-between">
+                        <div class="mt-1 flex items-baseline justify-between">
                             <span class="text-xs font-black text-amber-950 font-mono">${hourlyFilteredKwhP2.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
-                            <span class="text-[10px] font-bold text-amber-700">(${p2Pct.toFixed(1)}%)</span>
+                            <span class="text-[10px] font-bold text-amber-700">(${p2KwhPct.toFixed(1)}%)</span>
+                        </div>
+                        <div class="mt-0.5 pt-0.5 border-t border-amber-200/60 flex items-baseline justify-between">
+                            <span class="text-xs font-bold text-amber-900 font-mono">${hourlyFilteredCostP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                            <span class="text-[9px] font-semibold text-amber-600">(${p2CostPct.toFixed(1)}%)</span>
                         </div>
                     </div>
-                    <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                    <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider">P3 Valle</span>
-                        <div class="mt-0.5 flex items-baseline justify-between">
+                        <div class="mt-1 flex items-baseline justify-between">
                             <span class="text-xs font-black text-emerald-950 font-mono">${hourlyFilteredKwhP3.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
-                            <span class="text-[10px] font-bold text-emerald-700">(${p3Pct.toFixed(1)}%)</span>
+                            <span class="text-[10px] font-bold text-emerald-700">(${p3KwhPct.toFixed(1)}%)</span>
+                        </div>
+                        <div class="mt-0.5 pt-0.5 border-t border-emerald-200/60 flex items-baseline justify-between">
+                            <span class="text-xs font-bold text-emerald-900 font-mono">${hourlyFilteredCostP3.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                            <span class="text-[9px] font-semibold text-emerald-600">(${p3CostPct.toFixed(1)}%)</span>
                         </div>
                     </div>
-                    <div class="p-2 bg-blue-50 border border-blue-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                    <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <span class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">Total Filtrado</span>
-                        <div class="mt-0.5 flex items-baseline justify-between">
+                        <div class="mt-1 flex items-baseline justify-between">
                             <span class="text-xs font-black text-blue-950 font-mono">${totalHourlyKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
                             <span class="text-[10px] font-bold text-blue-700">(100.0%)</span>
+                        </div>
+                        <div class="mt-0.5 pt-0.5 border-t border-blue-200/60 flex items-baseline justify-between">
+                            <span class="text-xs font-bold text-blue-900 font-mono">${totalHourlyCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                            <span class="text-[9px] font-semibold text-blue-600">(100.0%)</span>
                         </div>
                     </div>
                 `;
