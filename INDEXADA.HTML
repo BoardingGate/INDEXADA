@@ -800,24 +800,27 @@
                         </div>
 
                         <!-- Solapa 4: Perfil Horario -->
-                    <!-- Solapa 4: Perfil Horario -->
-                    <div id="tab-chart-hourly" class="tab-pane hidden">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                            <h4 class="text-md font-bold text-gray-700">Perfil Horario Medio y Acumulado (24 Horas)</h4>
-                            <div class="flex items-center gap-2">
-                                <label for="hourlyDayFilter" class="text-xs font-semibold text-gray-600">Filtrar días:</label>
-                                <select id="hourlyDayFilter" class="px-2.5 py-1 text-xs border border-gray-300 rounded-md font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="all">Toda la semana</option>
-                                    <option value="weekday">De Lunes a Viernes</option>
-                                    <option value="weekend">Fines de semana</option>
-                                </select>
+                        <div id="tab-chart-hourly" class="tab-pane hidden">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+                                <h4 class="text-md font-bold text-gray-700">Perfil Horario Medio y Acumulado (24 Horas)</h4>
+                                <div class="flex items-center gap-2">
+                                    <label for="hourlyDayFilter" class="text-xs font-semibold text-gray-600">Filtrar días:</label>
+                                    <select id="hourlyDayFilter" class="px-2.5 py-1 text-xs border border-gray-300 rounded-md font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="all">Toda la semana</option>
+                                        <option value="weekday">De Lunes a Viernes</option>
+                                        <option value="weekend">Fines de semana</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Bloque de Acumulados P1, P2, P3 para el rango visualizado -->
+                            <div id="hourlyTrancheSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+                        
+                            <div class="relative h-[480px]">
+                                <canvas id="chartHourly"></canvas>
+                            </div>
+                            <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
                         </div>
-                    </div>
-    <div class="relative h-[500px]">
-        <canvas id="chartHourly"></canvas>
-    </div>
-    <div id="mainAiRecommendation" class="hidden mt-4 bg-blue-50/80 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 shadow-xs"></div>
-</div>
                     </div>
                 </div>
             </div>
@@ -2059,6 +2062,10 @@
             let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
             let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
 
+            let hourlyFilteredKwhP1 = 0;
+            let hourlyFilteredKwhP2 = 0;
+            let hourlyFilteredKwhP3 = 0;          
+            
             const dayOfWeekStats = {
                 1: { label: 'Lunes', kwh: 0, cost: 0 },
                 2: { label: 'Martes', kwh: 0, cost: 0 },
@@ -2196,6 +2203,14 @@
                     hourlyStats[h].totalCost += item.coste;
                     hourlyStats[h].totalPrice += item.precio;
                     hourlyStats[h].count += 1;
+
+                    if (itemSlot === 'P1') {
+                        hourlyFilteredKwhP1 += item.consumo;
+                    } else if (itemSlot === 'P2') {
+                        hourlyFilteredKwhP2 += item.consumo;
+                    } else {
+                        hourlyFilteredKwhP3 += item.consumo;
+                    }
                 }
 
                 if (item.consumo > threshold) {
@@ -2911,6 +2926,47 @@
 
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
+
+            // Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario
+            const summaryContainer = document.getElementById('hourlyTrancheSummary');
+            if (summaryContainer) {
+                const totalHourlyKwh = hourlyFilteredKwhP1 + hourlyFilteredKwhP2 + hourlyFilteredKwhP3;
+                const p1Pct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
+                const p2Pct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP2 / totalHourlyKwh) * 100 : 0;
+                const p3Pct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP3 / totalHourlyKwh) * 100 : 0;
+
+                summaryContainer.innerHTML = `
+                    <div class="p-2 bg-red-50 border border-red-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                        <span class="text-[9px] font-bold text-red-800 uppercase tracking-wider">P1 Punta</span>
+                        <div class="mt-0.5 flex items-baseline justify-between">
+                            <span class="text-xs font-black text-red-950 font-mono">${hourlyFilteredKwhP1.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
+                            <span class="text-[10px] font-bold text-red-700">(${p1Pct.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-amber-50 border border-amber-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                        <span class="text-[9px] font-bold text-amber-800 uppercase tracking-wider">P2 Llano</span>
+                        <div class="mt-0.5 flex items-baseline justify-between">
+                            <span class="text-xs font-black text-amber-950 font-mono">${hourlyFilteredKwhP2.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
+                            <span class="text-[10px] font-bold text-amber-700">(${p2Pct.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                        <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider">P3 Valle</span>
+                        <div class="mt-0.5 flex items-baseline justify-between">
+                            <span class="text-xs font-black text-emerald-950 font-mono">${hourlyFilteredKwhP3.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
+                            <span class="text-[10px] font-bold text-emerald-700">(${p3Pct.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-blue-50 border border-blue-200 rounded-lg flex flex-col justify-between shadow-2xs">
+                        <span class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">Total Filtrado</span>
+                        <div class="mt-0.5 flex items-baseline justify-between">
+                            <span class="text-xs font-black text-blue-950 font-mono">${totalHourlyKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
+                            <span class="text-[10px] font-bold text-blue-700">(100.0%)</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             renderHourlyChart(hourlyStats);
 
             resultsSection.classList.remove('hidden');
