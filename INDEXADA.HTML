@@ -3594,7 +3594,7 @@ function handleFiles(files) {
                 customTrancheP2: window.customTrancheP2,
                 customTrancheP3: window.customTrancheP3,
                 tariffProfiles: window.tariffProfiles,
-                activeProfileIndex: window.activeProfileIndex
+                activeProfileIndex: window.activeProfileIndex,
                 savedFileName: fileNameSpan.textContent || "",
                 rawCsvData: window.rawCsvData || null
             };
@@ -3664,7 +3664,18 @@ function handleFiles(files) {
                     window.activeProfileIndex = config.activeProfileIndex;
                 }
 
-                
+                // Restaurar el fichero y la interfaz si existía en memoria
+                if (config.savedFileName && config.savedFileName.trim() !== "") {
+                    fileNameSpan.textContent = config.savedFileName;
+                    dropZonePrompt.classList.add('hidden');
+                    fileSuccessText.classList.remove('hidden');
+                    dropZone.classList.add('border-green-400', 'bg-green-50');
+                    dropZone.classList.remove('border-blue-300', 'bg-gray-50');
+                }
+
+                if (config.rawCsvData && Array.isArray(config.rawCsvData) && config.rawCsvData.length > 0) {
+                    window.rawCsvData = config.rawCsvData;
+                }
 
                 loadProfileFromMemory(window.activeProfileIndex);
             } catch (e) {
