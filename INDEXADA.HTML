@@ -2933,13 +2933,13 @@
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
 
-            // Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario
-// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con kWh y Coste (€)
+   // Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con kWh y Coste (€)
             const summaryContainer = document.getElementById('hourlyTrancheSummary');
             if (summaryContainer) {
                 const totalHourlyKwh = hourlyFilteredKwhP1 + hourlyFilteredKwhP2 + hourlyFilteredKwhP3;
                 const totalHourlyCost = hourlyFilteredCostP1 + hourlyFilteredCostP2 + hourlyFilteredCostP3;
 
+                // Porcentajes internos del tramo filtrado (reparto P1/P2/P3 dentro de lo visualizado)
                 const p1KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
                 const p2KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP2 / totalHourlyKwh) * 100 : 0;
                 const p3KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP3 / totalHourlyKwh) * 100 : 0;
@@ -2947,6 +2947,10 @@
                 const p1CostPct = totalHourlyCost > 0 ? (hourlyFilteredCostP1 / totalHourlyCost) * 100 : 0;
                 const p2CostPct = totalHourlyCost > 0 ? (hourlyFilteredCostP2 / totalHourlyCost) * 100 : 0;
                 const p3CostPct = totalHourlyCost > 0 ? (hourlyFilteredCostP3 / totalHourlyCost) * 100 : 0;
+
+                // Porcentajes del filtro activo respecto al total global absoluto (totalKwh y totalCost)
+                const globalKwhPct = totalKwh > 0 ? (totalHourlyKwh / totalKwh) * 100 : 0;
+                const globalCostPct = totalCost > 0 ? (totalHourlyCost / totalCost) * 100 : 0;
 
                 summaryContainer.innerHTML = `
                     <div class="p-2.5 bg-red-50 border border-red-200 rounded-lg flex flex-col justify-between shadow-2xs">
@@ -2983,14 +2987,21 @@
                         </div>
                     </div>
                     <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-lg flex flex-col justify-between shadow-2xs">
-                        <span class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">Total Filtrado</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">Total Filtrado</span>
+                            <span class="text-[8px] font-bold text-blue-600 uppercase">vs Total Global</span>
+                        </div>
                         <div class="mt-1 flex items-baseline justify-between">
                             <span class="text-xs font-black text-blue-950 font-mono">${totalHourlyKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
-                            <span class="text-[10px] font-bold text-blue-700">(100.0%)</span>
+                            <span class="text-[10px] font-extrabold text-blue-800" title="Porcentaje del consumo respecto al total global">(${globalKwhPct.toFixed(1)}%)</span>
                         </div>
                         <div class="mt-0.5 pt-0.5 border-t border-blue-200/60 flex items-baseline justify-between">
                             <span class="text-xs font-bold text-blue-900 font-mono">${totalHourlyCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
-                            <span class="text-[9px] font-semibold text-blue-600">(100.0%)</span>
+                            <span class="text-[9px] font-bold text-blue-700" title="Porcentaje del coste respecto al total global">(${globalCostPct.toFixed(1)}%)</span>
+                        </div>
+                        <div class="mt-1 pt-1 border-t border-dashed border-blue-200 text-[8px] text-gray-500 flex justify-between font-mono">
+                            <span>Global:</span>
+                            <span>${totalKwh.toFixed(1)} kWh | ${totalCost.toFixed(2)} €</span>
                         </div>
                     </div>
                 `;
