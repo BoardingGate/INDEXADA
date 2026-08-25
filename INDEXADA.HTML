@@ -799,11 +799,18 @@
                             </div>
                         </div>
 
-                        <!-- Solapa 4: Perfil Horario -->
-                        <div id="tab-chart-hourly" class="tab-pane hidden">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-                                <h4 class="text-md font-bold text-gray-700">Perfil Horario Medio y Acumulado (24 Horas)</h4>
-                                <div class="flex items-center gap-2">
+                    <!-- Solapa 4: Perfil Horario -->
+                    <div id="tab-chart-hourly" class="tab-pane hidden">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-2">
+                            <h4 class="text-md font-bold text-gray-700">Perfil Horario Medio y Acumulado (24 Horas)</h4>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <!-- Checkbox de Simulación según Patrón -->
+                                <label class="inline-flex items-center gap-1.5 cursor-pointer select-none text-xs font-semibold text-blue-950 bg-blue-50/80 px-2.5 py-1 rounded-md border border-blue-200 shadow-2xs">
+                                    <input type="checkbox" id="simulateHourlyPvpcPatternCheckbox" class="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5">
+                                    <span id="simulateHourlyPatternLabel">Simular PVPC con patrón (%)</span>
+                                </label>
+                    
+                                <div class="flex items-center gap-1.5">
                                     <label for="hourlyDayFilter" class="text-xs font-semibold text-gray-600">Filtrar días:</label>
                                     <select id="hourlyDayFilter" class="px-2.5 py-1 text-xs border border-gray-300 rounded-md font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <option value="all">Toda la semana</option>
@@ -812,10 +819,10 @@
                                     </select>
                                 </div>
                             </div>
-
-                            <!-- Bloque de Acumulados P1, P2, P3 para el rango visualizado -->
-                            <div id="hourlyTrancheSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
-                        
+                        </div>
+                    
+                        <!-- Bloque de Acumulados P1, P2, P3 para el rango visualizado -->
+                        <div id="hourlyTrancheSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
                             <div class="relative h-[480px]">
                                 <canvas id="chartHourly"></canvas>
                             </div>
@@ -2952,18 +2959,25 @@ function handleFiles(files) {
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
 
-// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Nombre de Tarifa y Tamaños Igualados
+// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Simulación de Patrón PVPC
             const summaryContainer = document.getElementById('hourlyTrancheSummary');
             if (summaryContainer) {
                 const hourlyDayFilterVal = document.getElementById('hourlyDayFilter')?.value || 'all';
+                const simulatePatternActive = document.getElementById('simulateHourlyPvpcPatternCheckbox')?.checked || false;
+
+                // Actualizar etiqueta del checkbox con los % actuales
+                const patternLabelEl = document.getElementById('simulateHourlyPatternLabel');
+                if (patternLabelEl) {
+                    patternLabelEl.textContent = `Simular PVPC con patrón: P1 ${simPctP1}% | P2 ${simPctP2}% | P3 ${simPctP3}%`;
+                }
+
                 const totalHourlyKwh = hourlyFilteredKwhP1 + hourlyFilteredKwhP2 + hourlyFilteredKwhP3;
                 const totalHourlyCost = hourlyFilteredCostP1 + hourlyFilteredCostP2 + hourlyFilteredCostP3;
-                const totalHourlyPvpcCost = hourlyFilteredPvpcCostP1 + hourlyFilteredPvpcCostP2 + hourlyFilteredPvpcCostP3;
 
                 // Nombre descriptivo de la tarifa activa
                 const activeTariffLabel = (mode === 'pvpc') ? 'PVPC Oficial' : (document.getElementById('tariffProfileName').value || 'Manual');
 
-                // Porcentajes de kWh
+                // Porcentajes reales de kWh
                 const p1KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
                 const p2KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP2 / totalHourlyKwh) * 100 : 0;
                 const p3KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP3 / totalHourlyKwh) * 100 : 0;
@@ -2979,11 +2993,39 @@ function handleFiles(files) {
                 const p3AvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredCostP3 / hourlyFilteredKwhP3) : 0;
                 const totalAvgPrice = totalHourlyKwh > 0 ? (totalHourlyCost / totalHourlyKwh) : 0;
 
-                // Precios Medios PVPC Real (€/kWh)
-                const p1PvpcAvgPrice = hourlyFilteredKwhP1 > 0 ? (hourlyFilteredPvpcCostP1 / hourlyFilteredKwhP1) : 0;
-                const p2PvpcAvgPrice = hourlyFilteredKwhP2 > 0 ? (hourlyFilteredPvpcCostP2 / hourlyFilteredKwhP2) : 0;
-                const p3PvpcAvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredPvpcCostP3 / hourlyFilteredKwhP3) : 0;
-                const totalPvpcAvgPrice = totalHourlyKwh > 0 ? (totalHourlyPvpcCost / totalHourlyKwh) : 0;
+                // Precios Medios Reales PVPC del periodo filtrado (€/kWh)
+                const p1PvpcRealAvgPrice = hourlyFilteredKwhP1 > 0 ? (hourlyFilteredPvpcCostP1 / hourlyFilteredKwhP1) : avgP1Price;
+                const p2PvpcRealAvgPrice = hourlyFilteredKwhP2 > 0 ? (hourlyFilteredPvpcCostP2 / hourlyFilteredKwhP2) : avgP2Price;
+                const p3PvpcRealAvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredPvpcCostP3 / hourlyFilteredKwhP3) : avgP3Price;
+
+                // Cálculo PVPC según si el check de patrón está activo o no
+                let pvpcDisplayCostP1 = hourlyFilteredPvpcCostP1;
+                let pvpcDisplayCostP2 = hourlyFilteredPvpcCostP2;
+                let pvpcDisplayCostP3 = hourlyFilteredPvpcCostP3;
+                let pvpcDisplayTotalCost = hourlyFilteredPvpcCostP1 + hourlyFilteredPvpcCostP2 + hourlyFilteredPvpcCostP3;
+
+                let pvpcDisplayAvgPriceP1 = p1PvpcRealAvgPrice;
+                let pvpcDisplayAvgPriceP2 = p2PvpcRealAvgPrice;
+                let pvpcDisplayAvgPriceP3 = p3PvpcRealAvgPrice;
+                let pvpcDisplayTotalAvgPrice = totalHourlyKwh > 0 ? (pvpcDisplayTotalCost / totalHourlyKwh) : 0;
+
+                if (simulatePatternActive) {
+                    const simKwhP1 = totalHourlyKwh * (simPctP1 / 100);
+                    const simKwhP2 = totalHourlyKwh * (simPctP2 / 100);
+                    const simKwhP3 = totalHourlyKwh * (simPctP3 / 100);
+
+                    pvpcDisplayCostP1 = simKwhP1 * p1PvpcRealAvgPrice;
+                    pvpcDisplayCostP2 = simKwhP2 * p2PvpcRealAvgPrice;
+                    pvpcDisplayCostP3 = simKwhP3 * p3PvpcRealAvgPrice;
+                    pvpcDisplayTotalCost = pvpcDisplayCostP1 + pvpcDisplayCostP2 + pvpcDisplayCostP3;
+
+                    pvpcDisplayAvgPriceP1 = p1PvpcRealAvgPrice;
+                    pvpcDisplayAvgPriceP2 = p2PvpcRealAvgPrice;
+                    pvpcDisplayAvgPriceP3 = p3PvpcRealAvgPrice;
+                    pvpcDisplayTotalAvgPrice = totalHourlyKwh > 0 ? (pvpcDisplayTotalCost / totalHourlyKwh) : 0;
+                }
+
+                const pvpcLabelPrefix = simulatePatternActive ? 'PVPC (Patrón):' : 'PVPC 2.0TD:';
 
                 // Porcentajes globales
                 const globalKwhPct = totalKwh > 0 ? (totalHourlyKwh / totalKwh) * 100 : 0;
@@ -3021,8 +3063,8 @@ function handleFiles(files) {
                                 </div>
                             </div>
                             <div class="mt-2 pt-1 border-t border-blue-200 text-xs sm:text-sm font-bold text-blue-950 flex justify-between items-center font-mono bg-blue-100/60 px-1.5 py-0.5 rounded">
-                                <span class="uppercase text-[8px] text-blue-900 font-bold">PVPC 2.0TD:</span>
-                                <span>${totalHourlyPvpcCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${totalPvpcAvgPrice.toFixed(5)}€/k)</span></span>
+                                <span class="uppercase text-[8px] text-blue-900 font-bold">${pvpcLabelPrefix}</span>
+                                <span>${pvpcDisplayTotalCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${pvpcDisplayTotalAvgPrice.toFixed(5)}€/k)</span></span>
                             </div>
                         </div>
                     `;
@@ -3051,8 +3093,8 @@ function handleFiles(files) {
                                 </div>
                             </div>
                             <div class="mt-2 pt-1 border-t border-blue-200 text-xs sm:text-sm font-bold text-blue-950 flex justify-between items-center font-mono bg-blue-100/60 px-1.5 py-0.5 rounded">
-                                <span class="uppercase text-[8px] text-blue-900 font-bold">PVPC 2.0TD:</span>
-                                <span>${totalHourlyPvpcCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${totalPvpcAvgPrice.toFixed(5)}€/k)</span></span>
+                                <span class="uppercase text-[8px] text-blue-900 font-bold">${pvpcLabelPrefix}</span>
+                                <span>${pvpcDisplayTotalCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${pvpcDisplayTotalAvgPrice.toFixed(5)}€/k)</span></span>
                             </div>
                         </div>
                     `;
@@ -3078,8 +3120,8 @@ function handleFiles(files) {
                             </div>
                         </div>
                         <div class="mt-2 pt-1 border-t border-red-200 text-xs sm:text-sm font-bold text-red-950 flex justify-between items-center font-mono bg-red-100/60 px-1.5 py-0.5 rounded">
-                            <span class="uppercase text-[8px] text-red-900 font-bold">PVPC 2.0TD:</span>
-                            <span>${hourlyFilteredPvpcCostP1.toFixed(2)} € <span class="text-[9px] font-normal text-red-800">(${p1PvpcAvgPrice.toFixed(5)}€/k)</span></span>
+                            <span class="uppercase text-[8px] text-red-900 font-bold">${pvpcLabelPrefix}</span>
+                            <span>${pvpcDisplayCostP1.toFixed(2)} € <span class="text-[9px] font-normal text-red-800">(${pvpcDisplayAvgPriceP1.toFixed(5)}€/k)</span></span>
                         </div>
                     </div>
 
@@ -3102,8 +3144,8 @@ function handleFiles(files) {
                             </div>
                         </div>
                         <div class="mt-2 pt-1 border-t border-amber-200 text-xs sm:text-sm font-bold text-amber-950 flex justify-between items-center font-mono bg-amber-100/60 px-1.5 py-0.5 rounded">
-                            <span class="uppercase text-[8px] text-amber-900 font-bold">PVPC 2.0TD:</span>
-                            <span>${hourlyFilteredPvpcCostP2.toFixed(2)} € <span class="text-[9px] font-normal text-amber-800">(${p2PvpcAvgPrice.toFixed(5)}€/k)</span></span>
+                            <span class="uppercase text-[8px] text-amber-900 font-bold">${pvpcLabelPrefix}</span>
+                            <span>${pvpcDisplayCostP2.toFixed(2)} € <span class="text-[9px] font-normal text-amber-800">(${pvpcDisplayAvgPriceP2.toFixed(5)}€/k)</span></span>
                         </div>
                     </div>
 
@@ -3126,8 +3168,8 @@ function handleFiles(files) {
                             </div>
                         </div>
                         <div class="mt-2 pt-1 border-t border-emerald-200 text-xs sm:text-sm font-bold text-emerald-950 flex justify-between items-center font-mono bg-emerald-100/60 px-1.5 py-0.5 rounded">
-                            <span class="uppercase text-[8px] text-emerald-900 font-bold">PVPC 2.0TD:</span>
-                            <span>${hourlyFilteredPvpcCostP3.toFixed(2)} € <span class="text-[9px] font-normal text-emerald-800">(${p3PvpcAvgPrice.toFixed(5)}€/k)</span></span>
+                            <span class="uppercase text-[8px] text-emerald-900 font-bold">${pvpcLabelPrefix}</span>
+                            <span>${pvpcDisplayCostP3.toFixed(2)} € <span class="text-[9px] font-normal text-emerald-800">(${pvpcDisplayAvgPriceP3.toFixed(5)}€/k)</span></span>
                         </div>
                     </div>
 
@@ -5316,6 +5358,12 @@ function handleFiles(files) {
         });
 
         document.getElementById('hourlyDayFilter')?.addEventListener('change', () => {
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        });
+
+        document.getElementById('simulateHourlyPvpcPatternCheckbox')?.addEventListener('change', () => {
             if (window.lastFilteredData) {
                 renderResultsAndCharts(window.lastFilteredData);
             }
