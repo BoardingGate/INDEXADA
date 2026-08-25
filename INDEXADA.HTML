@@ -2959,7 +2959,7 @@ function handleFiles(files) {
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
 
-// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Simulación de Patrón PVPC
+// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Simulación Exacta de Patrón
             const summaryContainer = document.getElementById('hourlyTrancheSummary');
             if (summaryContainer) {
                 const hourlyDayFilterVal = document.getElementById('hourlyDayFilter')?.value || 'all';
@@ -2977,7 +2977,7 @@ function handleFiles(files) {
                 // Nombre descriptivo de la tarifa activa
                 const activeTariffLabel = (mode === 'pvpc') ? 'PVPC Oficial' : (document.getElementById('tariffProfileName').value || 'Manual');
 
-                // Porcentajes reales de kWh
+                // Porcentajes reales de kWh de la tarifa activa
                 const p1KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
                 const p2KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP2 / totalHourlyKwh) * 100 : 0;
                 const p3KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP3 / totalHourlyKwh) * 100 : 0;
@@ -2993,12 +2993,16 @@ function handleFiles(files) {
                 const p3AvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredCostP3 / hourlyFilteredKwhP3) : 0;
                 const totalAvgPrice = totalHourlyKwh > 0 ? (totalHourlyCost / totalHourlyKwh) : 0;
 
-                // Precios Medios Reales PVPC del periodo filtrado (€/kWh)
-                const p1PvpcRealAvgPrice = hourlyFilteredKwhP1 > 0 ? (hourlyFilteredPvpcCostP1 / hourlyFilteredKwhP1) : avgP1Price;
-                const p2PvpcRealAvgPrice = hourlyFilteredKwhP2 > 0 ? (hourlyFilteredPvpcCostP2 / hourlyFilteredKwhP2) : avgP2Price;
-                const p3PvpcRealAvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredPvpcCostP3 / hourlyFilteredKwhP3) : avgP3Price;
+                // Precios medios 2.0TD reales del desglose estricto
+                const p1PvpcRealAvgPrice = hourlyFilteredKwhP1 > 0 ? (hourlyFilteredPvpcCostP1 / hourlyFilteredKwhP1) : 0;
+                const p2PvpcRealAvgPrice = hourlyFilteredKwhP2 > 0 ? (hourlyFilteredPvpcCostP2 / hourlyFilteredKwhP2) : 0;
+                const p3PvpcRealAvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredPvpcCostP3 / hourlyFilteredKwhP3) : 0;
 
-                // Cálculo PVPC según si el check de patrón está activo o no
+                // CÁLCULO PVPC: Si está marcado el patrón, usa los precios de la Sección 2 (avgP1Price, avgP2Price, avgP3Price)
+                let pvpcDisplayKwhP1 = hourlyFilteredKwhP1;
+                let pvpcDisplayKwhP2 = hourlyFilteredKwhP2;
+                let pvpcDisplayKwhP3 = hourlyFilteredKwhP3;
+
                 let pvpcDisplayCostP1 = hourlyFilteredPvpcCostP1;
                 let pvpcDisplayCostP2 = hourlyFilteredPvpcCostP2;
                 let pvpcDisplayCostP3 = hourlyFilteredPvpcCostP3;
@@ -3010,22 +3014,23 @@ function handleFiles(files) {
                 let pvpcDisplayTotalAvgPrice = totalHourlyKwh > 0 ? (pvpcDisplayTotalCost / totalHourlyKwh) : 0;
 
                 if (simulatePatternActive) {
-                    const simKwhP1 = totalHourlyKwh * (simPctP1 / 100);
-                    const simKwhP2 = totalHourlyKwh * (simPctP2 / 100);
-                    const simKwhP3 = totalHourlyKwh * (simPctP3 / 100);
+                    pvpcDisplayKwhP1 = totalHourlyKwh * (simPctP1 / 100);
+                    pvpcDisplayKwhP2 = totalHourlyKwh * (simPctP2 / 100);
+                    pvpcDisplayKwhP3 = totalHourlyKwh * (simPctP3 / 100);
 
-                    pvpcDisplayCostP1 = simKwhP1 * p1PvpcRealAvgPrice;
-                    pvpcDisplayCostP2 = simKwhP2 * p2PvpcRealAvgPrice;
-                    pvpcDisplayCostP3 = simKwhP3 * p3PvpcRealAvgPrice;
+                    // Multiplicación exacta por las medias de coste de la Sección 2
+                    pvpcDisplayCostP1 = pvpcDisplayKwhP1 * avgP1Price;
+                    pvpcDisplayCostP2 = pvpcDisplayKwhP2 * avgP2Price;
+                    pvpcDisplayCostP3 = pvpcDisplayKwhP3 * avgP3Price;
                     pvpcDisplayTotalCost = pvpcDisplayCostP1 + pvpcDisplayCostP2 + pvpcDisplayCostP3;
 
-                    pvpcDisplayAvgPriceP1 = p1PvpcRealAvgPrice;
-                    pvpcDisplayAvgPriceP2 = p2PvpcRealAvgPrice;
-                    pvpcDisplayAvgPriceP3 = p3PvpcRealAvgPrice;
+                    pvpcDisplayAvgPriceP1 = avgP1Price;
+                    pvpcDisplayAvgPriceP2 = avgP2Price;
+                    pvpcDisplayAvgPriceP3 = avgP3Price;
                     pvpcDisplayTotalAvgPrice = totalHourlyKwh > 0 ? (pvpcDisplayTotalCost / totalHourlyKwh) : 0;
                 }
 
-                const pvpcLabelPrefix = simulatePatternActive ? 'PVPC (Patrón):' : 'PVPC 2.0TD:';
+                const pvpcLabelPrefix = simulatePatternActive ? 'PVPC Simulado:' : 'PVPC 2.0TD:';
 
                 // Porcentajes globales
                 const globalKwhPct = totalKwh > 0 ? (totalHourlyKwh / totalKwh) * 100 : 0;
