@@ -2959,7 +2959,7 @@ function handleFiles(files) {
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
 
-// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Simulación Exacta de Patrón
+// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con kWh explícitos en PVPC
             const summaryContainer = document.getElementById('hourlyTrancheSummary');
             if (summaryContainer) {
                 const hourlyDayFilterVal = document.getElementById('hourlyDayFilter')?.value || 'all';
@@ -2998,7 +2998,7 @@ function handleFiles(files) {
                 const p2PvpcRealAvgPrice = hourlyFilteredKwhP2 > 0 ? (hourlyFilteredPvpcCostP2 / hourlyFilteredKwhP2) : 0;
                 const p3PvpcRealAvgPrice = hourlyFilteredKwhP3 > 0 ? (hourlyFilteredPvpcCostP3 / hourlyFilteredKwhP3) : 0;
 
-                // CÁLCULO PVPC: Si está marcado el patrón, usa los precios de la Sección 2 (avgP1Price, avgP2Price, avgP3Price)
+                // CÁLCULO PVPC (kWh, Costes y Precios Unitarios)
                 let pvpcDisplayKwhP1 = hourlyFilteredKwhP1;
                 let pvpcDisplayKwhP2 = hourlyFilteredKwhP2;
                 let pvpcDisplayKwhP3 = hourlyFilteredKwhP3;
@@ -3030,7 +3030,7 @@ function handleFiles(files) {
                     pvpcDisplayTotalAvgPrice = totalHourlyKwh > 0 ? (pvpcDisplayTotalCost / totalHourlyKwh) : 0;
                 }
 
-                const pvpcLabelPrefix = simulatePatternActive ? 'PVPC Simulado:' : 'PVPC 2.0TD:';
+                const pvpcLabelPrefix = simulatePatternActive ? 'PVPC Sim.:' : 'PVPC 2.0TD:';
 
                 // Porcentajes globales
                 const globalKwhPct = totalKwh > 0 ? (totalHourlyKwh / totalKwh) * 100 : 0;
@@ -3069,7 +3069,7 @@ function handleFiles(files) {
                             </div>
                             <div class="mt-2 pt-1 border-t border-blue-200 text-xs sm:text-sm font-bold text-blue-950 flex justify-between items-center font-mono bg-blue-100/60 px-1.5 py-0.5 rounded">
                                 <span class="uppercase text-[8px] text-blue-900 font-bold">${pvpcLabelPrefix}</span>
-                                <span>${pvpcDisplayTotalCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${pvpcDisplayTotalAvgPrice.toFixed(5)}€/k)</span></span>
+                                <span>${pvpcDisplayTotalCost.toFixed(2)} € <span class="text-[8px] font-normal text-blue-800">[${totalHourlyKwh.toFixed(1)}k @ ${pvpcDisplayTotalAvgPrice.toFixed(5)}€]</span></span>
                             </div>
                         </div>
                     `;
@@ -3099,7 +3099,7 @@ function handleFiles(files) {
                             </div>
                             <div class="mt-2 pt-1 border-t border-blue-200 text-xs sm:text-sm font-bold text-blue-950 flex justify-between items-center font-mono bg-blue-100/60 px-1.5 py-0.5 rounded">
                                 <span class="uppercase text-[8px] text-blue-900 font-bold">${pvpcLabelPrefix}</span>
-                                <span>${pvpcDisplayTotalCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${pvpcDisplayTotalAvgPrice.toFixed(5)}€/k)</span></span>
+                                <span>${pvpcDisplayTotalCost.toFixed(2)} € <span class="text-[8px] font-normal text-blue-800">[${totalHourlyKwh.toFixed(1)}k @ ${pvpcDisplayTotalAvgPrice.toFixed(5)}€]</span></span>
                             </div>
                         </div>
                     `;
@@ -3126,7 +3126,7 @@ function handleFiles(files) {
                         </div>
                         <div class="mt-2 pt-1 border-t border-red-200 text-xs sm:text-sm font-bold text-red-950 flex justify-between items-center font-mono bg-red-100/60 px-1.5 py-0.5 rounded">
                             <span class="uppercase text-[8px] text-red-900 font-bold">${pvpcLabelPrefix}</span>
-                            <span>${pvpcDisplayCostP1.toFixed(2)} € <span class="text-[9px] font-normal text-red-800">(${pvpcDisplayAvgPriceP1.toFixed(5)}€/k)</span></span>
+                            <span>${pvpcDisplayCostP1.toFixed(2)} € <span class="text-[8px] font-normal text-red-800">[${pvpcDisplayKwhP1.toFixed(1)}k @ ${pvpcDisplayAvgPriceP1.toFixed(5)}€]</span></span>
                         </div>
                     </div>
 
@@ -3150,7 +3150,7 @@ function handleFiles(files) {
                         </div>
                         <div class="mt-2 pt-1 border-t border-amber-200 text-xs sm:text-sm font-bold text-amber-950 flex justify-between items-center font-mono bg-amber-100/60 px-1.5 py-0.5 rounded">
                             <span class="uppercase text-[8px] text-amber-900 font-bold">${pvpcLabelPrefix}</span>
-                            <span>${pvpcDisplayCostP2.toFixed(2)} € <span class="text-[9px] font-normal text-amber-800">(${pvpcDisplayAvgPriceP2.toFixed(5)}€/k)</span></span>
+                            <span>${pvpcDisplayCostP2.toFixed(2)} € <span class="text-[8px] font-normal text-amber-800">[${pvpcDisplayKwhP2.toFixed(1)}k @ ${pvpcDisplayAvgPriceP2.toFixed(5)}€]</span></span>
                         </div>
                     </div>
 
@@ -3174,7 +3174,7 @@ function handleFiles(files) {
                         </div>
                         <div class="mt-2 pt-1 border-t border-emerald-200 text-xs sm:text-sm font-bold text-emerald-950 flex justify-between items-center font-mono bg-emerald-100/60 px-1.5 py-0.5 rounded">
                             <span class="uppercase text-[8px] text-emerald-900 font-bold">${pvpcLabelPrefix}</span>
-                            <span>${pvpcDisplayCostP3.toFixed(2)} € <span class="text-[9px] font-normal text-emerald-800">(${pvpcDisplayAvgPriceP3.toFixed(5)}€/k)</span></span>
+                            <span>${pvpcDisplayCostP3.toFixed(2)} € <span class="text-[8px] font-normal text-emerald-800">[${pvpcDisplayKwhP3.toFixed(1)}k @ ${pvpcDisplayAvgPriceP3.toFixed(5)}€]</span></span>
                         </div>
                     </div>
 
