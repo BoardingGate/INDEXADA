@@ -823,6 +823,7 @@
                     
                         <!-- Bloque de Acumulados P1, P2, P3 para el rango visualizado -->
                         <div id="hourlyTrancheSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+                        <div id="hourlyConsumptionAiReport" class="hidden mb-4 bg-indigo-50/90 border border-indigo-200 p-3.5 rounded-xl text-xs text-indigo-950 shadow-xs"></div>
                             <div class="relative h-[480px]">
                                 <canvas id="chartHourly"></canvas>
                             </div>
@@ -2955,6 +2956,7 @@ function handleFiles(files) {
                 };
             });
             updateAiRecommendation(mainPricesForAi, 'mainAiRecommendation');
+            updateHourlyConsumptionAiReport(data);
 
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
@@ -5736,6 +5738,159 @@ function handleFiles(files) {
                 }
             });
         }
+
+        function updateHourlyConsumptionAiReport(data) {
+    const reportEl = document.getElementById('hourlyConsumptionAiReport');
+    if (!reportEl || !data || data.length === 0) {
+        if (reportEl) reportEl.classList.add('hidden');
+        return;
+    }
+
+    // Acumuladores de consumo y coste por hora divididos en L-V y S-D
+    const wdKwh = Array(24).fill(0), wdCost = Array(24).fill(0), wdCounts = Array(24).fill(0);
+    const weKwh = Array(24).fill(0), weCost = Array(24).fill(0), weCounts = Array(24).fill(0);
+
+    data.forEach(item => {
+        const parts = item.fechaStr.split('-');
+        const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+        const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+        const h = item.hora;
+
+        if (isWe) {
+            weKwh[h] += item.consumo;
+            weCost[h] += item.coste;
+            weCounts[h]++;
+        } else {
+            wdKwh[h] += item.consumo;
+            wdCost[h] += item.coste;
+            wdCounts[h]++;
+        }
+    });
+
+    const formatHourList = (hours) => {
+        if (!hours.length) return "N/D";
+        const sorted = [...hours].sort((a, b) => a - b);
+        const ranges = [];
+        let start = sorted[0], prev = sorted[0];
+        for (let i = 1; i <= sorted.length; i++) {
+            if (i < sorted.length && sorted[i] === prev + 1) {
+                prev = sorted[i];
+            } else {
+                ranges.push(start === prev ? `${String(start).padStart(2,'0')}:00h` : `${String(start).padStart(2,'0')}:00h a ${String(prev+1).padStart(2,'0')}:00h`);
+                if (i < sorted.length) { start = sorted[i]; prev = sorted[i]; }
+            }
+        }
+        return ranges.join(', ');
+    };
+
+    const analyzeSegment = (kwhArr, costArr, countArr, label) => {
+        const hasData = countArr.some(c => c > 0);
+        if (!hasData) return null;
+
+        const hoursData = Array.from({ length: 24 }, (_, h) => {
+            const count = countArr[h] || 1;
+            const avgK = kwhArr[h] / count;
+            const avgP = kwhArr[h] > 0 ? (costArr[h] / kwhArr[h]) : 0;
+            return { h, avgKwh: avgK, totalKwh: kwhArr[h], avgPrice: avgP };
+        });
+
+        const totalKwhSeg = kwhArr.reduce((a, b) => a + b, 0);
+        const avgGlobalPrice = totalKwhSeg > 0 ? (costArr.reduce((a, b) => a + b, 0) / totalKwhSeg) : 0;
+
+        // Horas donde más se consume (top 4)
+        const topConsumHours = [...hoursData].sort((a, b) => b.avgKwh - a.avgKwh).slice(0, 4);
+        // Horas con precios más baratos de la tarifa aplicada (top 6 más baratas)
+        const cheapestPriceHours = [...hoursData].sort((a, b) => a.avgPrice - b.avgPrice).slice(0, 6);
+        const cheapestHoursSet = new Set(cheapestPriceHours.map(x => x.h));
+
+        // Calcular qué porcentaje del consumo pico cae en horas baratas
+        const peakKwhTotal = topConsumHours.reduce((s, x) => s + x.totalKwh, 0);
+        const peakKwhInCheap = topConsumHours.filter(x => cheapestHoursSet.has(x.h)).reduce((s, x) => s + x.totalKwh, 0);
+        const efficiencyPct = peakKwhTotal > 0 ? (peakKwhInCheap / peakKwhTotal) * 100 : 0;
+
+        let evalBadge, evalText;
+        if (efficiencyPct >= 70) {
+            evalBadge = '<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold px-1.5 py-0.5 rounded text-[10px]">🟢 Excelente Aprovechamiento</span>';
+            evalText = `<span class="text-emerald-800 font-semibold">El ${efficiencyPct.toFixed(0)}% de tus picos de consumo coincide con las horas más baratas</span> (óptimo).`;
+        } else if (efficiencyPct >= 35) {
+            evalBadge = '<span class="bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1.5 py-0.5 rounded text-[10px]">🟡 Aprovechamiento Medio</span>';
+            evalText = `<span class="text-amber-800 font-semibold">Solo el ${efficiencyPct.toFixed(0)}% de tu mayor consumo está en horas baratas</span>. Hay margen para desplazar cargas.`;
+        } else {
+            evalBadge = '<span class="bg-rose-100 text-rose-900 border border-rose-300 font-extrabold px-1.5 py-0.5 rounded text-[10px]">🔴 Concentración en Horas Caras</span>';
+            evalText = `<span class="text-rose-800 font-semibold">Estás concentrando tus consumos fuertes en horas de coste elevado</span> (precio medio pico: ${(topConsumHours.reduce((s,x)=>s+x.avgPrice,0)/topConsumHours.length).toFixed(4)} €/kWh vs ${cheapestPriceHours[0]?.avgPrice.toFixed(4)} €/kWh mínima).`;
+        }
+
+        return {
+            label,
+            topHoursStr: formatHourList(topConsumHours.map(x => x.h)),
+            topAvgKwh: (topConsumHours.reduce((s, x) => s + x.avgKwh, 0) / topConsumHours.length).toFixed(2),
+            cheapestHoursStr: formatHourList(cheapestPriceHours.map(x => x.h)),
+            evalBadge,
+            evalText
+        };
+    };
+
+    const wdAnalysis = analyzeSegment(wdKwh, wdCost, wdCounts, "📅 Lunes a Viernes");
+    const weAnalysis = analyzeSegment(weKwh, weCost, weCounts, "🎉 Sábados y Domingos");
+
+    if (!wdAnalysis && !weAnalysis) {
+        reportEl.classList.add('hidden');
+        return;
+    }
+
+    reportEl.innerHTML = `
+        <div class="flex items-start gap-2.5">
+            <span class="text-base shrink-0">🤖</span>
+            <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-1.5 border-b border-indigo-200/70">
+                    <h5 class="font-bold text-indigo-950 text-xs uppercase tracking-wide">
+                        Diagnóstico iA: Hábitos de Consumo vs Precios de la Tarifa Activa
+                    </h5>
+                    <span class="text-[10px] text-indigo-700 italic">Evaluación sobre la curva de demanda real</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    ${wdAnalysis ? `
+                        <div class="bg-white/80 p-2.5 rounded-lg border border-indigo-100 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-bold text-gray-800">${wdAnalysis.label}</span>
+                                    ${wdAnalysis.evalBadge}
+                                </div>
+                                <p class="text-[11px] text-gray-700 leading-relaxed">
+                                    • <strong>Horas de mayor consumo:</strong> <span class="font-semibold text-indigo-900">${wdAnalysis.topHoursStr}</span> (media de ${wdAnalysis.topAvgKwh} kWh/h).<br>
+                                    • <strong>Horas más baratas de tu tarifa:</strong> <span class="font-semibold text-emerald-800">${wdAnalysis.cheapestHoursStr}</span>.
+                                </p>
+                            </div>
+                            <div class="mt-2 pt-1.5 border-t border-gray-150 text-[10.5px] leading-tight">
+                                ${wdAnalysis.evalText}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${weAnalysis ? `
+                        <div class="bg-white/80 p-2.5 rounded-lg border border-indigo-100 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-bold text-gray-800">${weAnalysis.label}</span>
+                                    ${weAnalysis.evalBadge}
+                                </div>
+                                <p class="text-[11px] text-gray-700 leading-relaxed">
+                                    • <strong>Horas de mayor consumo:</strong> <span class="font-semibold text-indigo-900">${weAnalysis.topHoursStr}</span> (media de ${weAnalysis.topAvgKwh} kWh/h).<br>
+                                    • <strong>Horas más baratas de tu tarifa:</strong> <span class="font-semibold text-emerald-800">${weAnalysis.cheapestHoursStr}</span>.
+                                </p>
+                            </div>
+                            <div class="mt-2 pt-1.5 border-t border-gray-150 text-[10.5px] leading-tight">
+                                ${weAnalysis.evalText}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    reportEl.classList.remove('hidden');
+}
+
 
         function updateAiRecommendation(pricesArray, targetElementId) {
             const targetEl = document.getElementById(targetElementId);
