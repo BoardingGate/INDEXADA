@@ -2952,13 +2952,16 @@ function handleFiles(files) {
             renderDailyChart(dailyStats);
             renderDayOfWeekChart(dayOfWeekStats, dayOfWeekCount);
 
-       // Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Precios Medios y Comparativa PVPC 2.0TD (Tamaño Grande)
+// Renderizado de las tarjetas de acumulación P1, P2 y P3 del Perfil Horario con Nombre de Tarifa y Tamaños Igualados
             const summaryContainer = document.getElementById('hourlyTrancheSummary');
             if (summaryContainer) {
                 const hourlyDayFilterVal = document.getElementById('hourlyDayFilter')?.value || 'all';
                 const totalHourlyKwh = hourlyFilteredKwhP1 + hourlyFilteredKwhP2 + hourlyFilteredKwhP3;
                 const totalHourlyCost = hourlyFilteredCostP1 + hourlyFilteredCostP2 + hourlyFilteredCostP3;
                 const totalHourlyPvpcCost = hourlyFilteredPvpcCostP1 + hourlyFilteredPvpcCostP2 + hourlyFilteredPvpcCostP3;
+
+                // Nombre descriptivo de la tarifa activa
+                const activeTariffLabel = (mode === 'pvpc') ? 'PVPC Oficial' : (document.getElementById('tariffProfileName').value || 'Manual');
 
                 // Porcentajes de kWh
                 const p1KwhPct = totalHourlyKwh > 0 ? (hourlyFilteredKwhP1 / totalHourlyKwh) * 100 : 0;
@@ -2997,13 +3000,13 @@ function handleFiles(files) {
                             <div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">Total Semana Completa</span>
-                                    <span class="text-[9px] font-bold text-blue-700">100.0%</span>
+                                    <span class="text-[8px] font-bold text-blue-700 bg-blue-100 px-1 py-0.2 rounded truncate max-w-[110px]" title="Tarifa activa: ${activeTariffLabel}">${activeTariffLabel}</span>
                                 </div>
                                 <div class="mt-0.5 flex items-baseline justify-between">
                                     <span class="text-xs font-black text-blue-950 font-mono">${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
-                                    <span class="text-xs font-bold text-blue-900 font-mono">${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                                    <span class="text-xs sm:text-sm font-bold text-blue-900 font-mono">${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
                                 </div>
-                                <div class="text-[10px] font-bold font-mono text-blue-700 text-right">
+                                <div class="text-[9px] font-mono text-blue-700 text-right">
                                     Med: ${totalAvgPrice.toFixed(5)} €/kWh
                                 </div>
                                 <div class="mt-1 pt-1 border-t border-blue-200/70 space-y-0.5 font-mono text-[10px]">
@@ -3017,9 +3020,9 @@ function handleFiles(files) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-2 pt-1.5 border-t border-blue-300 text-xs sm:text-sm font-black text-blue-950 flex justify-between items-center font-mono bg-blue-100/80 px-2 py-1 rounded shadow-2xs">
-                                <span class="uppercase text-[9px] sm:text-[10px] text-blue-900 font-black">PVPC 2.0TD:</span>
-                                <span>${totalHourlyPvpcCost.toFixed(2)} € <span class="text-[10px] font-semibold text-blue-800">(${totalPvpcAvgPrice.toFixed(5)}€)</span></span>
+                            <div class="mt-2 pt-1 border-t border-blue-200 text-xs sm:text-sm font-bold text-blue-950 flex justify-between items-center font-mono bg-blue-100/60 px-1.5 py-0.5 rounded">
+                                <span class="uppercase text-[8px] text-blue-900 font-bold">PVPC 2.0TD:</span>
+                                <span>${totalHourlyPvpcCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${totalPvpcAvgPrice.toFixed(5)}€/k)</span></span>
                             </div>
                         </div>
                     `;
@@ -3029,17 +3032,17 @@ function handleFiles(files) {
                             <div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-[9px] font-bold text-blue-800 uppercase tracking-wider">Total Filtrado</span>
-                                    <span class="text-[9px] font-bold text-blue-700 uppercase">vs Total Global</span>
+                                    <span class="text-[8px] font-bold text-blue-700 bg-blue-100 px-1 py-0.2 rounded truncate max-w-[110px]" title="Tarifa activa: ${activeTariffLabel}">${activeTariffLabel}</span>
                                 </div>
                                 <div class="mt-1 flex items-baseline justify-between">
                                     <span class="text-xs font-black text-blue-950 font-mono">${totalHourlyKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
                                     <span class="text-[11px] font-black text-blue-800" title="Porcentaje del consumo respecto al total global">(${globalKwhPct.toFixed(1)}%)</span>
                                 </div>
                                 <div class="mt-0.5 pt-0.5 border-t border-blue-200/60 flex items-baseline justify-between">
-                                    <span class="text-xs font-bold text-blue-900 font-mono">${totalHourlyCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                                    <span class="text-xs sm:text-sm font-bold text-blue-900 font-mono">${totalHourlyCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
                                     <span class="text-[10px] font-bold text-blue-700" title="Porcentaje del coste respecto al total global">(${globalCostPct.toFixed(1)}%)</span>
                                 </div>
-                                <div class="text-[10px] font-bold font-mono text-blue-700 text-right">
+                                <div class="text-[9px] font-mono text-blue-700 text-right">
                                     Med: ${totalAvgPrice.toFixed(5)} €/kWh
                                 </div>
                                 <div class="mt-1 pt-1 border-t border-blue-200 text-[10px] sm:text-[11px] font-bold text-slate-700 flex justify-between items-center font-mono bg-blue-100/50 px-1.5 py-0.5 rounded">
@@ -3047,9 +3050,9 @@ function handleFiles(files) {
                                     <span>${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh | ${totalCost.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
                                 </div>
                             </div>
-                            <div class="mt-2 pt-1.5 border-t border-blue-300 text-xs sm:text-sm font-black text-blue-950 flex justify-between items-center font-mono bg-blue-100/80 px-2 py-1 rounded shadow-2xs">
-                                <span class="uppercase text-[9px] sm:text-[10px] text-blue-900 font-black">PVPC 2.0TD:</span>
-                                <span>${totalHourlyPvpcCost.toFixed(2)} € <span class="text-[10px] font-semibold text-blue-800">(${totalPvpcAvgPrice.toFixed(5)}€)</span></span>
+                            <div class="mt-2 pt-1 border-t border-blue-200 text-xs sm:text-sm font-bold text-blue-950 flex justify-between items-center font-mono bg-blue-100/60 px-1.5 py-0.5 rounded">
+                                <span class="uppercase text-[8px] text-blue-900 font-bold">PVPC 2.0TD:</span>
+                                <span>${totalHourlyPvpcCost.toFixed(2)} € <span class="text-[9px] font-normal text-blue-800">(${totalPvpcAvgPrice.toFixed(5)}€/k)</span></span>
                             </div>
                         </div>
                     `;
@@ -3058,64 +3061,73 @@ function handleFiles(files) {
                 summaryContainer.innerHTML = `
                     <div class="p-2.5 bg-red-50 border border-red-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <div>
-                            <span class="text-[9px] font-bold text-red-800 uppercase tracking-wider">P1 Punta</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] font-bold text-red-800 uppercase tracking-wider">P1 Punta</span>
+                                <span class="text-[8px] font-bold text-red-700 bg-red-100 px-1 py-0.2 rounded truncate max-w-[100px]" title="Tarifa activa: ${activeTariffLabel}">${activeTariffLabel}</span>
+                            </div>
                             <div class="mt-1 flex items-baseline justify-between">
                                 <span class="text-xs font-black text-red-950 font-mono">${hourlyFilteredKwhP1.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
                                 <span class="text-[10px] font-bold text-red-700">(${p1KwhPct.toFixed(1)}%)</span>
                             </div>
                             <div class="mt-0.5 pt-0.5 border-t border-red-200/60 flex items-baseline justify-between">
-                                <span class="text-xs font-bold text-red-900 font-mono">${hourlyFilteredCostP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                                <span class="text-xs sm:text-sm font-bold text-red-900 font-mono">${hourlyFilteredCostP1.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
                                 <span class="text-[9px] font-semibold text-red-600">(${p1CostPct.toFixed(1)}%)</span>
                             </div>
-                            <div class="text-[10px] font-bold font-mono text-red-700 text-right">
+                            <div class="text-[9px] font-mono text-red-700 text-right">
                                 Med: ${p1AvgPrice.toFixed(5)} €/kWh
                             </div>
                         </div>
-                        <div class="mt-2 pt-1.5 border-t border-red-200 text-xs sm:text-sm font-black text-red-950 flex justify-between items-center font-mono bg-red-100/80 px-2 py-1 rounded shadow-2xs">
-                            <span class="uppercase text-[9px] sm:text-[10px] text-red-900 font-black">PVPC 2.0TD:</span>
-                            <span>${hourlyFilteredPvpcCostP1.toFixed(2)} € <span class="text-[10px] font-semibold text-red-800">(${p1PvpcAvgPrice.toFixed(5)}€)</span></span>
+                        <div class="mt-2 pt-1 border-t border-red-200 text-xs sm:text-sm font-bold text-red-950 flex justify-between items-center font-mono bg-red-100/60 px-1.5 py-0.5 rounded">
+                            <span class="uppercase text-[8px] text-red-900 font-bold">PVPC 2.0TD:</span>
+                            <span>${hourlyFilteredPvpcCostP1.toFixed(2)} € <span class="text-[9px] font-normal text-red-800">(${p1PvpcAvgPrice.toFixed(5)}€/k)</span></span>
                         </div>
                     </div>
 
                     <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <div>
-                            <span class="text-[9px] font-bold text-amber-800 uppercase tracking-wider">P2 Llano</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] font-bold text-amber-800 uppercase tracking-wider">P2 Llano</span>
+                                <span class="text-[8px] font-bold text-amber-700 bg-amber-100 px-1 py-0.2 rounded truncate max-w-[100px]" title="Tarifa activa: ${activeTariffLabel}">${activeTariffLabel}</span>
+                            </div>
                             <div class="mt-1 flex items-baseline justify-between">
                                 <span class="text-xs font-black text-amber-950 font-mono">${hourlyFilteredKwhP2.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
                                 <span class="text-[10px] font-bold text-amber-700">(${p2KwhPct.toFixed(1)}%)</span>
                             </div>
                             <div class="mt-0.5 pt-0.5 border-t border-amber-200/60 flex items-baseline justify-between">
-                                <span class="text-xs font-bold text-amber-900 font-mono">${hourlyFilteredCostP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                                <span class="text-xs sm:text-sm font-bold text-amber-900 font-mono">${hourlyFilteredCostP2.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
                                 <span class="text-[9px] font-semibold text-amber-600">(${p2CostPct.toFixed(1)}%)</span>
                             </div>
-                            <div class="text-[10px] font-bold font-mono text-amber-700 text-right">
+                            <div class="text-[9px] font-mono text-amber-700 text-right">
                                 Med: ${p2AvgPrice.toFixed(5)} €/kWh
                             </div>
                         </div>
-                        <div class="mt-2 pt-1.5 border-t border-amber-200 text-xs sm:text-sm font-black text-amber-950 flex justify-between items-center font-mono bg-amber-100/80 px-2 py-1 rounded shadow-2xs">
-                            <span class="uppercase text-[9px] sm:text-[10px] text-amber-900 font-black">PVPC 2.0TD:</span>
-                            <span>${hourlyFilteredPvpcCostP2.toFixed(2)} € <span class="text-[10px] font-semibold text-amber-800">(${p2PvpcAvgPrice.toFixed(5)}€)</span></span>
+                        <div class="mt-2 pt-1 border-t border-amber-200 text-xs sm:text-sm font-bold text-amber-950 flex justify-between items-center font-mono bg-amber-100/60 px-1.5 py-0.5 rounded">
+                            <span class="uppercase text-[8px] text-amber-900 font-bold">PVPC 2.0TD:</span>
+                            <span>${hourlyFilteredPvpcCostP2.toFixed(2)} € <span class="text-[9px] font-normal text-amber-800">(${p2PvpcAvgPrice.toFixed(5)}€/k)</span></span>
                         </div>
                     </div>
 
                     <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-col justify-between shadow-2xs">
                         <div>
-                            <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider">P3 Valle</span>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] font-bold text-emerald-800 uppercase tracking-wider">P3 Valle</span>
+                                <span class="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.2 rounded truncate max-w-[100px]" title="Tarifa activa: ${activeTariffLabel}">${activeTariffLabel}</span>
+                            </div>
                             <div class="mt-1 flex items-baseline justify-between">
                                 <span class="text-xs font-black text-emerald-950 font-mono">${hourlyFilteredKwhP3.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh</span>
                                 <span class="text-[10px] font-bold text-emerald-700">(${p3KwhPct.toFixed(1)}%)</span>
                             </div>
                             <div class="mt-0.5 pt-0.5 border-t border-emerald-200/60 flex items-baseline justify-between">
-                                <span class="text-xs font-bold text-emerald-900 font-mono">${hourlyFilteredCostP3.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
+                                <span class="text-xs sm:text-sm font-bold text-emerald-900 font-mono">${hourlyFilteredCostP3.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</span>
                                 <span class="text-[9px] font-semibold text-emerald-600">(${p3CostPct.toFixed(1)}%)</span>
                             </div>
-                            <div class="text-[10px] font-bold font-mono text-emerald-700 text-right">
+                            <div class="text-[9px] font-mono text-emerald-700 text-right">
                                 Med: ${p3AvgPrice.toFixed(5)} €/kWh
                             </div>
                         </div>
-                        <div class="mt-2 pt-1.5 border-t border-emerald-200 text-xs sm:text-sm font-black text-emerald-950 flex justify-between items-center font-mono bg-emerald-100/80 px-2 py-1 rounded shadow-2xs">
-                            <span class="uppercase text-[9px] sm:text-[10px] text-emerald-900 font-black">PVPC 2.0TD:</span>
-                            <span>${hourlyFilteredPvpcCostP3.toFixed(2)} € <span class="text-[10px] font-semibold text-emerald-800">(${p3PvpcAvgPrice.toFixed(5)}€)</span></span>
+                        <div class="mt-2 pt-1 border-t border-emerald-200 text-xs sm:text-sm font-bold text-emerald-950 flex justify-between items-center font-mono bg-emerald-100/60 px-1.5 py-0.5 rounded">
+                            <span class="uppercase text-[8px] text-emerald-900 font-bold">PVPC 2.0TD:</span>
+                            <span>${hourlyFilteredPvpcCostP3.toFixed(2)} € <span class="text-[9px] font-normal text-emerald-800">(${p3PvpcAvgPrice.toFixed(5)}€/k)</span></span>
                         </div>
                     </div>
 
