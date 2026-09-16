@@ -2022,6 +2022,89 @@ function handleFiles(files) {
             return preciosMap;
         }
 
+        function calculateProfileInvoice(prof, data, numDays, totalKwh, p1Kw, p2Kw, isSimTranches, simP1, simP2, simP3) {
+            let energyBase = 0;
+            if (isSimTranches) {
+                const k1 = totalKwh * (simP1 / 100);
+                const k2 = totalKwh * (simP2 / 100);
+                const k3 = totalKwh * (simP3 / 100);
+                energyBase = (k1 * (parseFloat(prof.pricePunta) || 0)) + (k2 * (parseFloat(prof.priceLlano) || 0)) + (k3 * (parseFloat(prof.priceValle) || 0));
+            } else {
+                const hPunta = typeof prof.hoursPunta === 'string' ? prof.hoursPunta.split(',').map(n => parseInt(n.trim(), 10)) : (prof.hoursPunta || []);
+                const hLlano = typeof prof.hoursLlano === 'string' ? prof.hoursLlano.split(',').map(n => parseInt(n.trim(), 10)) : (prof.hoursLlano || []);
+                const holidays = typeof prof.holidays === 'string' ? prof.holidays.split(',').map(d => d.trim()) : (prof.holidays || []);
+                const useWeValle = prof.weekendValle !== false;
+                const pValle = parseFloat(prof.priceValle) || 0;
+                const pLlano = parseFloat(prof.priceLlano) || 0;
+                const pPunta = parseFloat(prof.pricePunta) || 0;
+
+                for (let j = 0; j < data.length; j++) {
+                    const item = data[j];
+                    const dateParts = item.fechaStr.split('-');
+                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const dayOfWeek = dateObj.getDay();
+                    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                    const dayMonthStr = `${dateParts[2]}-${dateParts[1]}`;
+                    const isHoliday = holidays.includes(dayMonthStr) || holidays.includes(item.fechaStr);
+
+                    let price = pValle;
+                    if ((isWeekend && useWeValle) || isHoliday) {
+                        price = pValle;
+                    } else if (hPunta.includes(item.hora)) {
+                        price = pPunta;
+                    } else if (hLlano.includes(item.hora)) {
+                        price = pLlano;
+                    } else {
+                        price = pValle;
+                    }
+                    energyBase += item.consumo * price;
+                }
+            }
+
+            const descEnergia = parseFloat(prof.discountEnergyManual) || 0;
+            const descPotencia = parseFloat(prof.discountPowerManual) || 0;
+            const ajustes = parseFloat(prof.invoiceAdjustmentsManual) || 0;
+            const margenDiario = parseFloat(prof.retailerMarginManual) || 0;
+            const impElec = parseFloat(prof.electricityTaxManual) || 0;
+            const alqContador = parseFloat(prof.meterRentalManual) || 0;
+            const vatRate = parseFloat(prof.vatRateManual) || 0;
+            const powerP1 = parseFloat(prof.powerPriceP1Manual) || 0;
+            const powerP2 = parseFloat(prof.powerPriceP2Manual) || 0;
+
+            const powerBase = (((p1Kw * powerP1) + (p2Kw * powerP2)) / 365) * numDays;
+            const energyNet = energyBase * (1 - descEnergia / 100);
+            const powerNet = powerBase * (1 - descPotencia / 100);
+            const margenTotal = margenDiario * numDays;
+            const baseImp = energyNet + powerNet + margenTotal + ajustes;
+            const impElecVal = baseImp * (impElec / 100);
+            const alqContadorTotal = (alqContador / 30) * numDays;
+            const baseIva = baseImp + impElecVal + alqContadorTotal;
+            const ivaVal = baseIva * (vatRate / 100);
+            const grandTotal = baseIva + ivaVal;
+            const avgKwhPrice = totalKwh > 0 ? (grandTotal / totalKwh) : 0;
+
+            return {
+                name: prof.name || 'Tarifa Manual',
+                energyBase,
+                energyNet,
+                descEnergia,
+                powerBase,
+                powerNet,
+                descPotencia,
+                margenTotal,
+                margenDiario,
+                ajustes,
+                impElecVal,
+                impElec,
+                alqContadorTotal,
+                alqContador,
+                ivaVal,
+                vatRate,
+                grandTotal,
+                avgKwhPrice
+            };
+        }
+
         function renderResultsAndCharts(data) {
             window.lastFilteredData = data; 
 
@@ -2645,18 +2728,40 @@ function handleFiles(files) {
                 ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
                 : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
 
-            const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
-
+const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
             const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
             const isSumOk = Math.abs(sumPercents - 100.0) <= 0.1;
             const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
+
+            // Guardar perfil activo y calcular los 5 perfiles restantes
+            saveActiveProfileToMemory();
+            const otherProfiles = window.tariffProfiles
+                .map((prof, idx) => ({ prof, idx }))
+                .filter(item => item.idx !== window.activeProfileIndex)
+                .map(item => {
+                    const calc = calculateProfileInvoice(
+                        item.prof,
+                        data,
+                        numDays,
+                        totalKwh,
+                        p1Kw,
+                        p2Kw,
+                        window.assumeEquivalentTranches,
+                        simPctP1,
+                        simPctP2,
+                        simPctP3
+                    );
+                    return { ...calc, idx: item.idx };
+                });
+
+            const fmtEur = (val) => val.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
             let comparisonHtml = `
                 <div class="w-full">
                     <div class="border-b pb-3 mb-3 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
                         <div>
                             <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
-                            <p class="text-[11px] text-gray-500">Desglose integral de conceptos simulados con sus respectivas desviaciones.</p>
+                            <p class="text-[11px] text-gray-500">Desglose integral de conceptos. Desliza horizontalmente para ver las 5 tarifas restantes.</p>
                         </div>
                         
                         <!-- Panel de Simulación de Reparto por Porcentajes -->
@@ -2667,7 +2772,7 @@ function handleFiles(files) {
                                     <span>Simular % de consumo asignado a P1, P2 y P3 en la tarifa <strong>${targetTariffTitle}</strong></span>
                                 </label>
                                 ${window.assumeEquivalentTranches ? `
-                                    <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales de PVPC (Grupo 2)">
+                                    <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales de PVPC">
                                         ↺ % Reales PVPC
                                     </button>
                                 ` : ''}
@@ -2690,100 +2795,131 @@ function handleFiles(files) {
                                         <input type="number" step="0.5" min="0" max="100" value="${simPctP3}" onchange="updateTranchePercent('P3', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                         <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP3 / 100)).toFixed(1)} kWh)</span>
                                     </div>
-                                    <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg ${isSumOk ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900 animate-pulse'}" title="La suma de P1+P2+P3 debe ser igual al 100%">
+                                    <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg ${isSumOk ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900 animate-pulse'}">
                                         Suma: ${sumPercents}% ${isSumOk ? '✓' : '⚠️'}
                                     </span>
                                 </div>
                             ` : ''}
-
-                            <span class="text-[9px] text-blue-700 italic leading-tight">
-                                * Simula importe si adaptas tus hábitos de consumo distribuyendo tus kWh en distintas proporciones de P1, P2 y P3, al precio medio de la sección 2. Clasificación por Coste Real (PVPC de REE) 
-                            </span>
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
+
+                    <!-- Contenedor con Deslizador / Scroll Horizontal -->
+                    <div class="overflow-x-auto pb-3">
+                        <table class="w-full text-left text-xs border-collapse min-w-[1250px]">
                             <thead>
                                 <tr class="border-b text-gray-400 uppercase text-[9px] tracking-wider font-semibold">
-                                    <th class="py-2">Concepto Facturado</th>
-                                    <th class="py-2 text-right">Tarifa PVPC (Regulada)</th>
-                                    <th class="py-2 text-right">${activeManualTariffName} (Manual)</th>
-                                    <th class="py-2 text-right">Desviación / Diferencia</th>
+                                    <th class="py-2 px-2.5 whitespace-nowrap">Concepto Facturado</th>
+                                    <th class="py-2 px-2.5 text-right whitespace-nowrap">Tarifa PVPC (Regulada)</th>
+                                    <th class="py-2 px-2.5 text-right whitespace-nowrap bg-blue-50/70 text-blue-900 font-bold">${activeManualTariffName} (Activa)</th>
+                                    <th class="py-2 px-2.5 text-right whitespace-nowrap border-r border-gray-300">Desviación / Diferencia</th>
+                                    ${otherProfiles.map(o => `
+                                        <th class="py-2 px-2.5 text-right whitespace-nowrap text-gray-600 bg-gray-50/60 font-semibold">
+                                            <div class="truncate max-w-[150px] ml-auto" title="${o.name}">${o.name}</div>
+                                            <span class="text-[8px] text-gray-400 font-normal">Perfil ${o.idx + 1}</span>
+                                        </th>
+                                    `).join('')}
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 text-gray-700">
                                 <tr class="${window.assumeEquivalentTranches ? 'bg-blue-50/30' : ''}">
-                                    <td class="py-1.5 font-medium text-gray-700">
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-700 whitespace-nowrap">
                                         Término de Energía (Base)
-                                        ${window.assumeEquivalentTranches ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded ml-1.5 uppercase">⚡ Simulación % P1/P2/P3</span>' : ''}
+                                        ${window.assumeEquivalentTranches ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded ml-1.5 uppercase">⚡ Simulación %</span>' : ''}
                                     </td>
-                                    <td class="py-1.5 text-right font-mono text-gray-500">${compEnergyPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-500">${compEnergyManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-500 whitespace-nowrap">${fmtEur(compEnergyPvpc)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-500 whitespace-nowrap bg-blue-50/40">${fmtEur(compEnergyManual)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap">${fmtEur(o.energyBase)}</td>`).join('')}
                                 </tr>
+
                                 <tr class="bg-gray-50/50">
-                                    <td class="py-2 font-semibold text-gray-800">Término de Energía (Neto con Descuento)</td>
-                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
-                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
-                                    <td class="py-2 text-right font-mono font-semibold ${diffEnergyClass} leading-tight">${diffEnergyText}</td>
+                                    <td class="py-2 px-2.5 font-semibold text-gray-800 whitespace-nowrap">Término de Energía (Neto)</td>
+                                    <td class="py-2 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap">${fmtEur(totalCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
+                                    <td class="py-2 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap bg-blue-50/60">${fmtEur(totalCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
+                                    <td class="py-2 px-2.5 text-right font-mono font-semibold ${diffEnergyClass} border-r border-gray-300 leading-tight whitespace-nowrap">${diffEnergyText}</td>
+                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap">${fmtEur(o.energyNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descEnergia}%)</span></td>`).join('')}
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-500">Término de Potencia (Base)</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalPowerCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-400">${totalPowerCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-500 whitespace-nowrap">Término de Potencia (Base)</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap">${fmtEur(totalPowerCostPvpc)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap bg-blue-50/40">${fmtEur(totalPowerCostManual)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap">${fmtEur(o.powerBase)}</td>`).join('')}
                                 </tr>
+
                                 <tr class="bg-gray-50/50">
-                                    <td class="py-2 font-semibold text-gray-800">Término de Potencia (Neto con Descuento)</td>
-                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalPowerCostPvpcNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
-                                    <td class="py-2 text-right font-mono font-semibold text-gray-900">${totalPowerCostManualNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaManual}%)</span></td>
-                                    <td class="py-2 text-right font-mono font-semibold ${diffPowerClass} leading-tight">${diffPowerText}</td>
+                                    <td class="py-2 px-2.5 font-semibold text-gray-800 whitespace-nowrap">Término de Potencia (Neto)</td>
+                                    <td class="py-2 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap">${fmtEur(totalPowerCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
+                                    <td class="py-2 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap bg-blue-50/60">${fmtEur(totalPowerCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaManual}%)</span></td>
+                                    <td class="py-2 px-2.5 text-right font-mono font-semibold ${diffPowerClass} border-r border-gray-300 leading-tight whitespace-nowrap">${diffPowerText}</td>
+                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap">${fmtEur(o.powerNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descPotencia}%)</span></td>`).join('')}
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Margen Comercialización y Bono Social</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${margenComTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-700 whitespace-nowrap">Margen Comercialización y Bono</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap">${fmtEur(margenComTotalPvpc)} <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40">${fmtEur(margenComTotalManual)} <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap">${fmtEur(o.margenTotal)} <span class="text-[8px] text-gray-400 font-normal">(${o.margenDiario.toFixed(3)}/d)</span></td>`).join('')}
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Ajustes manuales</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${ajustesPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${ajustesManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-700 whitespace-nowrap">Ajustes manuales</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap">${fmtEur(ajustesPvpc)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40">${fmtEur(ajustesManual)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap">${fmtEur(o.ajustes)}</td>`).join('')}
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Impuesto Eléctrico</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${impElecManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-700 whitespace-nowrap">Impuesto Eléctrico</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap">${fmtEur(impElecPvpcVal)} <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40">${fmtEur(impElecManualVal)} <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap">${fmtEur(o.impElecVal)} <span class="text-[8px] text-gray-400 font-normal">(${o.impElec}%)</span></td>`).join('')}
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">Alquiler de Contador (Prorrateado)</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorTotalPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${alqContadorPvpc.toFixed(2)} €/mes)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${alqContadorTotalManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${alqContadorManual.toFixed(2)} €/mes)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-700 whitespace-nowrap">Alquiler de Contador</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap">${fmtEur(alqContadorTotalPvpc)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40">${fmtEur(alqContadorTotalManual)}</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap">${fmtEur(o.alqContadorTotal)}</td>`).join('')}
                                 </tr>
+
                                 <tr>
-                                    <td class="py-1.5 font-medium text-gray-700">IVA Aplicado</td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaPvpcVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-800">${ivaManualVal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaManual}%)</span></td>
-                                    <td class="py-1.5 text-right font-mono text-gray-300">-</td>
+                                    <td class="py-1.5 px-2.5 font-medium text-gray-700 whitespace-nowrap">IVA Aplicado</td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap">${fmtEur(ivaPvpcVal)} <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40">${fmtEur(ivaManualVal)} <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaManual}%)</span></td>
+                                    <td class="py-1.5 px-2.5 text-right font-mono text-gray-300 border-r border-gray-300 whitespace-nowrap">-</td>
+                                    ${otherProfiles.map(o => `<td class="py-1.5 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap">${fmtEur(o.ivaVal)} <span class="text-[8px] text-gray-400 font-normal">(${o.vatRate}%)</span></td>`).join('')}
                                 </tr>
-                                <tr class="bg-blue-50/40 font-bold border-t border-b border-blue-100">
-                                    <td class="py-3 text-gray-900 uppercase">Total Factura a Pagar</td>
-                                    <td class="py-3 text-right font-mono text-sm text-blue-900 leading-tight">
-                                        <div>${grandTotalPvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</div>
-                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPricePvpcSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+
+                                <tr class="bg-blue-50/50 font-bold border-t-2 border-b-2 border-blue-200">
+                                    <td class="py-3 px-2.5 text-gray-900 uppercase whitespace-nowrap">Total Factura a Pagar</td>
+                                    <td class="py-3 px-2.5 text-right font-mono text-sm text-blue-900 leading-tight whitespace-nowrap">
+                                        <div>${fmtEur(grandTotalPvpcSimulated)}</div>
+                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${avgKwhPricePvpcSimulated.toFixed(5)} €/kWh</span>
                                     </td>
-                                    <td class="py-3 text-right font-mono text-sm text-blue-900 leading-tight">
-                                        <div>${grandTotalManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</div>
-                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Medio: ${avgKwhPriceManualSimulated.toLocaleString('es-ES', {minimumFractionDigits: 5, maximumFractionDigits: 5})} €/kWh</span>
+                                    <td class="py-3 px-2.5 text-right font-mono text-sm text-blue-950 bg-blue-100/50 leading-tight whitespace-nowrap">
+                                        <div>${fmtEur(grandTotalManualSimulated)}</div>
+                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${avgKwhPriceManualSimulated.toFixed(5)} €/kWh</span>
                                     </td>
-                                    <td class="py-3 text-right font-mono text-sm font-bold ${diffTotalClass} leading-tight">${diffTotalText}</td>
+                                    <td class="py-3 px-2.5 text-right font-mono text-sm font-bold ${diffTotalClass} border-r border-gray-300 leading-tight whitespace-nowrap">
+                                        ${diffTotalText}
+                                    </td>
+                                    ${otherProfiles.map(o => `
+                                        <td class="py-3 px-2.5 text-right font-mono text-sm text-gray-800 leading-tight whitespace-nowrap bg-gray-50/80">
+                                            <div>${fmtEur(o.grandTotal)}</div>
+                                            <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${o.avgKwhPrice.toFixed(5)} €/kWh</span>
+                                        </td>
+                                    `).join('')}
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
                     <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
                         ${bannerText}
                     </div>
