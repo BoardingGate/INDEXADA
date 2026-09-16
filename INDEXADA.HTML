@@ -351,7 +351,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
                             <div>
                                 <label class="flex items-center space-x-2 text-sm font-medium mt-2">
                                     <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
@@ -361,6 +361,43 @@
                             <div>
                                 <label class="block text-xs font-medium mb-1">Fechas festivas adicionales (DD-MM separadas por comas):</label>
                                 <input type="text" id="holidaysInput" class="w-full px-3 py-1 border rounded text-xs" value="01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12">
+                            </div>
+                        </div>
+
+                        <!-- Parámetros particulares de Factura para este perfil -->
+                        <div class="mt-4 pt-3 border-t border-gray-200">
+                            <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-2">
+                                Parámetros de Factura particulares de este Perfil
+                            </span>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Energía</label>
+                                    <input type="number" id="tabManualDiscountEnergy" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Desc. Potencia</label>
+                                    <input type="number" id="tabManualDiscountPower" step="0.1" value="0.0" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Ajustes (€)</label>
+                                    <input type="number" id="tabManualInvoiceAdjustments" step="0.01" value="0.00" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Margen+Bono (€/d)</label>
+                                    <input type="number" id="tabManualRetailerMargin" step="0.001" value="0.142" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Imp. Eléc. (%)</label>
+                                    <input type="number" id="tabManualElectricityTax" step="0.01" value="5.11" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">Alq. Cont. (€/m)</label>
+                                    <input type="number" id="tabManualMeterRental" step="0.01" value="0.80" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
+                                    <input type="number" id="tabManualVatRate" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2060,16 +2097,15 @@ function handleFiles(files) {
                     energyBase += item.consumo * price;
                 }
             }
-
-            const descEnergia = parseFloat(prof.discountEnergyManual) || 0;
-            const descPotencia = parseFloat(prof.discountPowerManual) || 0;
-            const ajustes = parseFloat(prof.invoiceAdjustmentsManual) || 0;
-            const margenDiario = parseFloat(prof.retailerMarginManual) || 0;
-            const impElec = parseFloat(prof.electricityTaxManual) || 0;
-            const alqContador = parseFloat(prof.meterRentalManual) || 0;
-            const vatRate = parseFloat(prof.vatRateManual) || 0;
-            const powerP1 = parseFloat(prof.powerPriceP1Manual) || 0;
-            const powerP2 = parseFloat(prof.powerPriceP2Manual) || 0;
+          const descEnergia = prof.discountEnergyManual !== undefined ? (parseFloat(prof.discountEnergyManual) || 0) : 0;
+            const descPotencia = prof.discountPowerManual !== undefined ? (parseFloat(prof.discountPowerManual) || 0) : 0;
+            const ajustes = prof.invoiceAdjustmentsManual !== undefined ? (parseFloat(prof.invoiceAdjustmentsManual) || 0) : 0;
+            const margenDiario = prof.retailerMarginManual !== undefined ? (parseFloat(prof.retailerMarginManual) || 0) : 0.142;
+            const impElec = prof.electricityTaxManual !== undefined ? (parseFloat(prof.electricityTaxManual) || 0) : 5.11;
+            const alqContador = prof.meterRentalManual !== undefined ? (parseFloat(prof.meterRentalManual) || 0) : 0.80;
+            const vatRate = prof.vatRateManual !== undefined ? (parseFloat(prof.vatRateManual) || 0) : 21;
+            const powerP1 = prof.powerPriceP1Manual !== undefined ? (parseFloat(prof.powerPriceP1Manual) || 0) : 33.95;
+            const powerP2 = prof.powerPriceP2Manual !== undefined ? (parseFloat(prof.powerPriceP2Manual) || 0) : 33.95;
 
             const powerBase = (((p1Kw * powerP1) + (p2Kw * powerP2)) / 365) * numDays;
             const energyNet = energyBase * (1 - descEnergia / 100);
@@ -3753,6 +3789,14 @@ function saveActiveProfileToMemory() {
             const p1El = document.getElementById('tabManualPowerP1') || document.getElementById('powerPriceP1Manual');
             const p2El = document.getElementById('tabManualPowerP2') || document.getElementById('powerPriceP2Manual');
 
+            const getVal = (id1, id2, def) => {
+                const el1 = document.getElementById(id1);
+                if (el1 && el1.value !== '') return parseFloat(el1.value) || 0;
+                const el2 = document.getElementById(id2);
+                if (el2 && el2.value !== '') return parseFloat(el2.value) || 0;
+                return def;
+            };
+
             window.tariffProfiles[index] = {
                 name: document.getElementById('tariffProfileName').value || `Tarifa Manual ${index + 1}`,
                 pricePunta: parseFloat(document.getElementById('pricePunta').value) || 0,
@@ -3763,48 +3807,57 @@ function saveActiveProfileToMemory() {
                 hoursValle: document.getElementById('hoursValle').value,
                 weekendValle: document.getElementById('weekendValle').checked,
                 holidays: document.getElementById('holidaysInput').value,
-                powerPriceP1Manual: p1El ? (parseFloat(p1El.value) || 0) : 0,
-                powerPriceP2Manual: p2El ? (parseFloat(p2El.value) || 0) : 0,
-                discountEnergyManual: parseFloat(document.getElementById('discountEnergyManual').value) || 0,
-                discountPowerManual: parseFloat(document.getElementById('discountPowerManual').value) || 0,
-                invoiceAdjustmentsManual: parseFloat(document.getElementById('invoiceAdjustmentsManual').value) || 0,
-                retailerMarginManual: parseFloat(document.getElementById('retailerMarginManual').value) || 0,
-                electricityTaxManual: parseFloat(document.getElementById('electricityTaxManual').value) || 0,
-                meterRentalManual: parseFloat(document.getElementById('meterRentalManual').value) || 0,
-                vatRateManual: parseFloat(document.getElementById('vatRateManual').value) || 0
+                powerPriceP1Manual: p1El ? (parseFloat(p1El.value) || 0) : 33.95,
+                powerPriceP2Manual: p2El ? (parseFloat(p2El.value) || 0) : 33.95,
+                discountEnergyManual: getVal('tabManualDiscountEnergy', 'discountEnergyManual', 0),
+                discountPowerManual: getVal('tabManualDiscountPower', 'discountPowerManual', 0),
+                invoiceAdjustmentsManual: getVal('tabManualInvoiceAdjustments', 'invoiceAdjustmentsManual', 0),
+                retailerMarginManual: getVal('tabManualRetailerMargin', 'retailerMarginManual', 0.142),
+                electricityTaxManual: getVal('tabManualElectricityTax', 'electricityTaxManual', 5.11),
+                meterRentalManual: getVal('tabManualMeterRental', 'meterRentalManual', 0.80),
+                vatRateManual: getVal('tabManualVatRate', 'vatRateManual', 21)
             };
         }
 
-      function loadProfileFromMemory(index) {
+function loadProfileFromMemory(index) {
             if (index < 0 || index >= 6) return;
             window.activeProfileIndex = index;
             const profile = window.tariffProfiles[index];
             
             document.getElementById('tariffProfileName').value = profile.name || "";
-            document.getElementById('pricePunta').value = profile.pricePunta;
-            document.getElementById('hoursPunta').value = profile.hoursPunta;
-            document.getElementById('priceLlano').value = profile.priceLlano;
-            document.getElementById('hoursLlano').value = profile.hoursLlano;
-            document.getElementById('priceValle').value = profile.priceValle;
-            document.getElementById('hoursValle').value = profile.hoursValle;
-            document.getElementById('weekendValle').checked = !!profile.weekendValle;
-            document.getElementById('holidaysInput').value = profile.holidays;
+            document.getElementById('pricePunta').value = profile.pricePunta !== undefined ? profile.pricePunta : 0.15;
+            document.getElementById('hoursPunta').value = profile.hoursPunta || "10,11,12,13,18,19,20,21";
+            document.getElementById('priceLlano').value = profile.priceLlano !== undefined ? profile.priceLlano : 0.10;
+            document.getElementById('hoursLlano').value = profile.hoursLlano || "8,9,14,15,16,17,22,23";
+            document.getElementById('priceValle').value = profile.priceValle !== undefined ? profile.priceValle : 0.06;
+            document.getElementById('hoursValle').value = profile.hoursValle || "0,1,2,3,4,5,6,7";
+            document.getElementById('weekendValle').checked = profile.weekendValle !== false;
+            document.getElementById('holidaysInput').value = profile.holidays || "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12";
 
-            // Actualización de P1 y P2 en ambas pestañas
-            document.getElementById('powerPriceP1Manual').value = profile.powerPriceP1Manual;
-            document.getElementById('powerPriceP2Manual').value = profile.powerPriceP2Manual;
+            const p1 = profile.powerPriceP1Manual !== undefined ? profile.powerPriceP1Manual : 33.95;
+            const p2 = profile.powerPriceP2Manual !== undefined ? profile.powerPriceP2Manual : 33.95;
+            document.getElementById('powerPriceP1Manual').value = p1;
+            document.getElementById('powerPriceP2Manual').value = p2;
             const tabP1 = document.getElementById('tabManualPowerP1');
-            if (tabP1) tabP1.value = profile.powerPriceP1Manual;
+            if (tabP1) tabP1.value = p1;
             const tabP2 = document.getElementById('tabManualPowerP2');
-            if (tabP2) tabP2.value = profile.powerPriceP2Manual;
+            if (tabP2) tabP2.value = p2;
             
-            document.getElementById('discountEnergyManual').value = profile.discountEnergyManual;
-            document.getElementById('discountPowerManual').value = profile.discountPowerManual;
-            document.getElementById('invoiceAdjustmentsManual').value = profile.invoiceAdjustmentsManual;
-            document.getElementById('retailerMarginManual').value = profile.retailerMarginManual;
-            document.getElementById('electricityTaxManual').value = profile.electricityTaxManual;
-            document.getElementById('meterRentalManual').value = profile.meterRentalManual;
-            document.getElementById('vatRateManual').value = profile.vatRateManual;
+            const setField = (id1, id2, val, def) => {
+                const finalVal = val !== undefined ? val : def;
+                const el1 = document.getElementById(id1);
+                if (el1) el1.value = finalVal;
+                const el2 = document.getElementById(id2);
+                if (el2) el2.value = finalVal;
+            };
+
+            setField('tabManualDiscountEnergy', 'discountEnergyManual', profile.discountEnergyManual, 0);
+            setField('tabManualDiscountPower', 'discountPowerManual', profile.discountPowerManual, 0);
+            setField('tabManualInvoiceAdjustments', 'invoiceAdjustmentsManual', profile.invoiceAdjustmentsManual, 0);
+            setField('tabManualRetailerMargin', 'retailerMarginManual', profile.retailerMarginManual, 0.142);
+            setField('tabManualElectricityTax', 'electricityTaxManual', profile.electricityTaxManual, 5.11);
+            setField('tabManualMeterRental', 'meterRentalManual', profile.meterRentalManual, 0.80);
+            setField('tabManualVatRate', 'vatRateManual', profile.vatRateManual, 21);
             
             document.getElementById('tariffProfileSelector').value = index;
             updateProfileDropdownNames();
@@ -4007,9 +4060,12 @@ const inputsToWatch = [
             'pvpcHighThreshold', 'pvpcLowThreshold',
             'powerP1', 'powerP2', 'powerPriceP1Pvpc', 'powerPriceP2Pvpc', 'powerPriceP1Manual', 'powerPriceP2Manual',
             'tabManualPowerP1', 'tabManualPowerP2',
+            'tabManualDiscountEnergy', 'tabManualDiscountPower', 'tabManualInvoiceAdjustments',
+            'tabManualRetailerMargin', 'tabManualElectricityTax', 'tabManualMeterRental', 'tabManualVatRate',
+            'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual',
+            'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual',
             'datadisUser', 'datadisPass', 'datadisCups', 'datadisStart', 'datadisEnd',
             'discountEnergyPvpc', 'discountPowerPvpc', 'invoiceAdjustmentsPvpc', 'retailerMarginPvpc', 'electricityTaxPvpc', 'meterRentalPvpc', 'vatRatePvpc',
-            'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual',
             'evEfficiency'
         ];
 
@@ -4017,27 +4073,41 @@ const inputsToWatch = [
             const el = document.getElementById(id);
             if (el) {
                 const triggerHandler = () => {
-                    // Sincronización en directo entre la pestaña Tramos y Potencia Contratada
-                    if (id === 'tabManualPowerP1') {
-                        const target = document.getElementById('powerPriceP1Manual');
-                        if (target) target.value = el.value;
-                    } else if (id === 'tabManualPowerP2') {
-                        const target = document.getElementById('powerPriceP2Manual');
-                        if (target) target.value = el.value;
-                    } else if (id === 'powerPriceP1Manual') {
-                        const target = document.getElementById('tabManualPowerP1');
-                        if (target) target.value = el.value;
-                    } else if (id === 'powerPriceP2Manual') {
-                        const target = document.getElementById('tabManualPowerP2');
-                        if (target) target.value = el.value;
+                    // Sincronización bidireccional entre la pestaña Tramos y la zona inferior de Parámetros
+                    const syncMap = {
+                        'tabManualPowerP1': 'powerPriceP1Manual',
+                        'powerPriceP1Manual': 'tabManualPowerP1',
+                        'tabManualPowerP2': 'powerPriceP2Manual',
+                        'powerPriceP2Manual': 'tabManualPowerP2',
+                        'tabManualDiscountEnergy': 'discountEnergyManual',
+                        'discountEnergyManual': 'tabManualDiscountEnergy',
+                        'tabManualDiscountPower': 'discountPowerManual',
+                        'discountPowerManual': 'tabManualDiscountPower',
+                        'tabManualInvoiceAdjustments': 'invoiceAdjustmentsManual',
+                        'invoiceAdjustmentsManual': 'tabManualInvoiceAdjustments',
+                        'tabManualRetailerMargin': 'retailerMarginManual',
+                        'retailerMarginManual': 'tabManualRetailerMargin',
+                        'tabManualElectricityTax': 'electricityTaxManual',
+                        'electricityTaxManual': 'tabManualElectricityTax',
+                        'tabManualMeterRental': 'meterRentalManual',
+                        'meterRentalManual': 'tabManualMeterRental',
+                        'tabManualVatRate': 'vatRateManual',
+                        'vatRateManual': 'tabManualVatRate'
+                    };
+
+                    if (syncMap[id]) {
+                        const target = document.getElementById(syncMap[id]);
+                        if (target && target.value !== el.value) target.value = el.value;
                     }
 
                     const isManualField = [
                         'pricePunta', 'hoursPunta', 'priceLlano', 'hoursLlano', 'priceValle', 'hoursValle',
                         'weekendValle', 'holidaysInput', 'powerPriceP1Manual', 'powerPriceP2Manual',
                         'tabManualPowerP1', 'tabManualPowerP2',
-                        'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual', 'retailerMarginManual',
-                        'electricityTaxManual', 'meterRentalManual', 'vatRateManual'
+                        'tabManualDiscountEnergy', 'tabManualDiscountPower', 'tabManualInvoiceAdjustments',
+                        'tabManualRetailerMargin', 'tabManualElectricityTax', 'tabManualMeterRental', 'tabManualVatRate',
+                        'discountEnergyManual', 'discountPowerManual', 'invoiceAdjustmentsManual',
+                        'retailerMarginManual', 'electricityTaxManual', 'meterRentalManual', 'vatRateManual'
                     ].includes(id);
 
                     if (isManualField) {
