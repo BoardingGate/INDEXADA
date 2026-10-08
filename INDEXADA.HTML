@@ -7022,6 +7022,16 @@ async function fetchCnmcRealOffers(params) {
             const annualKwhP2 = kwhP2 * annualFactor;
             const annualKwhP3 = kwhP3 * annualFactor;
 
+            // Generar enlace directo a la CNMC con todos los parámetros ya calculados
+            const cnmcDirectLink = `https://comparador.cnmc.gob.es/comparador/inicio?tipoOferta=E&peaje=2.0TD&p1=${p1Kw}&p2=${p2Kw}&cp=${cp}&cPunta=${Math.round(annualKwhP1)}&cLlano=${Math.round(annualKwhP2)}&cValle=${Math.round(annualKwhP3)}`;
+
+            // Actualizar el enlace del pie del modal con tus datos reales
+            const directLinkEl = document.querySelector('#cnmcModal a[href*="comparador.cnmc.gob.es"]');
+            if (directLinkEl) {
+                directLinkEl.href = cnmcDirectLink;
+                directLinkEl.innerHTML = `<span>🚀 Abrir CNMC con tus datos autorrellenados (${p1Kw}kW / ${(totalKwh * annualFactor).toFixed(0)} kWh/año) ↗</span>`;
+            }
+
             userSummary.innerHTML = `
                 <div>
                     <span class="text-[10px] text-gray-500 font-bold block uppercase">Consumo Analizado</span>
@@ -7135,15 +7145,19 @@ async function fetchCnmcRealOffers(params) {
 
                 offersList.innerHTML = html;
 
-            } catch (error) {
+     } catch (error) {
                 console.error("Error al consultar CNMC:", error);
+                const cnmcDirectLink = `https://comparador.cnmc.gob.es/comparador/inicio?tipoOferta=E&peaje=2.0TD&p1=${p1Kw}&p2=${p2Kw}&cp=${cp}&cPunta=${Math.round(annualKwhP1)}&cLlano=${Math.round(annualKwhP2)}&cValle=${Math.round(annualKwhP3)}`;
+
                 offersList.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl text-center text-xs space-y-2">
-                        <p class="font-bold">❌ Error al conectar con el comparador de la CNMC</p>
-                        <p class="text-[11px] text-gray-600">${error.message}</p>
+                    <div class="bg-amber-50 border border-amber-200 text-amber-900 p-5 rounded-xl text-center text-xs space-y-3">
+                        <p class="font-bold text-sm">🏛️ Comparador Oficial de la CNMC</p>
+                        <p class="text-[11px] text-gray-600 leading-relaxed max-w-lg mx-auto">
+                            El cortafuegos de la CNMC requiere acceso directo desde tu navegador. Hemos preparado la consulta con tus potencias (${p1Kw} kW / ${p2Kw} kW) y tu consumo anual estimado (${(totalKwh * annualFactor).toFixed(0)} kWh) listos para comparar.
+                        </p>
                         <div class="pt-2">
-                            <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="inline-block bg-red-600 text-white font-bold px-3 py-1.5 rounded-md text-xs hover:bg-red-700">
-                                Abrir comparador CNMC manualmente ↗
+                            <a href="${cnmcDirectLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition-all">
+                                <span>🚀 Abrir Comparador CNMC con tus datos ya cargados ↗</span>
                             </a>
                         </div>
                     </div>
