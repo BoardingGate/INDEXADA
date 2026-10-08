@@ -3453,229 +3453,7 @@
             resultsSection.classList.remove('hidden');
         }
 
-        // ========================================================
-        // --- PARSER INTELIGENTE DE OFERTAS DEL COMPARADOR CNMC ---
-        // ========================================================
-        window.parsedCnmcData = null;
-
-        function parseCnmcOfferText(text) {
-            if (!text || typeof text !== 'string') return null;
-
-            const cleanText = text.replace(/\r/g, '\n');
-            const result = {
-                name: "",
-                powerP1: null,
-                powerP2: null,
-                energyPunta: null,
-                energyLlano: null,
-                energyValle: null,
-                bonoSocialDaily: null
-            };
-
-            // 1. Detección de Nombre de la Oferta / Comercializadora
-            const nameMatch = cleanText.match(/logoComercializadora\s*([^\n\r]+)/i);
-            if (nameMatch && nameMatch[1]) {
-                result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
-            } else {
-                const descMatch = cleanText.match(/Descripción oferta\s*([^\n\r]+)/i);
-                if (descMatch && descMatch[1]) {
-                    result.name = descMatch[1].substring(0, 40).trim();
-                }
-            }
-
-            const parseDirectDecimal = (str) => {
-                if (!str) return null;
-                // Quitar puntos al final que a veces deja la CNMC ("41,208.") y convertir coma a punto
-                const clean = str.trim().replace(/\.+$/, '').replace(',', '.');
-                const val = parseFloat(clean);
-                return isNaN(val) ? null : val;
-            };
-
-            // 2. Extracción de Precios de Potencia
-            // Caso A: Formato en una sola línea (ej. "Precio Termino de Potencia Punta: 44,905 €/kW/año")
-            // Caso B: Formato por bloques (ej. "Precios Potencia:\nPunta: 41,208 €/kW/año")
-            const p1Match = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Potencia\s+Punta|Precios?\s+Potencia[^\n]*\n[^\n]*Punta)[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
-                         || cleanText.match(/(?:^|\n)\s*Punta[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
-            if (p1Match) {
-                result.powerP1 = parseDirectDecimal(p1Match[1]);
-            } else {
-                const p1Month = cleanText.match(/Potencia\s*(?:Punta|P1)?[^€]*\(([\d.,]+)\s*€\/kW\s*mes\)/i);
-                if (p1Month) {
-                    const mVal = parseDirectDecimal(p1Month[1]);
-                    if (mVal !== null) result.powerP1 = mVal * 12;
-                }
-            }
-
-            const p2Match = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Potencia\s+Valle|Precios?\s+Potencia[^\n]*\n[^\n]*Valle)[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
-                         || cleanText.match(/(?:^|\n)\s*Valle[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
-            if (p2Match) {
-                result.powerP2 = parseDirectDecimal(p2Match[1]);
-            } else {
-                const p2Month = cleanText.match(/Potencia\s*(?:Valle|P2)?[^€]*\(([\d.,]+)\s*€\/kW\s*mes\)/i);
-                if (p2Month) {
-                    const mVal = parseDirectDecimal(p2Month[1]);
-                    if (mVal !== null) result.powerP2 = mVal * 12;
-                }
-            }
-
-            if (result.powerP1 !== null && result.powerP2 === null) {
-                result.powerP2 = result.powerP1;
-            }
-
-            // 3. Extracción de Precios de Energía
-            // Caso A: "Precio Termino de Energía Punta: 0,193 €/kWh"
-            // Caso B: "Precios Energía:\nPunta: 0,21886 €/kWh"
-            const ePuntaMatch = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Energ[ií]a\s+Punta|Precios?\s+Energ[ií]a[^\n]*\n[^\n]*Punta)[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:^|\n)\s*Punta[:\s]+([\d.,]+)\s*€\/kWh/i);
-            const eLlanoMatch = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Energ[ií]a\s+Llano|Precios?\s+Energ[ií]a[^\n]*\n[^\n]*Llano)[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:^|\n)\s*Llano[:\s]+([\d.,]+)\s*€\/kWh/i);
-            const eValleMatch = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Energ[ií]a\s+Valle|Precios?\s+Energ[ií]a[^\n]*\n[^\n]*Valle)[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:^|\n)\s*Valle[:\s]+([\d.,]+)\s*€\/kWh/i);
-
-            if (ePuntaMatch) result.energyPunta = parseDirectDecimal(ePuntaMatch[1]);
-            if (eLlanoMatch) result.energyLlano = parseDirectDecimal(eLlanoMatch[1]);
-            if (eValleMatch) result.energyValle = parseDirectDecimal(eValleMatch[1]);
-
-            // Detección de Tarifa Plana / Precio Único
-            if (result.energyPunta === null && result.energyLlano === null && result.energyValle === null) {
-                const singleEnergyMatch = cleanText.match(/(?:T[eé]rmino\s+de\s+Energ[ií]a|Precio\s+de\s+la\s+energ[ií]a|Energ[ií]a)[:\s]+([\d.,]+)\s*€\/kWh/i);
-                if (singleEnergyMatch) {
-                    const singlePrice = parseDirectDecimal(singleEnergyMatch[1]);
-                    result.energyPunta = singlePrice;
-                    result.energyLlano = singlePrice;
-                    result.energyValle = singlePrice;
-                }
-            } else if (result.energyPunta !== null && result.energyLlano === null && result.energyValle === null) {
-                result.energyLlano = result.energyPunta;
-                result.energyValle = result.energyPunta;
-            }
-
-            // 4. Bono Social (€/mes convertido a €/día)
-            const bonoMatch = cleanText.match(/bono\s*social[^:]*:\s*(?:Coste\s*fijo\s*por\s*cliente)?\s*([\d.,]+)\s*€\/mes/i);
-            if (bonoMatch) {
-                const bonoMonthly = parseDirectDecimal(bonoMatch[1]);
-                if (bonoMonthly !== null) {
-                    result.bonoSocialDaily = parseFloat((bonoMonthly / 30).toFixed(4));
-                }
-            }
-
-            return result;
-        }
-
-        const cnmcProcessBtn = document.getElementById('cnmcProcessBtn');
-        const cnmcClearBtn = document.getElementById('cnmcClearBtn');
-        const cnmcApplyBtn = document.getElementById('cnmcApplyBtn');
-        const cnmcPasteInput = document.getElementById('cnmcPasteInput');
-        const cnmcPreviewBox = document.getElementById('cnmcPreviewBox');
-        const cnmcPreviewContent = document.getElementById('cnmcPreviewContent');
-        const cnmcStatusMsg = document.getElementById('cnmcStatusMsg');
-        const cnmcTargetProfile = document.getElementById('cnmcTargetProfile');
-
-        if (cnmcClearBtn) {
-            cnmcClearBtn.addEventListener('click', () => {
-                cnmcPasteInput.value = '';
-                cnmcPreviewBox.classList.add('hidden');
-                cnmcStatusMsg.classList.add('hidden');
-                window.parsedCnmcData = null;
-            });
-        }
-
-        if (cnmcProcessBtn) {
-            cnmcProcessBtn.addEventListener('click', () => {
-                const text = cnmcPasteInput.value.trim();
-                cnmcStatusMsg.classList.remove('hidden');
-
-                if (!text) {
-                    cnmcStatusMsg.textContent = '⚠️ Pega primero el texto copiado de la oferta de la CNMC.';
-                    cnmcStatusMsg.className = 'text-xs font-semibold text-amber-700 mt-1';
-                    cnmcPreviewBox.classList.add('hidden');
-                    return;
-                }
-
-                const parsed = parseCnmcOfferText(text);
-
-                const hasAnyEnergy = parsed.energyPunta !== null || parsed.energyValle !== null;
-                const hasAnyPower = parsed.powerP1 !== null || parsed.powerP2 !== null;
-
-                if (!hasAnyEnergy && !hasAnyPower) {
-                    cnmcStatusMsg.textContent = '❌ No se han detectado precios reconocibles de potencia ni energía en el texto pegado.';
-                    cnmcStatusMsg.className = 'text-xs font-semibold text-rose-700 mt-1';
-                    cnmcPreviewBox.classList.add('hidden');
-                    return;
-                }
-
-                window.parsedCnmcData = parsed;
-                cnmcStatusMsg.textContent = '✅ Datos reconocidos correctamente. Revisa la previsualización y pulsa en "Aplicar".';
-                cnmcStatusMsg.className = 'text-xs font-semibold text-emerald-700 mt-1';
-
-                const fmtP = (v) => v !== null ? `${v.toFixed(5)} €/kWh` : '<span class="text-gray-400">N/D</span>';
-                const fmtKw = (v) => v !== null ? `${v.toFixed(4)} €/kW/año` : '<span class="text-gray-400">N/D</span>';
-
-                cnmcPreviewContent.innerHTML = `
-                    <div class="p-2 bg-indigo-50/70 border border-indigo-200 rounded">
-                        <span class="block text-[9px] font-black uppercase text-indigo-700">Nombre Oferta</span>
-                        <span class="font-bold text-gray-950 truncate block" title="${parsed.name || 'Oferta CNMC'}">${parsed.name || 'Oferta CNMC'}</span>
-                    </div>
-                    <div class="p-2 bg-amber-50 border border-amber-200 rounded">
-                        <span class="block text-[9px] font-black uppercase text-amber-800">Potencia P1</span>
-                        <span class="font-mono font-bold text-gray-900">${fmtKw(parsed.powerP1)}</span>
-                    </div>
-                    <div class="p-2 bg-amber-50 border border-amber-200 rounded">
-                        <span class="block text-[9px] font-black uppercase text-amber-800">Potencia P2</span>
-                        <span class="font-mono font-bold text-gray-900">${fmtKw(parsed.powerP2)}</span>
-                    </div>
-                    <div class="p-2 bg-red-50 border border-red-200 rounded">
-                        <span class="block text-[9px] font-black uppercase text-red-800">Energía Punta</span>
-                        <span class="font-mono font-bold text-gray-900">${fmtP(parsed.energyPunta)}</span>
-                    </div>
-                    <div class="p-2 bg-yellow-50 border border-yellow-200 rounded">
-                        <span class="block text-[9px] font-black uppercase text-yellow-800">Energía Llano</span>
-                        <span class="font-mono font-bold text-gray-900">${fmtP(parsed.energyLlano)}</span>
-                    </div>
-                    <div class="p-2 bg-emerald-50 border border-emerald-200 rounded">
-                        <span class="block text-[9px] font-black uppercase text-emerald-800">Energía Valle</span>
-                        <span class="font-mono font-bold text-gray-900">${fmtP(parsed.energyValle)}</span>
-                    </div>
-                `;
-
-                cnmcPreviewBox.classList.remove('hidden');
-            });
-        }
-
-        if (cnmcApplyBtn) {
-            cnmcApplyBtn.addEventListener('click', () => {
-                if (!window.parsedCnmcData) return;
-
-                const targetVal = parseInt(cnmcTargetProfile.value, 10);
-                const targetIndex = targetVal === -1 ? window.activeProfileIndex : targetVal;
-
-                if (targetIndex < 0 || targetIndex >= 6) return;
-
-                const targetProf = window.tariffProfiles[targetIndex];
-                const d = window.parsedCnmcData;
-
-                if (d.name) targetProf.name = d.name;
-                if (d.powerP1 !== null) targetProf.powerPriceP1Manual = d.powerP1;
-                if (d.powerP2 !== null) targetProf.powerPriceP2Manual = d.powerP2;
-                if (d.energyPunta !== null) targetProf.pricePunta = d.energyPunta;
-                if (d.energyLlano !== null) targetProf.priceLlano = d.energyLlano;
-                if (d.energyValle !== null) targetProf.priceValle = d.energyValle;
-                if (d.bonoSocialDaily !== null) targetProf.retailerMarginManual = d.bonoSocialDaily;
-
-                loadProfileFromMemory(targetIndex);
-                saveConfig();
-                updateProfileDropdownNames();
-                updatePowerPriceHelpers();
-
-                if (window.rawCsvData) {
-                    processData(window.rawCsvData);
-                }
-
-                cnmcStatusMsg.textContent = `🎉 ¡Oferta aplicada con éxito en el Perfil ${targetIndex + 1}: "${targetProf.name}"!`;
-                cnmcStatusMsg.className = 'text-xs font-extrabold text-emerald-700 mt-1';
-            });
-        }
-
+  
         function renderDailyChart(stats) {
             const canvas = document.getElementById('chartDaily');
             if (!canvas) return;
@@ -6314,7 +6092,7 @@
                 }
             });
 
-            const formatHourList = (hours) => {
+        const formatHourList = (hours) => {
                 if (!hours.length) return "N/D";
                 const sorted = [...hours].sort((a, b) => a - b);
                 const ranges = [];
@@ -6323,19 +6101,20 @@
                     if (i < sorted.length && sorted[i] === prev + 1) {
                         prev = sorted[i];
                     } else {
-                   if (start === prev) {
-                        ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(start+1).padStart(2,'0')}:00h`);
-                    } else {
-                        ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(prev+1).padStart(2,'0')}:00h`);
-                    }
-                    if (i < sorted.length) {
-                        start = sorted[i];
-                        prev = sorted[i];
+                        if (start === prev) {
+                            ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(start+1).padStart(2,'0')}:00h`);
+                        } else {
+                            ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(prev+1).padStart(2,'0')}:00h`);
+                        }
+                        if (i < sorted.length) {
+                            start = sorted[i];
+                            prev = sorted[i];
+                        }
                     }
                 }
-            }
-            return ranges.join(', ');
-        };
+                return ranges.join(', ');
+       };
+
 
     const analyzeSegment = (kwhArr, costArr, countArr, label, isWeekendSegment) => {
         const hasData = countArr.some(c => c > 0);
