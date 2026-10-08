@@ -324,70 +324,13 @@
                             </div>
                         </div>
 
+
+                    <!-- Solapa 3: Tarifa Manual -->
                     <div id="tab-manual" class="tab-pane hidden">
-                        <!-- NUEVA HERRAMIENTA: IMPORTADOR AUTOMÁTICO DE OFERTAS CNMC -->
-                        <div class="mb-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-xs">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
-                                <div>
-                                    <h5 class="text-xs sm:text-sm font-bold text-blue-900 flex items-center gap-1.5">
-                                        <span>📋 Importar Oferta desde el Comparador CNMC</span>
-                                        <span class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase">Rápido</span>
-                                    </h5>
-                                    <p class="text-[11px] text-gray-600 mt-0.5">
-                                        Abre una oferta en la web de la CNMC, selecciona el texto de la pestaña <strong>Características</strong> con <kbd class="px-1 py-0.5 bg-white border rounded font-mono text-[10px]">Ctrl+A</kbd>, pégalo aquí y pulsa "Procesar".
-                                    </p>
-                                </div>
-                                <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-xs">
-                                    <span>Abrir Comparador CNMC</span>
-                                    <span>↗</span>
-                                </a>
-                            </div>
-
-                            <div class="space-y-3">
-                                <div>
-                                    <textarea id="cnmcPasteInput" rows="3" class="w-full p-2.5 border border-blue-200 rounded-lg text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400" placeholder="Pega aquí el texto copiado de la oferta en la CNMC (ej: 'Precio Termino de Potencia Punta: 44,905812 €/kW/año... Precio Termino de Energía Punta: 0,193000 €/kWh...')"></textarea>
-                                </div>
-                                
-                                <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <label for="cnmcTargetProfile" class="text-xs font-bold text-gray-700">Guardar en:</label>
-                                        <select id="cnmcTargetProfile" class="px-2.5 py-1.5 border border-gray-300 rounded-md text-xs font-bold text-blue-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="-1">Perfil actualmente activo</option>
-                                            <option value="0">Perfil 1</option>
-                                            <option value="1">Perfil 2</option>
-                                            <option value="2">Perfil 3</option>
-                                            <option value="3">Perfil 4</option>
-                                            <option value="4">Perfil 5</option>
-                                            <option value="5">Perfil 6</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button id="cnmcProcessBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-4 rounded-lg text-xs transition-colors shadow-xs flex items-center gap-1">
-                                            <span>⚡ Procesar y Extraer Datos</span>
-                                        </button>
-                                        <button id="cnmcClearBtn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-1.5 px-3 rounded-lg text-xs transition-colors">
-                                            Limpiar
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Previsualización de los datos parseados -->
-                                <div id="cnmcPreviewBox" class="hidden mt-3 p-3 bg-white rounded-lg border border-indigo-200 shadow-2xs">
-                                    <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-indigo-100">
-                                        <span class="text-[11px] font-black text-indigo-900 uppercase tracking-wide">Previsualización de Datos Detectados</span>
-                                        <button id="cnmcApplyBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors shadow-xs">
-                                            ✅ Aplicar al Perfil Seleccionado
-                                        </button>
-                                    </div>
-                                    <div id="cnmcPreviewContent" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-[11px]"></div>
-                                </div>
-                                <p id="cnmcStatusMsg" class="text-xs font-semibold mt-1 hidden"></p>
-                            </div>
-                        </div>
-
+                        <!-- 1. CONFIGURACIÓN DEL PERFIL ACTIVO Y PRECIOS DE POTENCIA -->
                         <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b pb-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil de Tarifa (1 de 6)</label>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Perfil de Tarifa ACTIVA (1 de 6)</label>
                                 <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
                                     <option value="0">Perfil 1: Tarifa Manual 1</option>
                                     <option value="1">Perfil 2: Tarifa Manual 2</option>
@@ -411,6 +354,7 @@
                             </div>
                         </div>
 
+                        <!-- 2. TRAMOS HORARIOS Y PRECIOS DE ENERGÍA -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                             <div class="p-4 bg-red-50 rounded-lg border border-red-100">
                                 <span class="font-bold text-red-800 text-sm block mb-2">TRAMO PUNTA</span>
@@ -450,7 +394,7 @@
                             </div>
                         </div>
 
-                        <!-- Parámetros particulares de Factura para este perfil -->
+                        <!-- 3. PARÁMETROS PARTICULARES DE FACTURA -->
                         <div class="mt-4 pt-3 border-t border-gray-200">
                             <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-2">
                                 Parámetros de Factura particulares de este Perfil
@@ -484,6 +428,91 @@
                                     <label class="block text-[9px] font-bold text-gray-500 mb-0.5">% Tipo IVA</label>
                                     <input type="number" id="tabManualVatRate" step="1" value="21" class="w-full px-2 py-1 border rounded text-xs text-center font-semibold bg-green-50/50">
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. DATOS PARA INTRODUCIR EN EL COMPARADOR DE LA CNMC -->
+                        <div id="cnmcExportValuesCard" class="mt-6 mb-5 bg-amber-50/70 border border-amber-200 rounded-xl p-4 shadow-xs">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                                <div>
+                                    <h5 class="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                                        <span>📤 Datos de tu Consumo para rellenar en el Comparador CNMC</span>
+                                        <span class="bg-amber-600 text-white text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase">Oficial 2.0TD</span>
+                                    </h5>
+                                    <p class="text-[11px] text-gray-600 mt-0.5">
+                                        Valores calculados por tramo regulado (P1 Punta, P2 Llano, P3 Valle). Haz clic en <span class="font-bold">📋</span> para copiar cualquier cifra directamente.
+                                    </p>
+                                </div>
+                                <div class="inline-flex rounded-lg border border-amber-300 p-0.5 bg-white shrink-0">
+                                    <button type="button" id="cnmcTimeModeAnnual" onclick="setCnmcTimeMode('annual')" class="px-2.5 py-1 text-[11px] font-bold rounded-md bg-amber-600 text-white transition-all shadow-xs">Anual (365 días)</button>
+                                    <button type="button" id="cnmcTimeModeMonthly" onclick="setCnmcTimeMode('monthly')" class="px-2.5 py-1 text-[11px] font-semibold text-gray-600 hover:text-amber-900 transition-all">Mes (30 días)</button>
+                                </div>
+                            </div>
+
+                            <div id="cnmcValuesGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                <div class="col-span-full text-center text-xs text-gray-500 py-2">
+                                    Carga un archivo CSV o descarga datos de Datadis para generar los valores del comparador.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. IMPORTADOR AUTOMÁTICO DE OFERTAS DESDE LA CNMC -->
+                        <div class="mb-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-xs">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                                <div>
+                                    <h5 class="text-xs sm:text-sm font-bold text-blue-900 flex items-center gap-1.5">
+                                        <span>📋 Importar Oferta desde el Comparador CNMC</span>
+                                        <span class="bg-blue-600 text-white text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase">Rápido</span>
+                                    </h5>
+                                    <p class="text-[11px] text-gray-600 mt-0.5">
+                                        Abre una oferta en la web de la CNMC, selecciona el texto de la pestaña <strong>Características</strong> con <kbd class="px-1 py-0.5 bg-white border rounded font-mono text-[10px]">Ctrl+A</kbd>, pégalo aquí y pulsa "Procesar".
+                                    </p>
+                                </div>
+                                <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-xs">
+                                    <span>Abrir Comparador CNMC</span>
+                                    <span>↗</span>
+                                </a>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <textarea id="cnmcPasteInput" rows="3" class="w-full p-2.5 border border-blue-200 rounded-lg text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400" placeholder="Pega aquí el texto copiado de la oferta en la CNMC (ej: 'Precio Termino de Potencia Punta: 44,905812 €/kW/año... Precio Termino de Energía Punta: 0,193000 €/kWh...')"></textarea>
+                                </div>
+                                
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <label for="cnmcTargetProfile" class="text-xs font-bold text-gray-700">Guardar en:</label>
+                                        <select id="cnmcTargetProfile" class="px-2.5 py-1.5 border border-gray-300 rounded-md text-xs font-bold text-blue-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="-1">Perfil activo actual</option>
+                                            <option value="0">Perfil 1</option>
+                                            <option value="1">Perfil 2</option>
+                                            <option value="2">Perfil 3</option>
+                                            <option value="3">Perfil 4</option>
+                                            <option value="4">Perfil 5</option>
+                                            <option value="5">Perfil 6</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button id="cnmcProcessBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-4 rounded-lg text-xs transition-colors shadow-xs flex items-center gap-1">
+                                            <span>⚡ Procesar y Extraer Datos</span>
+                                        </button>
+                                        <button id="cnmcClearBtn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-1.5 px-3 rounded-lg text-xs transition-colors">
+                                            Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Previsualización de los datos parseados -->
+                                <div id="cnmcPreviewBox" class="hidden mt-3 p-3 bg-white rounded-lg border border-indigo-200 shadow-2xs">
+                                    <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-indigo-100">
+                                        <span class="text-[11px] font-black text-indigo-900 uppercase tracking-wide">Previsualización de Datos Detectados</span>
+                                        <button id="cnmcApplyBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-3 rounded text-xs transition-colors shadow-xs">
+                                            ✅ Aplicar al Perfil Seleccionado
+                                        </button>
+                                    </div>
+                                    <div id="cnmcPreviewContent" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-[11px]"></div>
+                                </div>
+                                <p id="cnmcStatusMsg" class="text-xs font-semibold mt-1 hidden"></p>
                             </div>
                         </div>
                     </div>
