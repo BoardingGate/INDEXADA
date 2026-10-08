@@ -6896,11 +6896,12 @@ function updateHourlyConsumptionAiReport(data) {
         document.getElementById('closeCnmcModal')?.addEventListener('click', () => document.getElementById('cnmcModal').classList.add('hidden'));
         document.getElementById('closeCnmcModalBtn')?.addEventListener('click', () => document.getElementById('cnmcModal').classList.add('hidden'));
         document.getElementById('cancelAssignBtn')?.addEventListener('click', () => document.getElementById('assignProfileModal').classList.add('hidden'));
-
-        async function fetchCnmcRealOffers(params) {
+async function fetchCnmcRealOffers(params) {
             const { cp, powerP1, powerP2, annualKwhP1, annualKwhP2, annualKwhP3 } = params;
 
+            // Payload que espera tu Vercel (api/datadis-proxy)
             const cnmcPayload = {
+                action: 'cnmc', // Activa la bifurcación CNMC en api/datadis-proxy.js
                 tipoConsumidor: "DOMESTICO",
                 tipoOferta: "E",
                 codigoPostal: cp || "28001",
@@ -6909,45 +6910,22 @@ function updateHourlyConsumptionAiReport(data) {
                 potenciaP2: powerP2,
                 consumoPunta: Math.round(annualKwhP1),
                 consumoLlano: Math.round(annualKwhP2),
-                consumoValle: Math.round(annualKwhP3),
-                filtroPermanencia: false,
-                filtroFacturaElectronica: false
+                consumoValle: Math.round(annualKwhP3)
             };
 
-            let responseData = null;
+            // Llamamos a la URL correcta del proxy (la misma que usas para Datadis)
+            const response = await fetch(DATADIS_PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cnmcPayload)
+            });
 
-            try {
-                const response = await fetch(CNMC_API_PROXY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(cnmcPayload)
-                });
-
-                if (response.ok) {
-                    responseData = await response.json();
-                } else {
-                    throw new Error(`Proxy error code: ${response.status}`);
-                }
-            } catch (err) {
-                console.warn("Proxy primario no disponible, usando fallback CORS...", err);
-                const directCnmcUrl = 'https://comparador.cnmc.gob.es/comparador/rest/ofertas/electricidad/buscar';
-                const proxyUrl = `${CORS_FALLBACK_PROXY}${encodeURIComponent(directCnmcUrl)}`;
-                
-                const response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(cnmcPayload)
-                });
-
-                if (!response.ok) {
-                    throw new Error("No se ha podido conectar con el comparador de la CNMC.");
-                }
-                responseData = await response.json();
+            if (!response.ok) {
+                const errJson = await response.json().catch(() => ({}));
+                throw new Error(errJson.error || `Error del proxy (código ${response.status})`);
             }
 
+            const responseData = await response.json();
             return parseCnmcOffers(responseData);
         }
 
