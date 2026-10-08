@@ -297,7 +297,7 @@
                         </div>
                     </div>
 
-<!-- Solapa 3: Tarifa Manual -->
+                     <!-- Solapa 3: Tarifa Manual -->
                     <div id="tab-manual" class="tab-pane hidden">
                         <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b pb-4">
                             <div>
@@ -1185,6 +1185,69 @@
                 <div class="relative h-[260px] sm:h-[400px] md:h-[520px] w-full">
                     <canvas id="dayConsumHourlyChart"></canvas>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- MODAL PRINCIPAL: TOP 10 OFERTAS OFICIALES CNMC CON IA  -->
+    <!-- ======================================================= -->
+    <div id="cnmcModal" class="hidden fixed inset-0 bg-gray-950/75 backdrop-blur-xs z-[70] flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-gray-200">
+            <div class="p-4 bg-gradient-to-r from-indigo-900 to-slate-900 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base flex items-center gap-2">
+                        <span>🏛️ Comparador Oficial CNMC - Top 10 Mejores Ofertas</span>
+                    </h3>
+                    <p class="text-[11px] text-indigo-200 mt-0.5" id="cnmcModalSubtitle">
+                        Calculando coste real proyectado sobre tus lecturas de consumo...
+                    </p>
+                </div>
+                <button id="closeCnmcModal" class="text-gray-300 hover:text-white text-2xl font-bold p-1 leading-none">&times;</button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 bg-gray-50 space-y-4">
+                <div id="cnmcUserSummary" class="bg-white p-3 rounded-xl border border-gray-200 shadow-xs grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-center"></div>
+                <div id="cnmcOffersList" class="space-y-3">
+                    <div class="text-center py-8 text-gray-500 text-xs">
+                        ⏳ Analizando consumos y contrastando con las tarifas de la CNMC...
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-gray-100 border-t flex flex-wrap justify-between items-center gap-2 shrink-0">
+                <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1 font-semibold">
+                    <span>Acceso directo al portal oficial CNMC ↗</span>
+                </a>
+                <button id="closeCnmcModalBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1.5 px-4 rounded-lg text-xs transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- MODAL SECUNDARIO: ASIGNAR TARIFA A UNO DE LOS 6 PERFILES -->
+    <!-- ======================================================= -->
+    <div id="assignProfileModal" class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5 border border-gray-200 space-y-4">
+            <h4 class="font-bold text-sm text-gray-900">📥 Importar Oferta Seleccionada</h4>
+            <p class="text-xs text-gray-600 leading-relaxed" id="assignModalTariffDesc">
+                ¿En qué perfil de tarifa manual deseas guardar estos precios?
+            </p>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Seleccionar Perfil Destino (1 al 6):</label>
+                <select id="targetProfileSelect" class="w-full px-3 py-2 border rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t">
+                <button id="cancelAssignBtn" type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-1.5 px-3 rounded-md text-xs">
+                    Cancelar
+                </button>
+                <button id="confirmAssignBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-4 rounded-md text-xs">
+                    Guardar en Perfil
+                </button>
             </div>
         </div>
     </div>
@@ -6798,7 +6861,370 @@ function updateHourlyConsumptionAiReport(data) {
                 }
             });
         }
+
+
+
+        // ===================================================================
+        // MÓDULO CNMC: CONSULTA EN VIVO, CÁLCULO Y ASIGNACIÓN A PERFILES
+        // ===================================================================
+        const CNMC_API_PROXY_URL = 'https://datadis-proxy.vercel.app/api/cnmc-proxy';
+        const CORS_FALLBACK_PROXY = 'https://api.allorigins.win/raw?url=';
+        window.lastEvaluatedOffers = [];
+        window.selectedCnmcOfferToImport = null;
+
+        document.getElementById('searchCnmcRatesBtn')?.addEventListener('click', runCnmcComparator);
+        document.getElementById('closeCnmcModal')?.addEventListener('click', () => document.getElementById('cnmcModal').classList.add('hidden'));
+        document.getElementById('closeCnmcModalBtn')?.addEventListener('click', () => document.getElementById('cnmcModal').classList.add('hidden'));
+        document.getElementById('cancelAssignBtn')?.addEventListener('click', () => document.getElementById('assignProfileModal').classList.add('hidden'));
+
+        async function fetchCnmcRealOffers(params) {
+            const { cp, powerP1, powerP2, annualKwhP1, annualKwhP2, annualKwhP3 } = params;
+
+            const cnmcPayload = {
+                tipoConsumidor: "DOMESTICO",
+                tipoOferta: "E",
+                codigoPostal: cp || "28001",
+                peaje: "2.0TD",
+                potenciaP1: powerP1,
+                potenciaP2: powerP2,
+                consumoPunta: Math.round(annualKwhP1),
+                consumoLlano: Math.round(annualKwhP2),
+                consumoValle: Math.round(annualKwhP3),
+                filtroPermanencia: false,
+                filtroFacturaElectronica: false
+            };
+
+            let responseData = null;
+
+            try {
+                const response = await fetch(CNMC_API_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cnmcPayload)
+                });
+
+                if (response.ok) {
+                    responseData = await response.json();
+                } else {
+                    throw new Error(`Proxy error code: ${response.status}`);
+                }
+            } catch (err) {
+                console.warn("Proxy primario no disponible, usando fallback CORS...", err);
+                const directCnmcUrl = 'https://comparador.cnmc.gob.es/comparador/rest/ofertas/electricidad/buscar';
+                const proxyUrl = `${CORS_FALLBACK_PROXY}${encodeURIComponent(directCnmcUrl)}`;
+                
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(cnmcPayload)
+                });
+
+                if (!response.ok) {
+                    throw new Error("No se ha podido conectar con el comparador de la CNMC.");
+                }
+                responseData = await response.json();
+            }
+
+            return parseCnmcOffers(responseData);
+        }
+
+        function parseCnmcOffers(rawCnmcData) {
+            if (!rawCnmcData) return [];
+
+            const items = rawCnmcData.ofertas || rawCnmcData.resultado || (Array.isArray(rawCnmcData) ? rawCnmcData : []);
+
+            return items.map(item => {
+                let p1 = parseFloat(item.precioEnergiaPunta ?? item.terminoEnergiaP1 ?? item.precioEnergia ?? item.p1 ?? 0);
+                let p2 = parseFloat(item.precioEnergiaLlano ?? item.terminoEnergiaP2 ?? item.p2 ?? p1);
+                let p3 = parseFloat(item.precioEnergiaValle ?? item.terminoEnergiaP3 ?? item.p3 ?? p1);
+
+                if (p1 > 5) p1 = p1 / 1000;
+                if (p2 > 5) p2 = p2 / 1000;
+                if (p3 > 5) p3 = p3 / 1000;
+
+                let potP1 = parseFloat(item.precioPotenciaPunta ?? item.terminoPotenciaP1 ?? item.potenciaP1 ?? 33.95);
+                let potP2 = parseFloat(item.precioPotenciaValle ?? item.terminoPotenciaP2 ?? item.potenciaP2 ?? 15.00);
+
+                if (potP1 < 1.0) potP1 = potP1 * 365;
+                if (potP2 < 1.0) potP2 = potP2 * 365;
+
+                return {
+                    id: item.idOferta || item.id || String(Math.random()),
+                    name: item.nombreOferta || item.nombre || "Tarifa 2.0TD Mercado Libre",
+                    company: item.comercializadora || item.empresa || "Mercado Libre",
+                    pPunta: p1,
+                    pLlano: p2,
+                    pValle: p3,
+                    powerP1: potP1,
+                    powerP2: potP2,
+                    marginDaily: parseFloat(item.costeFijoDiario ?? item.cuotaFija ?? 0.10),
+                    discountEnergy: parseFloat(item.descuentoEnergia ?? 0),
+                    discountPower: parseFloat(item.descuentoPotencia ?? 0),
+                    permanence: item.permanencia ? "Con permanencia" : "Sin permanencia"
+                };
+            }).filter(o => o.pPunta > 0);
+        }
+
+        async function runCnmcComparator() {
+            const modal = document.getElementById('cnmcModal');
+            const userSummary = document.getElementById('cnmcUserSummary');
+            const offersList = document.getElementById('cnmcOffersList');
+            const modalSubtitle = document.getElementById('cnmcModalSubtitle');
+            modal.classList.remove('hidden');
+
+            const data = window.lastFilteredData || window.rawCsvData;
+            if (!data || data.length === 0) {
+                offersList.innerHTML = `
+                    <div class="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-center text-xs">
+                        ⚠️ No hay lecturas cargadas. Sube un archivo CSV o importa desde Datadis para evaluar las tarifas sobre tus consumos reales.
+                    </div>
+                `;
+                return;
+            }
+
+            offersList.innerHTML = `
+                <div class="text-center py-12 text-gray-600 text-xs flex flex-col items-center gap-3">
+                    <span class="animate-spin text-2xl">⏳</span>
+                    <span>Conectando con el comparador de la CNMC y obteniendo ofertas vigentes en tiempo real...</span>
+                </div>
+            `;
+
+            const p1Kw = parseFloat(document.getElementById('powerP1').value) || 4.60;
+            const p2Kw = parseFloat(document.getElementById('powerP2').value) || 4.60;
+            const cp = window.detectedPostalCode || "28001";
+
+            let kwhP1 = 0, kwhP2 = 0, kwhP3 = 0, totalKwh = 0;
+            const datesSet = new Set();
+
+            data.forEach(item => {
+                datesSet.add(item.fechaStr);
+                const k = item.consumo || 0;
+                totalKwh += k;
+
+                const parts = item.fechaStr.split('-');
+                const dObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+                const h = item.hora;
+
+                if (isWe) {
+                    kwhP3 += k;
+                } else {
+                    if ((h >= 10 && h < 14) || (h >= 18 && h < 22)) kwhP1 += k;
+                    else if ((h >= 8 && h < 10) || (h >= 14 && h < 18) || (h >= 22 && h < 24)) kwhP2 += k;
+                    else kwhP3 += k;
+                }
+            });
+
+            const numDays = datesSet.size || 1;
+            const annualFactor = 365 / numDays;
+            const annualKwhP1 = kwhP1 * annualFactor;
+            const annualKwhP2 = kwhP2 * annualFactor;
+            const annualKwhP3 = kwhP3 * annualFactor;
+
+            userSummary.innerHTML = `
+                <div>
+                    <span class="text-[10px] text-gray-500 font-bold block uppercase">Consumo Analizado</span>
+                    <span class="text-xs sm:text-sm font-black text-gray-950 font-mono">${totalKwh.toFixed(1)} kWh (${numDays} días)</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-gray-500 font-bold block uppercase">Reparto P1 / P2 / P3</span>
+                    <span class="text-xs sm:text-sm font-bold text-gray-900 font-mono">
+                        ${totalKwh > 0 ? (kwhP1/totalKwh*100).toFixed(0) : 0}% / ${totalKwh > 0 ? (kwhP2/totalKwh*100).toFixed(0) : 0}% / ${totalKwh > 0 ? (kwhP3/totalKwh*100).toFixed(0) : 0}%
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-gray-500 font-bold block uppercase">Potencia P1 / P2</span>
+                    <span class="text-xs sm:text-sm font-bold text-indigo-900 font-mono">${p1Kw.toFixed(2)} / ${p2Kw.toFixed(2)} kW</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-gray-500 font-bold block uppercase">Extrapolación Anual</span>
+                    <span class="text-xs sm:text-sm font-bold text-emerald-800 font-mono">${(totalKwh * annualFactor).toFixed(0)} kWh/año</span>
+                </div>
+            `;
+
+            try {
+                const realOffers = await fetchCnmcRealOffers({
+                    cp,
+                    powerP1: p1Kw,
+                    powerP2: p2Kw,
+                    annualKwhP1,
+                    annualKwhP2,
+                    annualKwhP3
+                });
+
+                if (!realOffers || realOffers.length === 0) {
+                    throw new Error("No se recibieron ofertas válidas del comparador en este momento.");
+                }
+
+                const evaluated = realOffers.map(offer => {
+                    const tempProf = {
+                        name: offer.name,
+                        pricePunta: offer.pPunta,
+                        priceLlano: offer.pLlano,
+                        priceValle: offer.pValle,
+                        hoursPunta: "10,11,12,13,18,19,20,21",
+                        hoursLlano: "8,9,14,15,16,17,22,23",
+                        hoursValle: "0,1,2,3,4,5,6,7",
+                        weekendValle: true,
+                        holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                        powerPriceP1Manual: offer.powerP1,
+                        powerPriceP2Manual: offer.powerP2,
+                        discountEnergyManual: offer.discountEnergy,
+                        discountPowerManual: offer.discountPower,
+                        retailerMarginManual: offer.marginDaily,
+                        invoiceAdjustmentsManual: 0,
+                        electricityTaxManual: 5.11,
+                        meterRentalManual: 0.80,
+                        vatRateManual: 21
+                    };
+
+                    const calc = calculateProfileInvoice(tempProf, data, numDays, totalKwh, p1Kw, p2Kw, false, 0, 0, 0);
+                    return {
+                        ...offer,
+                        calculated: calc,
+                        totalCost: calc.grandTotal,
+                        avgKwhPrice: calc.avgKwhPrice
+                    };
+                });
+
+                evaluated.sort((a, b) => a.totalCost - b.totalCost);
+                const top10 = evaluated.slice(0, 10);
+                window.lastEvaluatedOffers = top10;
+
+                modalSubtitle.textContent = `Se han contrastado ${evaluated.length} ofertas vigentes. Mostrando el Top 10 más económico:`;
+
+                let html = '';
+                top10.forEach((item, index) => {
+                    const medal = index === 0 ? '🥇 Mejor Opción' : index === 1 ? '🥈 2º Puesto' : index === 2 ? '🥉 3º Puesto' : `#${index + 1}`;
+                    const borderClass = index === 0 ? 'border-2 border-emerald-500 bg-emerald-50/40' : 'border border-gray-200 bg-white';
+
+                    html += `
+                        <div class="p-3.5 sm:p-4 rounded-xl shadow-xs transition-all hover:shadow-md ${borderClass} flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${index === 0 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-800'}">
+                                        ${medal}
+                                    </span>
+                                    <h5 class="text-xs sm:text-sm font-bold text-gray-900 truncate">${item.name}</h5>
+                                    <span class="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">${item.company}</span>
+                                    <span class="text-[9px] text-gray-400 italic">${item.permanence}</span>
+                                </div>
+
+                                <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-gray-600 font-mono">
+                                    <div>Punta (P1): <strong class="text-red-700">${item.pPunta.toFixed(5)} €</strong></div>
+                                    <div>Llano (P2): <strong class="text-amber-700">${item.pLlano.toFixed(5)} €</strong></div>
+                                    <div>Valle (P3): <strong class="text-emerald-700">${item.pValle.toFixed(5)} €</strong></div>
+                                    <div>Pot. P1/P2: <strong>${item.powerP1.toFixed(2)} / ${item.powerP2.toFixed(2)} €</strong></div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
+                                <div class="text-left md:text-right">
+                                    <span class="text-[9px] text-gray-400 font-bold uppercase block">Factura Estimada (${numDays}d)</span>
+                                    <span class="text-base sm:text-lg font-black text-gray-950 font-mono">${item.totalCost.toFixed(2)} €</span>
+                                    <span class="text-[10px] text-blue-700 font-mono block">Med: ${item.avgKwhPrice.toFixed(5)} €/kWh</span>
+                                </div>
+                                <button type="button" onclick="promptAssignOffer(${index})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3.5 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-xs">
+                                    <span>📥 Aplicar a Perfil</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                offersList.innerHTML = html;
+
+            } catch (error) {
+                console.error("Error al consultar CNMC:", error);
+                offersList.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl text-center text-xs space-y-2">
+                        <p class="font-bold">❌ Error al conectar con el comparador de la CNMC</p>
+                        <p class="text-[11px] text-gray-600">${error.message}</p>
+                        <div class="pt-2">
+                            <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="inline-block bg-red-600 text-white font-bold px-3 py-1.5 rounded-md text-xs hover:bg-red-700">
+                                Abrir comparador CNMC manualmente ↗
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        window.promptAssignOffer = function(offerIndex) {
+            const offer = window.lastEvaluatedOffers[offerIndex];
+            if (!offer) return;
+
+            window.selectedCnmcOfferToImport = offer;
+
+            const descEl = document.getElementById('assignModalTariffDesc');
+            descEl.innerHTML = `Vas a importar <strong>"${offer.name}"</strong> de <strong>${offer.company}</strong> con precios:<br>
+            <span class="font-mono text-gray-800 text-[11px]">P1: ${offer.pPunta.toFixed(5)}€ | P2: ${offer.pLlano.toFixed(5)}€ | P3: ${offer.pValle.toFixed(5)}€</span>`;
+
+            const sel = document.getElementById('targetProfileSelect');
+            sel.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `Perfil ${i + 1}: ${window.tariffProfiles[i]?.name || 'Tarifa Manual ' + (i + 1)}`;
+                if (i === window.activeProfileIndex) opt.selected = true;
+                sel.appendChild(opt);
+            }
+
+            document.getElementById('assignProfileModal').classList.remove('hidden');
+        };
+
+        document.getElementById('confirmAssignBtn')?.addEventListener('click', () => {
+            const targetIdx = parseInt(document.getElementById('targetProfileSelect').value, 10);
+            const offer = window.selectedCnmcOfferToImport;
+            if (!offer || isNaN(targetIdx) || targetIdx < 0 || targetIdx >= 6) return;
+
+            window.tariffProfiles[targetIdx] = {
+                name: `${offer.company} - ${offer.name}`,
+                pricePunta: offer.pPunta,
+                hoursPunta: "10,11,12,13,18,19,20,21",
+                priceLlano: offer.pLlano,
+                hoursLlano: "8,9,14,15,16,17,22,23",
+                priceValle: offer.pValle,
+                hoursValle: "0,1,2,3,4,5,6,7",
+                weekendValle: true,
+                holidays: "01-01,06-01,01-05,15-08,12-10,01-11,06-12,08-12,25-12",
+                powerPriceP1Manual: offer.powerP1,
+                powerPriceP2Manual: offer.powerP2,
+                discountEnergyManual: offer.discountEnergy || 0,
+                discountPowerManual: offer.discountPower || 0,
+                invoiceAdjustmentsManual: 0,
+                retailerMarginManual: offer.marginDaily || 0.142,
+                electricityTaxManual: 5.11,
+                meterRentalManual: 0.80,
+                vatRateManual: 21
+            };
+
+            if (targetIdx === window.activeProfileIndex) {
+                loadProfileFromMemory(targetIdx);
+            } else {
+                updateProfileDropdownNames();
+            }
+
+            saveConfig();
+
+            document.getElementById('assignProfileModal').classList.add('hidden');
+            document.getElementById('cnmcModal').classList.add('hidden');
+
+            if (window.rawCsvData) {
+                processData(window.rawCsvData);
+            }
+
+            showStatus(`✅ Tarifa "${offer.name}" importada en el Perfil ${targetIdx + 1}.`, 'success');
+        });        
+
+
+
     </script>
+
+
 </body>
 </html>
               
