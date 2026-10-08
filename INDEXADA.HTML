@@ -7263,8 +7263,7 @@ async function fetchCnmcRealOffers(params) {
         });        
 
 
-   // =====================================================================
-        // EXTRACTOR Y PROCESADOR DE OFERTAS DEL LISTADO DE LA CNMC
+        // PROCESADOR DE OFERTAS REALES DE LA CNMC
         // =====================================================================
         document.getElementById('extractCnmcUrlBtn')?.addEventListener('click', async () => {
             const url = document.getElementById('cnmcListUrlInput')?.value.trim();
@@ -7277,7 +7276,7 @@ async function fetchCnmcRealOffers(params) {
             offersList.innerHTML = `
                 <div class="text-center py-12 text-gray-600 text-xs flex flex-col items-center gap-3">
                     <span class="animate-spin text-2xl">⏳</span>
-                    <span>Descargando y analizando todas las ofertas del listado de la CNMC con iA...</span>
+                    <span>Descargando y analizando las ofertas reales de la CNMC con iA...</span>
                 </div>
             `;
 
@@ -7291,82 +7290,67 @@ async function fetchCnmcRealOffers(params) {
                     })
                 });
 
-                if (!resp.ok) {
-                    const err = await resp.json().catch(() => ({}));
-                    throw new Error(err.error || `Error ${resp.status}`);
+                const data = await resp.json();
+
+                if (!resp.ok || data.error) {
+                    throw new Error(data.error || `Error del proxy (Código ${resp.status})`);
                 }
 
-                const data = await resp.json();
-                const htmlText = data.html || '';
+                const rawOffers = Array.isArray(data) ? data : (data.ofertas || data.listaOfertas || data.resultado || []);
 
-                const extractedOffers = parseCnmcHtmlOffers(htmlText);
+                if (!Array.isArray(rawOffers) || rawOffers.length === 0) {
+                    throw new Error("La CNMC no devolvió ninguna oferta para ese enlace o la sesión ha expirado.");
+                }
+
+                // Normalización de los datos devueltos por la API de la CNMC
+                const extractedOffers = rawOffers.map(item => {
+                    let p1 = parseFloat(item.precioEnergiaPunta ?? item.terminoEnergiaP1 ?? item.precioEnergia ?? item.p1 ?? 0);
+                    let p2 = parseFloat(item.precioEnergiaLlano ?? item.terminoEnergiaP2 ?? item.p2 ?? p1);
+                    let p3 = parseFloat(item.precioEnergiaValle ?? item.terminoEnergiaP3 ?? item.p3 ?? p1);
+
+                    if (p1 > 5) p1 /= 1000;
+                    if (p2 > 5) p2 /= 1000;
+                    if (p3 > 5) p3 /= 1000;
+
+                    let pot1 = parseFloat(item.precioPotenciaPunta ?? item.terminoPotenciaP1 ?? item.potenciaP1 ?? 33.95);
+                    let pot2 = parseFloat(item.precioPotenciaValle ?? item.terminoPotenciaP2 ?? item.potenciaP2 ?? 15.00);
+
+                    if (pot1 < 1.0) pot1 *= 365;
+                    if (pot2 < 1.0) pot2 *= 365;
+
+                    return {
+                        name: item.nombreOferta || item.nombre || "Tarifa 2.0TD",
+                        company: item.comercializadora || item.empresa || "Mercado Libre",
+                        pPunta: p1,
+                        pLlano: p2,
+                        pValle: p3,
+                        powerP1: pot1,
+                        powerP2: pot2,
+                        permanence: item.permanencia ? "Con permanencia" : "Sin permanencia"
+                    };
+                }).filter(o => o.pPunta > 0);
 
                 if (extractedOffers.length === 0) {
-                    throw new Error("No se detectaron ofertas en el HTML devuelto por la CNMC.");
+                    throw new Error("No se pudieron interpretar los precios de las ofertas devueltas por la CNMC.");
                 }
 
+                // Evalúa las ofertas reales contra tus consumos reales y muestra el Top 10
                 renderCnmcExtractedTop10(extractedOffers);
 
             } catch (err) {
-                alert('Error al extraer ofertas: ' + err.message);
-                offersList.innerHTML = `<div class="p-4 bg-red-50 text-red-700 text-xs rounded-xl text-center">❌ ${err.message}</div>`;
+                console.error("Error al procesar CNMC:", err);
+                offersList.innerHTML = `
+                    <div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl text-center space-y-1">
+                        <p class="font-bold">❌ Error al obtener las ofertas reales de la CNMC</p>
+                        <p class="text-[11px] text-gray-600">${err.message}</p>
+                    </div>
+                `;
             }
         });
 
-        function parseCnmcHtmlOffers(htmlString) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlString, 'text/html');
-            const offers = [];
+        
 
-            const cards = doc.querySelectorAll('.oferta-item, .card-oferta, tr.fila-oferta, .resultado-item, div[class*="oferta"]');
-
-            cards.forEach(card => {
-                const text = card.innerText || '';
-                if (!text.includes('€') || (!text.includes('kWh') && !text.includes('kW'))) return;
-
-                const titleEl = card.querySelector('.nombre-oferta, .titulo, h3, h4, strong');
-                const companyEl = card.querySelector('.comercializadora, .empresa, .logo-empresa');
-                
-                const name = titleEl ? titleEl.innerText.trim() : "Tarifa 2.0TD";
-                const company = companyEl ? companyEl.innerText.trim() : (text.split('\n')[0] || "Mercado Libre");
-
-                const pKwhMatches = text.match(/([0-9]+[.,][0-9]{3,5})\s*€\s*\/\s*kWh/gi) || [];
-                const pKwMatches = text.match(/([0-9]+[.,][0-9]{2,4})\s*€\s*\/\s*kW/gi) || [];
-
-                let p1 = 0.15, p2 = 0.10, p3 = 0.06;
-                if (pKwhMatches.length >= 3) {
-                    p1 = parseFloat(pKwhMatches[0].replace(',', '.'));
-                    p2 = parseFloat(pKwhMatches[1].replace(',', '.'));
-                    p3 = parseFloat(pKwhMatches[2].replace(',', '.'));
-                } else if (pKwhMatches.length === 1) {
-                    p1 = parseFloat(pKwhMatches[0].replace(',', '.'));
-                    p2 = p1; p3 = p1;
-                }
-
-                let pot1 = 33.95, pot2 = 15.00;
-                if (pKwMatches.length >= 2) {
-                    pot1 = parseFloat(pKwMatches[0].replace(',', '.'));
-                    pot2 = parseFloat(pKwMatches[1].replace(',', '.'));
-                    if (pot1 < 1.0) pot1 *= 365;
-                    if (pot2 < 1.0) pot2 *= 365;
-                }
-
-                offers.push({
-                    name: name,
-                    company: company,
-                    pPunta: p1,
-                    pLlano: p2,
-                    pValle: p3,
-                    powerP1: pot1,
-                    powerP2: pot2,
-                    permanence: text.includes('Sin permanencia') ? 'Sin permanencia' : 'Consultar condiciones'
-                });
-            });
-
-            return offers;
-        }
-
-        function renderCnmcExtractedTop10(offers) {
+function renderCnmcExtractedTop10(offers) {
             const data = window.lastFilteredData || window.rawCsvData;
             const p1Kw = parseFloat(document.getElementById('powerP1').value) || 4.60;
             const p2Kw = parseFloat(document.getElementById('powerP2').value) || 4.60;
@@ -7418,16 +7402,18 @@ async function fetchCnmcRealOffers(params) {
                                 <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${index === 0 ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-800'}">${medal}</span>
                                 <h5 class="text-xs sm:text-sm font-bold text-gray-900 truncate">${item.name}</h5>
                                 <span class="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">${item.company}</span>
+                                <span class="text-[9px] text-gray-400 italic">${item.permanence}</span>
                             </div>
                             <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-gray-600 font-mono">
-                                <div>Punta: <strong class="text-red-700">${item.pPunta.toFixed(5)}€</strong></div>
-                                <div>Llano: <strong class="text-amber-700">${item.pLlano.toFixed(5)}€</strong></div>
-                                <div>Valle: <strong class="text-emerald-700">${item.pValle.toFixed(5)}€</strong></div>
-                                <div>Pot: <strong>${item.powerP1.toFixed(2)} / ${item.powerP2.toFixed(2)}€</strong></div>
+                                <div>Punta: <strong class="text-red-700">${item.pPunta.toFixed(5)} €</strong></div>
+                                <div>Llano: <strong class="text-amber-700">${item.pLlano.toFixed(5)} €</strong></div>
+                                <div>Valle: <strong class="text-emerald-700">${item.pValle.toFixed(5)} €</strong></div>
+                                <div>Pot: <strong>${item.powerP1.toFixed(2)} / ${item.powerP2.toFixed(2)} €</strong></div>
                             </div>
                         </div>
                         <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
                             <div class="text-left md:text-right">
+                                <span class="text-[9px] text-gray-400 font-bold uppercase block">Coste Estimado (${numDays}d)</span>
                                 <span class="text-base sm:text-lg font-black text-gray-950 font-mono">${item.totalCost.toFixed(2)} €</span>
                                 <span class="text-[10px] text-blue-700 font-mono block">(${item.avgKwhPrice.toFixed(5)} €/kWh)</span>
                             </div>
