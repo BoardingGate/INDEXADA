@@ -122,9 +122,7 @@
                     <button type="button" onclick="switchTab('cluster-config', 'tab-manual')" data-tab-target="tab-manual" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
                         <span>⚡ Tarifa por Tramos</span>
                     </button>
-                    <button type="button" onclick="switchTab('cluster-config', 'tab-power')" data-tab-target="tab-power" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
-                        <span>🔌 Potencia Contratada</span>
-                    </button>
+
                 </div>
 
                 <!-- Contenidos de las Solapas -->
@@ -297,10 +295,10 @@
                         </div>
                     </div>
 
-                    <!-- Solapa 3: Tarifa Manual -->
+                    <!-- Solapa 3: Tarifa Manual y Potencias -->
                     <div id="tab-manual" class="tab-pane hidden">
-                        <!-- 1. CONFIGURACIÓN DEL PERFIL ACTIVO Y PRECIOS DE POTENCIA -->
-                        <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b pb-4">
+                        <!-- 1. CONFIGURACIÓN DEL PERFIL ACTIVO -->
+                        <div class="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b pb-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Perfil de Tarifa ACTIVA (1 de 6)</label>
                                 <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
@@ -312,17 +310,9 @@
                                     <option value="5">Perfil 6: Tarifa Manual 6</option>
                                 </select>
                             </div>
-                            <div>
+                            <div class="lg:col-span-3">
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
                                 <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Precio Potencia P1 (€/kW/año)</label>
-                                <input type="number" id="tabManualPowerP1" step="0.0001" value="33.95" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold text-gray-800 text-sm bg-amber-50">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Precio Potencia P2 (€/kW/año)</label>
-                                <input type="number" id="tabManualPowerP2" step="0.0001" value="33.95" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold text-gray-800 text-sm bg-amber-50">
                             </div>
                         </div>
 
@@ -353,7 +343,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t font-semibold text-gray-700">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 pb-4 border-b font-semibold text-gray-700">
                             <div>
                                 <label class="flex items-center space-x-2 text-sm font-medium mt-2">
                                     <input type="checkbox" id="weekendValle" checked class="rounded text-green-600 focus:ring-green-500">
@@ -366,8 +356,48 @@
                             </div>
                         </div>
 
-                        <!-- 3. PARÁMETROS PARTICULARES DE FACTURA -->
-                        <div class="mt-4 pt-3 border-t border-gray-200">
+                        <!-- 3. POTENCIAS CONTRATADAS Y PRECIOS DE POTENCIA (REUBICADO AQUÍ) -->
+                        <div class="pt-4 pb-4 border-b">
+                            <span class="text-[11px] font-bold text-indigo-900 uppercase tracking-wide block mb-1">
+                                🔌 Potencias Contratadas y Términos de Potencia Anuales
+                            </span>
+                            <p class="text-[11px] text-gray-500 mb-3">Define los kW contratados en tu suministro y los precios anuales correspondientes a esta tarifa manual vs la regulada PVPC.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (kW)</label>
+                                    <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-2.5 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (kW)</label>
+                                    <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-2.5 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
+                                    <input type="number" id="tabManualPowerP1" step="0.0001" value="33.95" class="w-full px-2.5 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50 font-semibold">
+                                    <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
+                                    <input type="number" id="tabManualPowerP2" step="0.0001" value="33.95" class="w-full px-2.5 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50 font-semibold">
+                                    <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
+                                    <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-2.5 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
+                                    <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-2.5 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
+                                </div>
+                            </div>
+                            <div id="powerDiffContainer" class="mt-3 text-center text-xs"></div>
+                        </div>
+
+                        <!-- 4. PARÁMETROS PARTICULARES DE FACTURA -->
+                        <div class="mt-4 pt-2 border-b pb-5">
                             <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wide block mb-2">
                                 Parámetros de Factura particulares de este Perfil
                             </span>
@@ -403,8 +433,8 @@
                             </div>
                         </div>
 
-                        <!-- 4. DATOS PARA INTRODUCIR EN EL COMPARADOR DE LA CNMC -->
-                        <div id="cnmcExportValuesCard" class="mt-6 mb-5 bg-amber-50/70 border border-amber-200 rounded-xl p-4 shadow-xs">
+                        <!-- 5. DATOS PARA INTRODUCIR EN EL COMPARADOR DE LA CNMC -->
+                        <div id="cnmcExportValuesCard" class="mt-5 mb-5 bg-amber-50/70 border border-amber-200 rounded-xl p-4 shadow-xs">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                                 <div>
                                     <h5 class="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
@@ -428,7 +458,7 @@
                             </div>
                         </div>
 
-                        <!-- 5. IMPORTADOR AUTOMÁTICO DE OFERTAS DESDE LA CNMC -->
+                        <!-- 6. IMPORTADOR AUTOMÁTICO DE OFERTAS DESDE LA CNMC -->
                         <div class="mb-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-xs">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
                                 <div>
@@ -474,7 +504,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Previsualización de los datos parseados -->
                                 <div id="cnmcPreviewBox" class="hidden mt-3 p-3 bg-white rounded-lg border border-indigo-200 shadow-2xs">
                                     <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-indigo-100">
                                         <span class="text-[11px] font-black text-indigo-900 uppercase tracking-wide">Previsualización de Datos Detectados</span>
@@ -489,42 +518,7 @@
                         </div>
                     </div>
 
-                    <!-- Solapa 4: Potencia -->
-                    <div id="tab-power" class="tab-pane hidden">
-                        <p class="text-xs text-gray-500 mb-4">Define los kW contratados y los precios anuales correspondientes. El coste se calculará proporcionalmente al número de días del archivo.</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P1 (Punta kW)</label>
-                                <input type="number" id="powerP1" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">Potencia P2 (Valle kW)</label>
-                                <input type="number" id="powerP2" step="0.01" value="4.60" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">P1 PVPC (€/kW/año)</label>
-                                <input type="number" id="powerPriceP1Pvpc" step="0.0001" value="30.8174" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <p id="helperP1Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">P2 PVPC (€/kW/año)</label>
-                                <input type="number" id="powerPriceP2Pvpc" step="0.0001" value="0.7274" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                <p id="helperP2Pvpc" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">P1 Manual (€/kW/año)</label>
-                                <input type="number" id="powerPriceP1Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
-                                <p id="helperP1Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">P2 Manual (€/kW/año)</label>
-                                <input type="number" id="powerPriceP2Manual" step="0.0001" value="33.95" class="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-amber-50">
-                                <p id="helperP2Manual" class="text-[10px] text-gray-500 mt-1 leading-tight"></p>
-                            </div>   
-                        </div>
-                        <div id="powerDiffContainer" class="mt-4 pt-3 border-t border-indigo-100 text-center text-xs"></div>
-                    </div>
-                </div>
+ 
             </div>
         </div>
 
@@ -1637,15 +1631,17 @@
             }`;
         }
 
-        function updatePowerPriceHelpers() {
+          function updatePowerPriceHelpers() {
             const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
             const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
 
             const p1Pvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
             const p2Pvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
-            const p1Manual = parseFloat(document.getElementById('powerPriceP1Manual').value) || 0;
-            const p2Manual = parseFloat(document.getElementById('powerPriceP2Manual').value) || 0;
-
+            
+            // Leemos del input tabManualPower o su fallback
+            const p1Manual = parseFloat(document.getElementById('tabManualPowerP1')?.value || document.getElementById('powerPriceP1Manual')?.value) || 0;
+            const p2Manual = parseFloat(document.getElementById('tabManualPowerP2')?.value || document.getElementById('powerPriceP2Manual')?.value) || 0;
+    
             const renderHelper = (elementId, annualPricePerKw, kwValue) => {
                 const el = document.getElementById(elementId);
                 if (!el) return;
@@ -3476,7 +3472,7 @@
                 bonoSocialDaily: null
             };
 
-            // 1. Detección de Nombre y Comercializadora
+            // 1. Detección de Nombre de la Oferta / Comercializadora
             const nameMatch = cleanText.match(/logoComercializadora\s*([^\n\r]+)/i);
             if (nameMatch && nameMatch[1]) {
                 result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
@@ -3487,40 +3483,37 @@
                 }
             }
 
-            // Función auxiliar para extraer números con comas españolas
-            const parseNum = (str) => {
-                if (!str) return null;
-                const normalized = str.trim().replace(/\./g, '').replace(',', '.');
-                const val = parseFloat(normalized);
-                return isNaN(val) ? null : val;
-            };
-
             const parseDirectDecimal = (str) => {
                 if (!str) return null;
-                const normalized = str.trim().replace(',', '.');
-                const val = parseFloat(normalized);
+                // Quitar puntos al final que a veces deja la CNMC ("41,208.") y convertir coma a punto
+                const clean = str.trim().replace(/\.+$/, '').replace(',', '.');
+                const val = parseFloat(clean);
                 return isNaN(val) ? null : val;
             };
 
-            // 2. Extracción de Precios de Potencia (€/kW/año o €/kWmes)
-            const p1YearMatch = cleanText.match(/Potencia\s*(?:Punta|P1)?[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
-            if (p1YearMatch) {
-                result.powerP1 = parseDirectDecimal(p1YearMatch[1]);
+            // 2. Extracción de Precios de Potencia
+            // Caso A: Formato en una sola línea (ej. "Precio Termino de Potencia Punta: 44,905 €/kW/año")
+            // Caso B: Formato por bloques (ej. "Precios Potencia:\nPunta: 41,208 €/kW/año")
+            const p1Match = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Potencia\s+Punta|Precios?\s+Potencia[^\n]*\n[^\n]*Punta)[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
+                         || cleanText.match(/(?:^|\n)\s*Punta[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
+            if (p1Match) {
+                result.powerP1 = parseDirectDecimal(p1Match[1]);
             } else {
-                const p1MonthMatch = cleanText.match(/Potencia\s*(?:Punta|P1)?[^€]*\(([\d.,]+)\s*€\/kW\s*mes\)/i);
-                if (p1MonthMatch) {
-                    const mVal = parseDirectDecimal(p1MonthMatch[1]);
+                const p1Month = cleanText.match(/Potencia\s*(?:Punta|P1)?[^€]*\(([\d.,]+)\s*€\/kW\s*mes\)/i);
+                if (p1Month) {
+                    const mVal = parseDirectDecimal(p1Month[1]);
                     if (mVal !== null) result.powerP1 = mVal * 12;
                 }
             }
 
-            const p2YearMatch = cleanText.match(/Potencia\s*(?:Valle|P2)?[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
-            if (p2YearMatch) {
-                result.powerP2 = parseDirectDecimal(p2YearMatch[1]);
+            const p2Match = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Potencia\s+Valle|Precios?\s+Potencia[^\n]*\n[^\n]*Valle)[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
+                         || cleanText.match(/(?:^|\n)\s*Valle[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
+            if (p2Match) {
+                result.powerP2 = parseDirectDecimal(p2Match[1]);
             } else {
-                const p2MonthMatch = cleanText.match(/Potencia\s*(?:Valle|P2)?[^€]*\(([\d.,]+)\s*€\/kW\s*mes\)/i);
-                if (p2MonthMatch) {
-                    const mVal = parseDirectDecimal(p2MonthMatch[1]);
+                const p2Month = cleanText.match(/Potencia\s*(?:Valle|P2)?[^€]*\(([\d.,]+)\s*€\/kW\s*mes\)/i);
+                if (p2Month) {
+                    const mVal = parseDirectDecimal(p2Month[1]);
                     if (mVal !== null) result.powerP2 = mVal * 12;
                 }
             }
@@ -3529,18 +3522,23 @@
                 result.powerP2 = result.powerP1;
             }
 
-            // 3. Extracción de Precios de la Energía (€/kWh)
-            const ePuntaMatch = cleanText.match(/Energía\s*Punta[:\s]+([\d.,]+)\s*€\/kWh/i);
-            const eLlanoMatch = cleanText.match(/Energía\s*Llano[:\s]+([\d.,]+)\s*€\/kWh/i);
-            const eValleMatch = cleanText.match(/Energía\s*Valle[:\s]+([\d.,]+)\s*€\/kWh/i);
+            // 3. Extracción de Precios de Energía
+            // Caso A: "Precio Termino de Energía Punta: 0,193 €/kWh"
+            // Caso B: "Precios Energía:\nPunta: 0,21886 €/kWh"
+            const ePuntaMatch = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Energ[ií]a\s+Punta|Precios?\s+Energ[ií]a[^\n]*\n[^\n]*Punta)[:\s]+([\d.,]+)\s*€\/kWh/i)
+                             || cleanText.match(/(?:^|\n)\s*Punta[:\s]+([\d.,]+)\s*€\/kWh/i);
+            const eLlanoMatch = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Energ[ií]a\s+Llano|Precios?\s+Energ[ií]a[^\n]*\n[^\n]*Llano)[:\s]+([\d.,]+)\s*€\/kWh/i)
+                             || cleanText.match(/(?:^|\n)\s*Llano[:\s]+([\d.,]+)\s*€\/kWh/i);
+            const eValleMatch = cleanText.match(/(?:Precio(?:\s+T[eé]rmino)?\s+de\s+Energ[ií]a\s+Valle|Precios?\s+Energ[ií]a[^\n]*\n[^\n]*Valle)[:\s]+([\d.,]+)\s*€\/kWh/i)
+                             || cleanText.match(/(?:^|\n)\s*Valle[:\s]+([\d.,]+)\s*€\/kWh/i);
 
             if (ePuntaMatch) result.energyPunta = parseDirectDecimal(ePuntaMatch[1]);
             if (eLlanoMatch) result.energyLlano = parseDirectDecimal(eLlanoMatch[1]);
             if (eValleMatch) result.energyValle = parseDirectDecimal(eValleMatch[1]);
 
-            // Detección de Tarifa Plana / Precio Único de Energía
+            // Detección de Tarifa Plana / Precio Único
             if (result.energyPunta === null && result.energyLlano === null && result.energyValle === null) {
-                const singleEnergyMatch = cleanText.match(/(?:Término de Energía|Precio de la energía|Energía)[:\s]+([\d.,]+)\s*€\/kWh/i);
+                const singleEnergyMatch = cleanText.match(/(?:T[eé]rmino\s+de\s+Energ[ií]a|Precio\s+de\s+la\s+energ[ií]a|Energ[ií]a)[:\s]+([\d.,]+)\s*€\/kWh/i);
                 if (singleEnergyMatch) {
                     const singlePrice = parseDirectDecimal(singleEnergyMatch[1]);
                     result.energyPunta = singlePrice;
@@ -3552,8 +3550,8 @@
                 result.energyValle = result.energyPunta;
             }
 
-            // 4. Extracción del mecanismo de financiación del Bono Social (€/mes convertido a €/día)
-            const bonoMatch = cleanText.match(/bono social[^:]*:\s*(?:Coste fijo por cliente)?\s*([\d.,]+)\s*€\/mes/i);
+            // 4. Bono Social (€/mes convertido a €/día)
+            const bonoMatch = cleanText.match(/bono\s*social[^:]*:\s*(?:Coste\s*fijo\s*por\s*cliente)?\s*([\d.,]+)\s*€\/mes/i);
             if (bonoMatch) {
                 const bonoMonthly = parseDirectDecimal(bonoMatch[1]);
                 if (bonoMonthly !== null) {
