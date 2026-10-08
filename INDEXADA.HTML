@@ -4170,7 +4170,7 @@
             updateProfileDropdownNames();
         }
 
-        function updateProfileDropdownNames() {
+       function updateProfileDropdownNames() {
             const selector = document.getElementById('tariffProfileSelector');
             if (!selector) return;
             for (let i = 0; i < 6; i++) {
@@ -6323,12 +6323,19 @@
                     if (i < sorted.length && sorted[i] === prev + 1) {
                         prev = sorted[i];
                     } else {
-                        ranges.push(start === prev ? `${String(start).padStart(2,'0')}:00h` : `${String(start).padStart(2,'0')}:00h a ${String(prev+1).padStart(2,'0')}:00h`);
-                if (i < sorted.length) { start = sorted[i]; prev = sorted[i]; }
+                   if (start === prev) {
+                        ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(start+1).padStart(2,'0')}:00h`);
+                    } else {
+                        ranges.push(`${String(start).padStart(2,'0')}:00h a ${String(prev+1).padStart(2,'0')}:00h`);
+                    }
+                    if (i < sorted.length) {
+                        start = sorted[i];
+                        prev = sorted[i];
+                    }
+                }
             }
-        }
-        return ranges.join(', ');
-    };
+            return ranges.join(', ');
+        };
 
     const analyzeSegment = (kwhArr, costArr, countArr, label, isWeekendSegment) => {
         const hasData = countArr.some(c => c > 0);
@@ -7188,7 +7195,7 @@
                 ${makeItem(`Consumo Llano (P2)`, projP2.toLocaleString('es-ES'), 'kWh', p2Pct, projP2, 'amber')}
                 ${makeItem(`Consumo Valle (P3)`, projP3.toLocaleString('es-ES'), 'kWh', p3Pct, projP3, 'emerald')}
                 ${makeItem(`Potencia Punta (P1)`, p1Kw.toFixed(3).replace('.', ','), 'kW', null, p1Kw.toFixed(3).replace('.', ','), 'indigo', true)}
-                ${makeItem(`Potencia Valle (P2)`, p2Kw.toFixed(3).replace('.', ','), 'kW', null, p2Kw.toFixed(3).replace('.', ','), 'indigo', true)}
+                ${makeItem(`Potencia Valle (P2)`, p2Kw.toixed(3).replace('.', ','), 'kW', null, p2Kw.toFixed(3).replace('.', ','), 'indigo', true)}
             `;
         }
 
