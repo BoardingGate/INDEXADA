@@ -7263,91 +7263,142 @@ async function fetchCnmcRealOffers(params) {
         });        
 
 
-        // PROCESADOR DE OFERTAS REALES DE LA CNMC
+      // =====================================================================
+        // EXTRACTOR DIRECTO DE ENLACES OFICIALES DE LA CNMC
         // =====================================================================
         document.getElementById('extractCnmcUrlBtn')?.addEventListener('click', async () => {
-            const url = document.getElementById('cnmcListUrlInput')?.value.trim();
-            if (!url || !url.includes('/comparador/listado/')) {
-                alert('⚠️ Introduce una URL válida del listado de la CNMC (debe contener /comparador/listado/...)');
+            const rawUrl = (document.getElementById('cnmcListUrlInput')?.value || document.getElementById('cnmcTextInput')?.value || '').trim();
+
+            if (!rawUrl || !rawUrl.includes('/comparador/listado/')) {
+                alert('⚠️ Pega una URL válida de la CNMC (debe contener /comparador/listado/...)');
                 return;
             }
+
+            // Extraer el hash largo de la URL
+            const hashMatch = rawUrl.match(/listado\/([A-Za-z0-9]+)/i);
+            if (!hashMatch) {
+                alert('⚠️ No se ha podido extraer el identificador de la URL.');
+                return;
+            }
+            const hash = hashMatch[1];
 
             const offersList = document.getElementById('cnmcOffersList');
             offersList.innerHTML = `
                 <div class="text-center py-12 text-gray-600 text-xs flex flex-col items-center gap-3">
                     <span class="animate-spin text-2xl">⏳</span>
-                    <span>Descargando y analizando las ofertas reales de la CNMC con iA...</span>
+                    <span>Conectando con la base de datos de la CNMC para el listado indicado...</span>
                 </div>
             `;
 
+            let extractedOffers = [];
+
+            // INTENTO 1: Consultar el endpoint de datos del listado de la CNMC mediante proxy CORS universal
             try {
-                const resp = await fetch(DATADIS_PROXY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'cnmc-extract',
-                        listUrl: url
-                    })
+                // Endpoint oficial que alimenta el listado en la CNMC
+                const cnmcApiEndpoint = `https://comparador.cnmc.gob.es/comparador/rest/ofertas/listado/${hash}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(cnmcApiEndpoint)}`;
+
+                const resp = await fetch(proxyUrl, {
+                    headers: { 'Accept': 'application/json, text/plain, */*' }
                 });
 
-                const data = await resp.json();
+                if (resp.ok) {
+                    const textData = await resp.text();
+                    // Comprobamos si la CNMC devolvió JSON real y no HTML
+                    if (textData.trim().startsWith('{') || textData.trim().startsWith('[')) {
+                        const jsonData = JSON.parse(textData);
+                        const list = Array.isArray(jsonData) ? jsonData : (jsonData.ofertas || jsonData.listaOfertas || jsonData.resultado || []);
 
-                if (!resp.ok || data.error) {
-                    throw new Error(data.error || `Error del proxy (Código ${resp.status})`);
+                        if (Array.isArray(list) && list.length > 0) {
+                            extractedOffers = list.map(item => {
+                                let p1 = parseFloat(item.precioEnergiaPunta ?? item.terminoEnergiaP1 ?? item.p1 ?? 0);
+                                let p2 = parseFloat(item.precioEnergiaLlano ?? item.terminoEnergiaP2 ?? item.p2 ?? p1);
+                                let p3 = parseFloat(item.precioEnergiaValle ?? item.terminoEnergiaP3 ?? item.p3 ?? p1);
+                                if (p1 > 5) p1 /= 1000;
+                                if (p2 > 5) p2 /= 1000;
+                                if (p3 > 5) p3 /= 1000;
+
+                                let pot1 = parseFloat(item.precioPotenciaPunta ?? item.terminoPotenciaP1 ?? 33.95);
+                                let pot2 = parseFloat(item.precioPotenciaValle ?? item.terminoPotenciaP2 ?? 15.00);
+                                if (pot1 < 1.0) pot1 *= 365;
+                                if (pot2 < 1.0) pot2 *= 365;
+
+                                return {
+                                    name: item.nombreOferta || item.nombre || "Tarifa 2.0TD",
+                                    company: item.comercializadora || item.empresa || "Mercado Libre",
+                                    pPunta: p1,
+                                    pLlano: p2,
+                                    pValle: p3,
+                                    powerP1: pot1,
+                                    powerP2: pot2,
+                                    permanence: item.permanencia ? "Con permanencia" : "Sin permanencia"
+                                };
+                            }).filter(o => o.pPunta > 0);
+                        }
+                    }
                 }
+            } catch (errProxy) {
+                console.warn("Fallo en Intento 1:", errProxy);
+            }
 
-                const rawOffers = Array.isArray(data) ? data : (data.ofertas || data.listaOfertas || data.resultado || []);
-
-                if (!Array.isArray(rawOffers) || rawOffers.length === 0) {
-                    throw new Error("La CNMC no devolvió ninguna oferta para ese enlace o la sesión ha expirado.");
+            // INTENTO 2: Si la CNMC bloquea peticiones de servidor a su API interna,
+            // abrimos una ventana temporal o leemos el DOM de la CNMC que tu navegador sí puede abrir
+            if (extractedOffers.length === 0) {
+                try {
+                    // Petición a la URL directa del listado
+                    const directPageUrl = `https://comparador.cnmc.gob.es/comparador/listado/${hash}`;
+                    const proxyPageUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directPageUrl)}`;
+                    
+                    const pageResp = await fetch(proxyPageUrl);
+                    if (pageResp.ok) {
+                        const htmlContent = await pageResp.text();
+                        extractedOffers = parseCnmcHtmlOffers(htmlContent);
+                    }
+                } catch (errPage) {
+                    console.warn("Fallo en Intento 2:", errPage);
                 }
+            }
 
-                // Normalización de los datos devueltos por la API de la CNMC
-                const extractedOffers = rawOffers.map(item => {
-                    let p1 = parseFloat(item.precioEnergiaPunta ?? item.terminoEnergiaP1 ?? item.precioEnergia ?? item.p1 ?? 0);
-                    let p2 = parseFloat(item.precioEnergiaLlano ?? item.terminoEnergiaP2 ?? item.p2 ?? p1);
-                    let p3 = parseFloat(item.precioEnergiaValle ?? item.terminoEnergiaP3 ?? item.p3 ?? p1);
-
-                    if (p1 > 5) p1 /= 1000;
-                    if (p2 > 5) p2 /= 1000;
-                    if (p3 > 5) p3 /= 1000;
-
-                    let pot1 = parseFloat(item.precioPotenciaPunta ?? item.terminoPotenciaP1 ?? item.potenciaP1 ?? 33.95);
-                    let pot2 = parseFloat(item.precioPotenciaValle ?? item.terminoPotenciaP2 ?? item.potenciaP2 ?? 15.00);
-
-                    if (pot1 < 1.0) pot1 *= 365;
-                    if (pot2 < 1.0) pot2 *= 365;
-
-                    return {
-                        name: item.nombreOferta || item.nombre || "Tarifa 2.0TD",
-                        company: item.comercializadora || item.empresa || "Mercado Libre",
-                        pPunta: p1,
-                        pLlano: p2,
-                        pValle: p3,
-                        powerP1: pot1,
-                        powerP2: pot2,
-                        permanence: item.permanencia ? "Con permanencia" : "Sin permanencia"
-                    };
-                }).filter(o => o.pPunta > 0);
-
-                if (extractedOffers.length === 0) {
-                    throw new Error("No se pudieron interpretar los precios de las ofertas devueltas por la CNMC.");
-                }
-
-                // Evalúa las ofertas reales contra tus consumos reales y muestra el Top 10
+            // Si se han obtenido las ofertas reales de la CNMC:
+            if (extractedOffers.length > 0) {
                 renderCnmcExtractedTop10(extractedOffers);
-
-            } catch (err) {
-                console.error("Error al procesar CNMC:", err);
+            } else {
+                // Si la CNMC bloquea tanto la API como la página a nivel de servidor:
                 offersList.innerHTML = `
-                    <div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl text-center space-y-1">
-                        <p class="font-bold">❌ Error al obtener las ofertas reales de la CNMC</p>
-                        <p class="text-[11px] text-gray-600">${err.message}</p>
+                    <div class="p-5 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl space-y-3 text-center">
+                        <p class="font-bold text-sm">🔒 El servidor de la CNMC requiere lectura desde el navegador</p>
+                        <p class="text-[11px] text-gray-600 max-w-lg mx-auto leading-relaxed">
+                            La CNMC no permite que servidores externos descarguen sus ofertas por seguridad. Como tienes el enlace abierto en tu otra pestaña:
+                        </p>
+                        <div class="bg-white p-3 rounded-lg border border-amber-300 max-w-md mx-auto text-left font-mono text-[11px] text-gray-800 space-y-1">
+                            <div>1. Ve a la pestaña donde tienes las ofertas abiertas.</div>
+                            <div>2. Pulsa <strong>Ctrl + A</strong> (Seleccionar todo) y <strong>Ctrl + C</strong> (Copiar).</div>
+                            <div>3. Pégalo en el cajetín de abajo y pulsa <strong>Analizar Ofertas con iA</strong>.</div>
+                        </div>
+                        <div class="pt-1">
+                            <textarea id="cnmcFallbackText" rows="3" placeholder="Pega aquí el contenido copiado de la pestaña de la CNMC..." class="w-full max-w-md p-2 border rounded-lg text-xs font-mono"></textarea>
+                        </div>
+                        <button type="button" onclick="processPastedTextFallback()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg text-xs transition-colors shadow-xs">
+                            ⚡ Analizar Texto Copiado
+                        </button>
                     </div>
                 `;
             }
         });
 
+        window.processPastedTextFallback = function() {
+            const txt = document.getElementById('cnmcFallbackText')?.value.trim();
+            if (!txt) {
+                alert('⚠️ Pega primero el texto copiado de la CNMC.');
+                return;
+            }
+            const offers = parseRawCnmcText(txt);
+            if (offers.length > 0) {
+                renderCnmcExtractedTop10(offers);
+            } else {
+                alert('No se detectaron ofertas en el texto pegado.');
+            }
+        };
         
 
 function renderCnmcExtractedTop10(offers) {
