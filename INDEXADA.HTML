@@ -1724,13 +1724,10 @@
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
         // Formato con día completo para las lecturas de consumo (YYYY/MM/DD)
-        function toDatadisDate(isoDate) {
+       function toDatadisDate(isoDate) {
             if (!isoDate) return '';
             const parts = isoDate.split('-');
-            if (parts.length === 3) {
-                return `${parts[0]}/${parts[1]}/${parts[2]}`;
-            }
-            return isoDate.replace(/-/g, '/');
+            return `${parts[0]}/${parts[1]}`; // Devuelve YYYY/MM
         }
 
         // Formato mensual exclusivo para contratos y potencias máximas (YYYY/MM)
