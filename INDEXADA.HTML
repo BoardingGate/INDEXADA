@@ -1755,7 +1755,8 @@
             return rawDate;
         }
 
-async function descargarDesdeDatadis() {
+
+        async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
@@ -1776,83 +1777,56 @@ async function descargarDesdeDatadis() {
             window.lastDatadisCsv = null;
 
             try {
-                // Generar lista de meses necesarios entre la fecha de inicio y fin
-                const startParts = startDateStr.split('-').map(Number);
-                const endParts = endDateStr.split('-').map(Number);
-                let cursor = new Date(startParts[0], startParts[1] - 1, 1);
-                const finalDate = new Date(endParts[0], endParts[1] - 1, 1);
+                // Convertimos la fecha de inicio y fin a formato YYYY/MM para la API de Datadis
+                const toProxyMonth = (isoDate) => {
+                    const parts = isoDate.split('-');
+                    return `${parts[0]}/${parts[1]}`;
+                };
 
-                const monthChunks = [];
-                while (cursor <= finalDate) {
-                    const y = cursor.getFullYear();
-                    const m = String(cursor.getMonth() + 1).padStart(2, '0');
-                    monthChunks.push(`${y}/${m}`);
-                    cursor.setMonth(cursor.getMonth() + 1);
+                const resp = await fetch(DATADIS_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        cups: cups || undefined,
+                        startDate: toProxyMonth(startDateStr),
+                        endDate: toProxyMonth(endDateStr),
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || data.error) {
+                    throw new Error(data.error || `Error del proxy (código ${resp.status}).`);
                 }
 
-                let allConsumptionRows = [];
-                let detectedCups = cups;
-
-                for (let i = 0; i < monthChunks.length; i++) {
-                    const mStr = monthChunks[i];
-                    statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${monthChunks.length} (${mStr})...`;
-
-                    const resp = await fetch(DATADIS_PROXY_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username,
-                            password,
-                            cups: cups || undefined,
-                            startDate: mStr,
-                            endDate: mStr,
-                        }),
-                    });
-
-                    const data = await resp.json();
-                    if (!resp.ok || data.error) {
-                        throw new Error(data.error || `Error al descargar el mes ${mStr}`);
-                    }
-
-                    if (data.cups && !detectedCups) detectedCups = data.cups;
-                    if (Array.isArray(data.consumptionData)) {
-                        allConsumptionRows = allConsumptionRows.concat(data.consumptionData);
-                    }
-
-                    await new Promise(r => setTimeout(r, 200)); // Pequeña pausa entre peticiones
-                }
-
-                if (allConsumptionRows.length === 0) {
-                    throw new Error("No se encontraron lecturas de consumo en el periodo seleccionado.");
+                if (!data.consumptionData || !Array.isArray(data.consumptionData) || data.consumptionData.length === 0) {
+                    throw new Error("No hay lecturas disponibles para ese período.");
                 }
 
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
-                const cupsVal = detectedCups || 'ES0022000007526050YT1P';
+                const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
 
-                // --- IMPRIMIMOS EL PRIMER REGISTRO DE DATADIS EN LA CONSOLA ---
-                if (allConsumptionRows.length > 0) {
-                    console.warn("TEXTO PLANO DEL OBJETO DATADIS:", JSON.stringify(allConsumptionRows[0]));        
-                }
-
-                allConsumptionRows.forEach((x) => {              
-                    // Datadis devuelve x.date (ej: "2026-02-01") y x.time (ej: "01:00")
+                data.consumptionData.forEach((x) => {
+                    // x.date viene como "2026/05/01" o "2026-05-01"
                     let rawDate = x.date || '';
                     let normalizedDate = '';
 
                     if (rawDate) {
+                        // Limpiamos y separamos por barras o guiones
                         let clean = rawDate.trim().split(/[ T]/)[0];
                         let parts = clean.split(/[-/.]/).map(p => p.trim());
                         if (parts.length === 3) {
-                            if (parts[0].length === 4) {
-                                // De YYYY-MM-DD a DD/MM/YYYY
-                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                            } else {
-                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-                            }
+                            // Convertimos YYYY/MM/DD a DD/MM/YYYY que es lo que espera la app
+                            normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+                        } else {
+                            normalizedDate = rawDate;
                         }
                     }
 
-                    let rawTime = String(x.time || x.hora || '0');
+                    // x.time viene como "01:00", extraemos la hora numérica (1 a 24 o 0 a 23)
+                    let rawTime = String(x.time || '0');
                     let horaNum = parseInt(rawTime.split(':')[0], 10);
                     if (isNaN(horaNum)) horaNum = 0;
 
@@ -1881,7 +1855,7 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${allConsumptionRows.length} lecturas reales de Datadis.`;
+                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas de Datadis.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         exportBtn.classList.remove('hidden');
                         
@@ -1900,6 +1874,7 @@ async function descargarDesdeDatadis() {
                 statusEl.className = 'text-xs mt-2 text-red-600';
             }
         }
+
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
 
         document.getElementById('datadisExportBtn').addEventListener('click', () => {
