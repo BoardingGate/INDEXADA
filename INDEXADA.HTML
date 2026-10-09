@@ -1723,10 +1723,13 @@
 
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
-        function toDatadisDate(isoDate) {
+       function toDatadisDate(isoDate) {
             if (!isoDate) return '';
             const parts = isoDate.split('-');
-            return `${parts[0]}/${parts[1]}`;
+            if (parts.length === 3) {
+                return `${parts[0]}/${parts[1]}/${parts[2]}`; // Envía YYYY/MM/DD
+            }
+            return isoDate.replace(/-/g, '/');
         }
 
         // Formato para contratos y potencias (YYYY/MM)
