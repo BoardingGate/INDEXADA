@@ -1755,8 +1755,7 @@
             return rawDate;
         }
 
-
-        async function descargarDesdeDatadis() {
+async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
@@ -1777,7 +1776,6 @@
             window.lastDatadisCsv = null;
 
             try {
-                // Convertimos la fecha de inicio y fin a formato YYYY/MM para la API de Datadis
                 const toProxyMonth = (isoDate) => {
                     const parts = isoDate.split('-');
                     return `${parts[0]}/${parts[1]}`;
@@ -1805,7 +1803,38 @@
                     throw new Error("No hay lecturas disponibles para ese período.");
                 }
 
-let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
+                let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
+                const finalCups = cups || data.cups || 'ES0022000007526050YT1P';
+
+                data.consumptionData.forEach((x) => {
+                    let rawDate = x.date || '';
+                    let normalizedDate = '';
+
+                    if (rawDate) {
+                        let clean = String(rawDate).trim().split(/[ T]/)[0];
+                        let parts = clean.split(/[-/.]/).map(p => p.trim());
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+                            } else {
+                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+                            }
+                        }
+                    }
+
+                    let rawTime = String(x.time || '0');
+                    let horaNum = parseInt(rawTime.split(':')[0], 10);
+                    if (isNaN(horaNum)) horaNum = 0;
+
+                    const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
+                    const consumoStr = String(consumoValue).replace('.', ',');
+
+                    if (normalizedDate) {
+                        csv += `${finalCups};${normalizedDate};${horaNum};${consumoStr};R\n`;
+                    }
+                });
+
+                window.lastDatadisCsv = csv;
 
                 Papa.parse(csv, {
                     header: true,
@@ -1828,7 +1857,7 @@ let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                         
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
-                        fileNameSpan.textContent = `Datadis API (CUPS ${cupsVal})`;
+                        fileNameSpan.textContent = `Datadis API (CUPS ${finalCups})`;
                     },
                     error: (err) => {
                         statusEl.textContent = '❌ Error al procesar los datos recibidos: ' + err.message;
