@@ -7088,58 +7088,78 @@ function parseCnmcOfferText(text) {
                 return isNaN(val) ? null : val;
             };
 
-            // 1. NOMBRE DE LA OFERTA
-            const nameMatch = cleanText.match(/logoComercializadora\s*\n*([^\n\r]+)/i);
+            // DIVIDIMOS EL TEXTO EN DOS ZONAS USANDO "Descripción oferta" COMO FRONTERA
+            const splitMatch = cleanText.match(/Descripción\s+oferta/i);
+            let headerText = cleanText;
+            let offerBody = cleanText;
+
+            if (splitMatch && splitMatch.index !== undefined) {
+                headerText = cleanText.substring(0, splitMatch.index);
+                offerBody = cleanText.substring(splitMatch.index);
+            }
+
+            // ==============================================================
+            // ZONA 1: CABECERA (Solo buscamos el nombre de la oferta/compañía)
+            // ==============================================================
+            const nameMatch = headerText.match(/logoComercializadora\s*\n*([^\n\r]+)/i);
             if (nameMatch && nameMatch[1]) {
                 result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
             } else {
-                const descMatch = cleanText.match(/Descripción oferta\s*\n*([^\n\r]+)/i);
-                if (descMatch && descMatch[1]) {
-                    result.name = descMatch[1].substring(0, 45).trim();
+                // Fallback por si no viene logoComercializadora
+                const altMatch = offerBody.match(/Descripción\s+oferta\s*\n*([^\n\r]+)/i);
+                if (altMatch && altMatch[1]) {
+                    result.name = altMatch[1].substring(0, 45).trim();
                 }
             }
 
-            // 2. PRECIOS DE POTENCIA (P1 y P2)
-            // Admite: "Potencia Periodo 1", "P1", "Potencia Punta", "Punta", "Periodo 1", etc.
+            // ==============================================================
+            // ZONA 2: CUERPO DE LA OFERTA (Precios de Potencia, Energía y Bono)
+            // Aquí ya es IMPOSIBLE que se cuelen los kW/kWh del usuario
+            // ==============================================================
+
+            // 1. PRECIOS DE POTENCIA (P1 Punta y P2 Valle)
+            // Exigimos siempre el símbolo € para asegurar que es un precio monetario
             const p1Regexes = [
-                /(?:Potencia\s*Periodo\s*1|Periodo\s*1|Potencia\s*Punta|P1)[^\d\n]*[:=\s]+([\d.,]+)/i,
-                /P1[^\d\n]*[:=\s]+([\d.,]+)/i
+                /(?:Punta|P1|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
+                /Potencia[^\n]*?(?:P1|Punta|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
+                /P1\s*=\s*([\d.,]+)\s*€/i
             ];
             for (let rx of p1Regexes) {
-                const m = cleanText.match(rx);
+                const m = offerBody.match(rx);
                 if (m && m[1]) { result.powerP1 = parseNum(m[1]); break; }
             }
 
             const p2Regexes = [
-                /(?:Potencia\s*Periodo\s*2|Periodo\s*2|Potencia\s*Valle|Valle|P2)[^\d\n]*[:=\s]+([\d.,]+)/i,
-                /P2[^\d\n]*[:=\s]+([\d.,]+)/i
+                /(?:Valle|P2|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
+                /Potencia[^\n]*?(?:P2|Valle|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
+                /P2\s*=\s*([\d.,]+)\s*€/i
             ];
             for (let rx of p2Regexes) {
-                const m = cleanText.match(rx);
+                const m = offerBody.match(rx);
                 if (m && m[1]) { result.powerP2 = parseNum(m[1]); break; }
             }
 
-            // Si solo hay un precio de potencia definido, se replica para ambos
+            // Si la compañía cobra la misma potencia en ambos tramos (potencia única)
             if (result.powerP1 !== null && result.powerP2 === null) result.powerP2 = result.powerP1;
             if (result.powerP2 !== null && result.powerP1 === null) result.powerP1 = result.powerP2;
 
 
-            // 3. PRECIOS DE ENERGÍA
-            // A) Tramos múltiples clásicos (Punta, Llano, Valle o Periodo 1, 2, 3)
-            const ePuntaMatch = cleanText.match(/(?:Energ[ií]a\s*Punta|Punta|Energ[ií]a\s*Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
-            const eLlanoMatch = cleanText.match(/(?:Energ[ií]a\s*Llano|Llano|Energ[ií]a\s*Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
-            const eValleMatch = cleanText.match(/(?:Energ[ií]a\s*Valle|Valle|Energ[ií]a\s*Periodo\s*3)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
+            // 2. PRECIOS DE ENERGÍA (Punta, Llano, Valle o Tarifa Plana)
+            // A) Detección de tramos múltiples (3 precios)
+            const ePuntaMatch = offerBody.match(/(?:Energ[ií]a\s*Punta|Punta|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
+            const eLlanoMatch = offerBody.match(/(?:Energ[ií]a\s*Llano|Llano|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
+            const eValleMatch = offerBody.match(/(?:Energ[ií]a\s*Valle|Valle|Periodo\s*3)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
 
             if (ePuntaMatch) result.energyPunta = parseNum(ePuntaMatch[1]);
             if (eLlanoMatch) result.energyLlano = parseNum(eLlanoMatch[1]);
             if (eValleMatch) result.energyValle = parseNum(eValleMatch[1]);
 
-            // B) Tarifa Plana / Precio Único / Término Variable 24h
+            // B) Detección de Tarifa Plana / Precio Único 24h
             if (result.energyPunta === null && result.energyLlano === null && result.energyValle === null) {
                 let singlePrice = null;
 
-                // Prioridad 1: Precio con FNEE incluido si viene desglosado
-                const fneeMatch = cleanText.match(/con\s+importe[^\n=:]*[=:\s]+([\d.,]+)\s*€\/kwh/i);
+                // Prioridad 1: Precio con FNEE incluido si viene especificado
+                const fneeMatch = offerBody.match(/con\s+importe[^\n=:]*[=:\s]+([\d.,]+)\s*€\/kwh/i);
                 if (fneeMatch && fneeMatch[1]) {
                     singlePrice = parseNum(fneeMatch[1]);
                 }
@@ -7151,7 +7171,7 @@ function parseCnmcOfferText(text) {
                         /([\d.,]+)\s*€\/kwh/i
                     ];
                     for (let rx of singlePatterns) {
-                        const m = cleanText.match(rx);
+                        const m = offerBody.match(rx);
                         if (m && m[1]) { singlePrice = parseNum(m[1]); break; }
                     }
                 }
@@ -7164,17 +7184,14 @@ function parseCnmcOfferText(text) {
             }
 
 
-            // 4. BONO SOCIAL (Márgenes fijos)
-            // A) Si expresamente no se factura o está incluido en la oferta
-            if (/No\s+se\s+facturar[aá][^\n]*Bono\s*Social/i.test(cleanText) ||
-                /Bono\s*Social[^\n]*incluido/i.test(cleanText)) {
+            // 3. BONO SOCIAL (Márgenes fijos)
+            if (/No\s+se\s+facturar[aá][^\n]*Bono\s*Social/i.test(offerBody) ||
+                /Bono\s*Social[^\n]*incluido/i.test(offerBody)) {
                 result.bonoSocialDaily = 0.00;
-            } 
-            // B) Formato directo en €/día (ej: "0,024688 €/día")
-            else {
-                const bonoDayMatch = cleanText.match(/([\d.,]+)\s*€\/d[ií]a/i);
-                const bonoCupsMatch = cleanText.match(/bono\s*social[^\n\d]*[a-z\s]*([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
-                const bonoMonthMatch = cleanText.match(/bono\s*social[^\n\d]*[a-z\s]*([\d.,]+)\s*€\/mes/i);
+            } else {
+                const bonoDayMatch = offerBody.match(/([\d.,]+)\s*€\/d[ií]a/i);
+                const bonoCupsMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
+                const bonoMonthMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*([\d.,]+)\s*€\/mes/i);
 
                 if (bonoDayMatch && bonoDayMatch[1]) {
                     result.bonoSocialDaily = parseNum(bonoDayMatch[1]);
