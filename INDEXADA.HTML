@@ -1831,7 +1831,7 @@ async function descargarDesdeDatadis() {
 
                 // --- IMPRIMIMOS EL PRIMER REGISTRO DE DATADIS EN LA CONSOLA ---
                 if (allConsumptionRows.length > 0) {
-                    console.log("PROPIEDADES REALES QUE DEVUELVE DATADIS:", allConsumptionRows[0]);
+                    console.warn("TEXTO PLANO DEL OBJETO DATADIS:", JSON.stringify(allConsumptionRows[0]));        
                 }
 
                 allConsumptionRows.forEach((x) => {              
