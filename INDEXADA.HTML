@@ -1776,7 +1776,7 @@ async function descargarDesdeDatadis() {
             window.lastDatadisCsv = null;
 
             try {
-                // 1. Generamos los meses que abarca el rango seleccionado por el usuario (Ej: 2026/01, 2026/02...)
+                // 1. Calcular los meses del rango
                 const [sY, sM] = startDateStr.split('-').map(Number);
                 const [eY, eM] = endDateStr.split('-').map(Number);
                 
@@ -1787,14 +1787,14 @@ async function descargarDesdeDatadis() {
                 while (cursor <= limit) {
                     const y = cursor.getFullYear();
                     const m = String(cursor.getMonth() + 1).padStart(2, '0');
-                    monthsToFetch.push(`${y}/${m}`);
+                    monthList = monthsToFetch.push(`${y}/${m}`);
                     cursor.setMonth(cursor.getMonth() + 1);
                 }
 
-                let allConsumptionRows = [];
+                let allRows = [];
                 let detectedCups = cups;
 
-                // 2. Pedimos mes a mes al proxy de Vercel
+                // 2. Descargar mes a mes
                 for (let i = 0; i < monthsToFetch.length; i++) {
                     const mStr = monthsToFetch[i];
                     statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${monthsToFetch.length} (${mStr})...`;
@@ -1817,72 +1817,79 @@ async function descargarDesdeDatadis() {
                     }
 
                     if (data.cups && !detectedCups) detectedCups = data.cups;
-                    
-                    // Si el proxy devuelve un objeto con consumptionData o un array directo
                     const rows = data.consumptionData || data;
-                    if (Array.isArray(rows)) {
-                        allConsumptionRows = allConsumptionRows.concat(rows);
+
+                    if (Array.isArray(rows) && rows.length > 0) {
+                        // RECONSTRUCCIÓN INTELIGENTE DE FECHAS:
+                        // Si Datadis repite "YYYY/MM/01" en todas las horas de un mes,
+                        // asignamos el día real sumando 1 día cada 24 horas consecutivas.
+                        const [mYear, mMonth] = mStr.split('/').map(Number);
+                        let dayCounter = 1;
+                        let lastHour = -1;
+
+                        const fixedRows = rows.map((item, idx) => {
+                            let rawTime = String(item.time || '0');
+                            let currentHour = parseInt(rawTime.split(':')[0], 10);
+                            if (isNaN(currentHour)) currentHour = (idx % 24) + 1;
+
+                            // Si la hora es menor o igual a la anterior (ej. pasa de 24 a 1, o de 23 a 0), avanzamos de día
+                            if (lastHour !== -1 && currentHour <= lastHour) {
+                                dayCounter++;
+                            }
+                            lastHour = currentHour;
+
+                            // Si la fecha original ya traía días distintos del 01, respetamos la original
+                            let rawD = String(item.date || '').trim().split(/[ T]/)[0].replace(/\//g, '-');
+                            let parts = rawD.split('-');
+                            let realDateISO = '';
+
+                            if (parts.length === 3 && parseInt(parts[2], 10) > 1) {
+                                // Trae día real en parts[2]
+                                realDateISO = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                            } else {
+                                // Datadis dejó el día atascado en 01: usamos nuestro contador de día real
+                                const dayStr = String(dayCounter).padStart(2, '0');
+                                const monthStr = String(mMonth).padStart(2, '0');
+                                realDateISO = `${mYear}-${monthStr}-${dayStr}`;
+                            }
+
+                            return {
+                                ...item,
+                                calculatedDateISO: realDateISO,
+                                calculatedHour: currentHour
+                            };
+                        });
+
+                        allRows = allRows.concat(fixedRows);
                     }
 
-                    await new Promise(r => setTimeout(r, 200));
+                    await new Promise(r => setTimeout(r, 150));
                 }
 
-                if (allConsumptionRows.length === 0) {
-                    throw new Error("No se encontraron registros de consumo en las fechas indicadas.");
+                if (allRows.length === 0) {
+                    throw new Error("No se encontraron registros de consumo.");
                 }
 
-                // 3. MOSTRAMOS EL MODAL DE DEPURACIÓN CON LAS PRIMERAS 5 FILAS CRUDAS QUE DEVUELVE DATADIS
-                const modalTitle = document.getElementById('cupsModalTitle');
-                const cupsDetailContent = document.getElementById('cupsDetailContent');
-                if (modalTitle) modalTitle.textContent = '🛠️ Depuración: JSON Crudo devuelto por Datadis';
-                if (cupsDetailContent) {
-                    cupsDetailContent.innerHTML = `
-                        <p class="font-bold text-emerald-800 mb-2">Total de registros descargados: ${allConsumptionRows.length}</p>
-                        <p class="text-gray-600 mb-2">Aquí tienes las primeras 5 filas tal cual las ha entregado el servidor:</p>
-                        <pre class="bg-gray-100 p-3 rounded text-[10px] overflow-x-auto max-h-60">${JSON.stringify(allConsumptionRows.slice(0, 5), null, 2)}</pre>
-                    `;
-                    document.getElementById('cupsDetailModal').classList.remove('hidden');
-                }
-
-                // 4. Filtramos estrictamente por el rango de fechas exacto del usuario
-                const filteredRows = allConsumptionRows.filter(x => {
-                    let d = x.date || x.dia || '';
-                    if (!d) return true; // Si no trae fecha, lo dejamos pasar para examinarlo
-                    let clean = String(d).trim().split(/[ T]/)[0].replace(/\//g, '-');
-                    return clean >= startDateStr && clean <= endDateStr;
+                // 3. Filtrar exactamente entre fecha inicio y fecha fin del formulario
+                const filteredRows = allRows.filter(x => {
+                    return x.calculatedDateISO >= startDateStr && x.calculatedDateISO <= endDateStr;
                 });
 
-                // 5. Construimos el CSV final
+                if (filteredRows.length === 0) {
+                    throw new Error("No hay lecturas dentro del rango de fechas seleccionado.");
+                }
+
+                // 4. Generar el CSV con fecha DD/MM/YYYY y hora limpia
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const finalCups = detectedCups || 'ES0022000007526050YT1P';
 
                 filteredRows.forEach((x) => {
-                    let rawDate = x.date || x.dia || '';
-                    let normalizedDate = '';
-
-                    if (rawDate) {
-                        let clean = String(rawDate).trim().split(/[ T]/)[0];
-                        let parts = clean.split(/[-/.]/).map(p => p.trim());
-                        if (parts.length === 3) {
-                            if (parts[0].length === 4) {
-                                // YYYY-MM-DD o YYYY/MM/DD a DD/MM/YYYY
-                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                            } else {
-                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-                            }
-                        }
-                    }
-
-                    let rawTime = String(x.time || x.hora || '0');
-                    let horaNum = parseInt(rawTime.split(':')[0], 10);
-                    if (isNaN(horaNum)) horaNum = 0;
-
+                    const [y, m, d] = x.calculatedDateISO.split('-');
+                    const dmyDate = `${d}/${m}/${y}`;
                     const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
 
-                    if (normalizedDate) {
-                        csv += `${finalCups};${normalizedDate};${horaNum};${consumoStr};R\n`;
-                    }
+                    csv += `${finalCups};${dmyDate};${x.calculatedHour};${consumoStr};R\n`;
                 });
 
                 window.lastDatadisCsv = csv;
@@ -1902,7 +1909,7 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${filteredRows.length} lecturas reales.`;
+                        statusEl.textContent = `✅ Cargadas ${filteredRows.length} lecturas correctamente desglosadas.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         exportBtn.classList.remove('hidden');
                         
