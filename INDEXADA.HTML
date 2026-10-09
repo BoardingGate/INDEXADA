@@ -111,18 +111,17 @@
 
             <!-- Cuerpo colapsable -->
             <div id="cluster-config-body">
-                <!-- Barra de Solapas / Tabs -->
-                <div class="flex flex-wrap border-b border-gray-200 bg-gray-100/70 px-4 pt-2 gap-1.5">
-                    <button type="button" onclick="switchTab('cluster-config', 'tab-datadis')" data-tab-target="tab-datadis" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 bg-white text-blue-700 font-bold shadow-xs border-b-2 border-blue-600">
+              <!-- Barra de Solapas / Tabs Estilo Pestaña de Archivador -->
+                <div class="flex flex-wrap border-b-2 border-gray-300 bg-gray-200/60 px-4 pt-3 gap-2">
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-datadis')" data-tab-target="tab-datadis" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-extrabold rounded-t-xl transition-all flex items-center gap-2 bg-white text-blue-700 border-t-4 border-l border-r border-gray-300 border-t-blue-600 shadow-sm relative z-10 -mb-[1px]">
                         <span>📥 Importación Datadis</span>
                     </button>
-                    <button type="button" onclick="switchTab('cluster-config', 'tab-filters')" data-tab-target="tab-filters" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-filters')" data-tab-target="tab-filters" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-bold rounded-t-xl transition-all flex items-center gap-2 bg-gray-200/90 hover:bg-gray-300/90 text-gray-600 hover:text-gray-900 border-t border-l border-r border-transparent hover:border-gray-300 relative z-0">
                         <span>⏱️ Filtros Temporales</span>
                     </button>
-                    <button type="button" onclick="switchTab('cluster-config', 'tab-manual')" data-tab-target="tab-manual" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                    <button type="button" onclick="switchTab('cluster-config', 'tab-manual')" data-tab-target="tab-manual" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-bold rounded-t-xl transition-all flex items-center gap-2 bg-gray-200/90 hover:bg-gray-300/90 text-gray-600 hover:text-gray-900 border-t border-l border-r border-transparent hover:border-gray-300 relative z-0">
                         <span>⚡ Tarifa por Tramos</span>
                     </button>
-
                 </div>
 
                 <!-- Contenidos de las Solapas -->
@@ -898,18 +897,17 @@
 
                 <!-- Cuerpo colapsable -->
                 <div id="cluster-charts-body">
-                    <!-- Barra de Solapas / Tabs -->
-                    <div class="flex flex-wrap border-b border-gray-200 bg-gray-100/70 px-4 pt-2 gap-1.5">
-                        <button type="button" onclick="switchTab('cluster-charts', 'tab-calendar')" data-tab-target="tab-calendar" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 bg-white text-blue-700 font-bold shadow-xs border-b-2 border-blue-600">
+                     <div class="flex flex-wrap border-b-2 border-gray-300 bg-gray-200/60 px-4 pt-3 gap-2">
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-calendar')" data-tab-target="tab-calendar" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-extrabold rounded-t-xl transition-all flex items-center gap-2 bg-white text-blue-700 border-t-4 border-l border-r border-gray-300 border-t-blue-600 shadow-sm relative z-10 -mb-[1px]">
                             <span>📅 Calendario Diario</span>
                         </button>
-                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-daily')" data-tab-target="tab-chart-daily" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-daily')" data-tab-target="tab-chart-daily" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-bold rounded-t-xl transition-all flex items-center gap-2 bg-gray-200/90 hover:bg-gray-300/90 text-gray-600 hover:text-gray-900 border-t border-l border-r border-transparent hover:border-gray-300 relative z-0">
                             <span>📈 Evolución Diaria</span>
                         </button>
-                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-dayofweek')" data-tab-target="tab-chart-dayofweek" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-dayofweek')" data-tab-target="tab-chart-dayofweek" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-bold rounded-t-xl transition-all flex items-center gap-2 bg-gray-200/90 hover:bg-gray-300/90 text-gray-600 hover:text-gray-900 border-t border-l border-r border-transparent hover:border-gray-300 relative z-0">
                             <span>📊 Día de la Semana</span>
                         </button>
-                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-hourly')" data-tab-target="tab-chart-hourly" class="tab-btn py-2 px-3 sm:px-4 text-xs font-semibold rounded-t-lg transition-all flex items-center gap-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                        <button type="button" onclick="switchTab('cluster-charts', 'tab-chart-hourly')" data-tab-target="tab-chart-hourly" class="tab-btn py-2.5 px-4 sm:px-6 text-sm sm:text-base font-bold rounded-t-xl transition-all flex items-center gap-2 bg-gray-200/90 hover:bg-gray-300/90 text-gray-600 hover:text-gray-900 border-t border-l border-r border-transparent hover:border-gray-300 relative z-0">
                             <span>🕒 Perfil Horario 24h</span>
                         </button>
                     </div>
