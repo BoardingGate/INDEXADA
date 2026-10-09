@@ -1776,6 +1776,7 @@ async function descargarDesdeDatadis() {
             window.lastDatadisCsv = null;
 
             try {
+                // Función estricta para enviar YYYY/MM al proxy
                 const toProxyMonth = (isoDate) => {
                     const parts = isoDate.split('-');
                     return `${parts[0]}/${parts[1]}`;
@@ -1807,6 +1808,7 @@ async function descargarDesdeDatadis() {
                 const finalCups = cups || data.cups || 'ES0022000007526050YT1P';
 
                 data.consumptionData.forEach((x) => {
+                    // CADA OBJETO 'x' TRAE SU PROPIA FECHA EN 'x.date' (ej: "2026-05-01" o "2026/05/01")
                     let rawDate = x.date || '';
                     let normalizedDate = '';
 
@@ -1814,14 +1816,12 @@ async function descargarDesdeDatadis() {
                         let clean = String(rawDate).trim().split(/[ T]/)[0];
                         let parts = clean.split(/[-/.]/).map(p => p.trim());
                         if (parts.length === 3) {
-                            if (parts[0].length === 4) {
-                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                            } else {
-                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-                            }
+                            // Convertimos YYYY-MM-DD o YYYY/MM/DD a DD/MM/YYYY para la app
+                            normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
                         }
                     }
 
+                    // CADA HORA VIENE EN 'x.time' (ej: "01:00", "02:00"...)
                     let rawTime = String(x.time || '0');
                     let horaNum = parseInt(rawTime.split(':')[0], 10);
                     if (isNaN(horaNum)) horaNum = 0;
@@ -1851,7 +1851,7 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas de Datadis.`;
+                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas reales de Datadis.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         exportBtn.classList.remove('hidden');
                         
