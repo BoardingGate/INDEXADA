@@ -1756,16 +1756,15 @@
         }
 
 async function descargarDesdeDatadis() {
-             console.log("¡Se ha pulsado el botón de descargar desde Datadis!");
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
-            const startDate = document.getElementById('datadisStart').value;
-            const endDate = document.getElementById('datadisEnd').value;
+            const startDateStr = document.getElementById('datadisStart').value;
+            const endDateStr = document.getElementById('datadisEnd').value;
 
-            if (!username || !password || !startDate || !endDate) {
+            if (!username || !password || !startDateStr || !endDateStr) {
                 statusEl.textContent = '⚠️ Rellena usuario, contraseña y ambas fechas.';
                 statusEl.className = 'text-xs mt-2 text-red-600';
                 return;
@@ -1777,64 +1776,87 @@ async function descargarDesdeDatadis() {
             window.lastDatadisCsv = null;
 
             try {
-                const resp = await fetch(DATADIS_PROXY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username,
-                        password,
-                        cups: cups || undefined,
-                        startDate: toDatadisDate(startDate),
-                        endDate: toDatadisDate(endDate),
-                    }),
-                });
+                // Generar lista de meses necesarios entre la fecha de inicio y fin
+                const startParts = startDateStr.split('-').map(Number);
+                const endParts = endDateStr.split('-').map(Number);
+                let cursor = new Date(startParts[0], startParts[1] - 1, 1);
+                const finalDate = new Date(endParts[0], endParts[1] - 1, 1);
 
-                const data = await resp.json();
-                
-                // --- AÑADE ESTA LÍNEA PARA DEPURAR ---
-                console.log("Respuesta completa de Datadis/Proxy:", data);
-
-                if (!resp.ok || data.error) {
-                    statusEl.textContent = '❌ ' + (data.error || `Error del proxy (código ${resp.status}).`);
-                    statusEl.className = 'text-xs mt-2 text-red-600';
-                    return;
+                const monthChunks = [];
+                while (cursor <= finalDate) {
+                    const y = cursor.getFullYear();
+                    const m = String(cursor.getMonth() + 1).padStart(2, '0');
+                    monthChunks.push(`${y}/${m}`);
+                    cursor.setMonth(cursor.getMonth() + 1);
                 }
 
-                // Verificación de seguridad por si data.consumptionData no viene
-                if (!data.consumptionData || !Array.isArray(data.consumptionData)) {
-                    statusEl.textContent = '❌ El servidor no devolvió datos de consumo válidos (revisa credenciales o fechas).';
-                    statusEl.className = 'text-xs mt-2 text-red-600';
-                    return;
-                }
+                let allConsumptionRows = [];
+                let detectedCups = cups;
 
-let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
-                const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
-                
-                // Parseamos la fecha de inicio seleccionada por el usuario (ej. "2026-03-01")
-                const startDateInput = document.getElementById('datadisStart').value;
-                let currentDate = new Date(startDateInput + 'T00:00:00');
+                for (let i = 0; i < monthChunks.length; i++) {
+                    const mStr = monthChunks[i];
+                    statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${monthChunks.length} (${mStr})...`;
 
-                data.consumptionData.forEach((x, index) => {
-                    // Cada 24 horas (cuando la hora vuelve a ser 1 o 0), avanzamos un día en el calendario
-                    if (index > 0 && index % 24 === 0) {
-                        currentDate.setDate(currentDate.getDate() + 1);
+                    const resp = await fetch(DATADIS_PROXY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username,
+                            password,
+                            cups: cups || undefined,
+                            startDate: mStr,
+                            endDate: mStr,
+                        }),
+                    });
+
+                    const data = await resp.json();
+                    if (!resp.ok || data.error) {
+                        throw new Error(data.error || `Error al descargar el mes ${mStr}`);
                     }
 
-                    // Formateamos la fecha actual calculada a DD/MM/YYYY para que Excel y la app la lean bien
-                    const day = String(currentDate.getDate()).padStart(2, '0');
-                    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                    const year = currentDate.getFullYear();
-                    const normalizedDate = `${day}/${month}/${year}`;
+                    if (data.cups && !detectedCups) detectedCups = data.cups;
+                    if (Array.isArray(data.consumptionData)) {
+                        allConsumptionRows = allConsumptionRows.concat(data.consumptionData);
+                    }
 
-                    // Extraer la hora limpia de x.time (ej. "1", "24", "01:00")
+                    await new Promise(r => setTimeout(r, 200)); // Pequeña pausa entre peticiones
+                }
+
+                if (allConsumptionRows.length === 0) {
+                    throw new Error("No se encontraron lecturas de consumo en el periodo seleccionado.");
+                }
+
+                let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
+                const cupsVal = detectedCups || 'ES0022000007526050YT1P';
+
+                allConsumptionRows.forEach((x) => {
+                    // Datadis devuelve x.date (ej: "2026-02-01") y x.time (ej: "01:00")
+                    let rawDate = x.date || '';
+                    let normalizedDate = '';
+
+                    if (rawDate) {
+                        let clean = rawDate.trim().split(/[ T]/)[0];
+                        let parts = clean.split(/[-/.]/).map(p => p.trim());
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) {
+                                // De YYYY-MM-DD a DD/MM/YYYY
+                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+                            } else {
+                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+                            }
+                        }
+                    }
+
                     let rawTime = String(x.time || x.hora || '0');
                     let horaNum = parseInt(rawTime.split(':')[0], 10);
-                    if (isNaN(horaNum)) horaNum = (index % 24) + 1;
+                    if (isNaN(horaNum)) horaNum = 0;
 
                     const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
 
-                    csv += `${cupsVal};${normalizedDate};${horaNum};${consumoStr};R\n`;
+                    if (normalizedDate) {
+                        csv += `${cupsVal};${normalizedDate};${horaNum};${consumoStr};R\n`;
+                    }
                 });
 
                 window.lastDatadisCsv = csv;
@@ -1848,13 +1870,13 @@ let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                         if (window.calendarSelectedDates) {
                             window.calendarSelectedDates.clear();
                         }
-                        document.getElementById('filterStartDate').value = startDate;
-                        document.getElementById('filterEndDate').value = endDate;
+                        document.getElementById('filterStartDate').value = startDateStr;
+                        document.getElementById('filterEndDate').value = endDateStr;
                         saveConfig();
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas de Datadis.`;
+                        statusEl.textContent = `✅ Cargadas ${allConsumptionRows.length} lecturas reales de Datadis.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         exportBtn.classList.remove('hidden');
                         
@@ -1867,12 +1889,12 @@ let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                         statusEl.className = 'text-xs mt-2 text-red-600';
                     },
                 });
+
             } catch (err) {
-                statusEl.textContent = '❌ Error de conexión con el proxy: ' + err.message;
+                statusEl.textContent = '❌ ' + err.message;
                 statusEl.className = 'text-xs mt-2 text-red-600';
             }
         }
-
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
 
         document.getElementById('datadisExportBtn').addEventListener('click', () => {
