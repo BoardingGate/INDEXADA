@@ -1723,7 +1723,17 @@
 
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
-        function toDatadisDate(isoDate) {
+       function toDatadisDate(isoDate) {
+            if (!isoDate) return '';
+            const parts = isoDate.split('-');
+            if (parts.length === 3) {
+                return `${parts[0]}/${parts[1]}/${parts[2]}`;
+            }
+            return isoDate.replace(/-/g, '/');
+        }
+
+        // Formato para contratos y potencias (YYYY/MM)
+        function toDatadisMonth(isoDate) {
             if (!isoDate) return '';
             const parts = isoDate.split('-');
             return `${parts[0]}/${parts[1]}`;
@@ -1771,12 +1781,13 @@
                 const resp = await fetch(DATADIS_PROXY_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                   body: JSON.stringify({
                         username,
                         password,
                         cups: cups || undefined,
-                        startDate: toDatadisDate(startDate),
-                        endDate: toDatadisDate(endDate),
+                        startDate: toDatadisDate(startDateRaw), 
+                        endDate: toDatadisDate(endDateRaw),     
+                        action: 'contracts'
                     }),
                 });
 
@@ -6516,13 +6527,13 @@ function saveActiveProfileToMemory() {
                 const resp = await fetch(DATADIS_PROXY_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                   body: JSON.stringify({
                         username,
                         password,
                         cups: cups || undefined,
-                        startDate: toDatadisDate(startDateRaw), 
-                        endDate: toDatadisDate(endDateRaw),     
-                        action: 'contracts'
+                        startDate: toDatadisMonth(startDateRaw), 
+                        endDate: toDatadisMonth(endDateRaw),     
+                        action: 'contracts'                
                     }),
                 });
 
