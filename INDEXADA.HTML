@@ -7189,9 +7189,10 @@ function parseCnmcOfferText(text) {
                 /Bono\s*Social[^\n]*incluido/i.test(offerBody)) {
                 result.bonoSocialDaily = 0.00;
             } else {
-                const bonoDayMatch = offerBody.match(/([\d.,]+)\s*€\/d[ií]a/i);
-                const bonoCupsMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
-                const bonoMonthMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*([\d.,]+)\s*€\/mes/i);
+                const bonoDayMatch = offerBody.match(/bono\s*social[^\n\d]*?([\d.,]+)\s*€\/d[ií]a/i)
+                                  || offerBody.match(/([\d.,]+)\s*€\/d[ií]a/i);
+                const bonoCupsMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*?([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
+                const bonoMonthMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*?([\d.,]+)\s*€\/mes/i);
 
                 if (bonoDayMatch && bonoDayMatch[1]) {
                     result.bonoSocialDaily = parseNum(bonoDayMatch[1]);
@@ -7280,8 +7281,7 @@ function parseCnmcOfferText(text) {
             }
             previewBox?.classList.remove('hidden');
         });
-
-        document.getElementById('cnmcApplyBtn')?.addEventListener('click', () => {
+document.getElementById('cnmcApplyBtn')?.addEventListener('click', () => {
             if (!window.parsedCnmcData) return;
 
             const targetVal = parseInt(document.getElementById('cnmcTargetProfile')?.value || '-1', 10);
@@ -7298,7 +7298,12 @@ function parseCnmcOfferText(text) {
             if (d.energyPunta !== null) targetProf.pricePunta = d.energyPunta;
             if (d.energyLlano !== null) targetProf.priceLlano = d.energyLlano;
             if (d.energyValle !== null) targetProf.priceValle = d.energyValle;
-            if (d.bonoSocialDaily !== null) targetProf.retailerMarginManual = d.bonoSocialDaily;
+
+            // SOLO si se detectó explícitamente un bono social (número >= 0), lo aplicamos.
+            // Si es null (no venía en la oferta), se conserva intacto el que ya tenía el perfil.
+            if (d.bonoSocialDaily !== null && !isNaN(d.bonoSocialDaily)) {
+                targetProf.retailerMarginManual = d.bonoSocialDaily;
+            }
 
             loadProfileFromMemory(targetIndex);
             saveConfig();
