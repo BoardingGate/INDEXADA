@@ -1805,40 +1805,7 @@
                     throw new Error("No hay lecturas disponibles para ese período.");
                 }
 
-                let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
-                const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
-
-                data.consumptionData.forEach((x) => {
-                    // x.date viene como "2026/05/01" o "2026-05-01"
-                    let rawDate = x.date || '';
-                    let normalizedDate = '';
-
-                    if (rawDate) {
-                        // Limpiamos y separamos por barras o guiones
-                        let clean = rawDate.trim().split(/[ T]/)[0];
-                        let parts = clean.split(/[-/.]/).map(p => p.trim());
-                        if (parts.length === 3) {
-                            // Convertimos YYYY/MM/DD a DD/MM/YYYY que es lo que espera la app
-                            normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                        } else {
-                            normalizedDate = rawDate;
-                        }
-                    }
-
-                    // x.time viene como "01:00", extraemos la hora numérica (1 a 24 o 0 a 23)
-                    let rawTime = String(x.time || '0');
-                    let horaNum = parseInt(rawTime.split(':')[0], 10);
-                    if (isNaN(horaNum)) horaNum = 0;
-
-                    const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
-                    const consumoStr = String(consumoValue).replace('.', ',');
-
-                    if (normalizedDate) {
-                        csv += `${cupsVal};${normalizedDate};${horaNum};${consumoStr};R\n`;
-                    }
-                });
-
-                window.lastDatadisCsv = csv;
+let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
 
                 Papa.parse(csv, {
                     header: true,
