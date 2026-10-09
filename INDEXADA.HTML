@@ -1808,7 +1808,14 @@ async function descargarDesdeDatadis() {
 
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
+                
+                // --- IMPRIMIMOS EL PRIMER OBJETO QUE DEVUELVE DATADIS PARA ANALIZARLO ---
+                console.log("Estructura de la primera lectura de Datadis:", data.consumptionData[0]);
+
                 data.consumptionData.forEach((x) => {
+                    // Imprimimos x.date y x.time de cada lectura en la consola
+                    console.log("Lectura cruda - date:", x.date, "| time:", x.time);
+
                     const normalizedDate = formatToDistributorDate(x.date);
                     const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
