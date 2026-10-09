@@ -1811,30 +1811,16 @@ let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
                 
                 data.consumptionData.forEach((x) => {
-                    // Datadis suele enviar la fecha en x.date o en x.dateTimestamp o x.time
-                    // Vamos a extraer la fecha y la hora de forma inteligente:
+                    // Datadis envía la fecha limpia en x.date (ej: "2026-08-01")
                     let rawDate = x.date || x.dia || '';
-                    let normalizedDate = '';
+                    let cleanDate = '';
 
                     if (rawDate) {
-                        // Si viene en formato YYYY-MM-DD o YYYY/MM/DD
-                        let clean = rawDate.trim().split(/[ T]/)[0];
-                        let parts = clean.split(/[-/.]/).map(p => p.trim());
-                        if (parts.length === 3) {
-                            // Si viene como AAAA-MM-DD
-                            if (parts[0].length === 4) {
-                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                            } 
-                            // Si viene como DD-MM-AAAA
-                            else {
-                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-                            }
-                        } else {
-                            normalizedDate = rawDate;
-                        }
+                        // Nos quedamos solo con la parte de la fecha (por si trae hora u otros caracteres)
+                        cleanDate = rawDate.trim().split(/[ T]/)[0];
                     }
 
-                    // Extraer la hora correctamente de x.time (ej: "01:00", "01", o "1")
+                    // Extraer la hora limpia de x.time (ej: "02:00" o "2")
                     let rawTime = String(x.time || x.hora || '0');
                     let horaNum = parseInt(rawTime.split(':')[0], 10);
                     if (isNaN(horaNum)) horaNum = 0;
@@ -1842,7 +1828,8 @@ let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                     const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
 
-                    csv += `${cupsVal};${normalizedDate};${horaNum};${consumoStr};R\n`;
+                    // Guardamos directamente en el CSV con el formato YYYY-MM-DD que processData adora
+                    csv += `${cupsVal};${cleanDate};${horaNum};${consumoStr};R\n`;
                 });
 
                 window.lastDatadisCsv = csv;
