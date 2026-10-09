@@ -1757,7 +1757,7 @@
             return rawDate;
         }
 
-        async function descargarDesdeDatadis() {
+async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
@@ -1781,20 +1781,29 @@
                 const resp = await fetch(DATADIS_PROXY_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                   body: JSON.stringify({
+                    body: JSON.stringify({
                         username,
                         password,
                         cups: cups || undefined,
-                        startDate: toDatadisDate(startDate), 
-                        endDate: toDatadisDate(endDate),     
-                        action: 'contracts'
+                        startDate: toDatadisDate(startDate),
+                        endDate: toDatadisDate(endDate),
                     }),
                 });
 
                 const data = await resp.json();
+                
+                // --- AÑADE ESTA LÍNEA PARA DEPURAR ---
+                console.log("Respuesta completa de Datadis/Proxy:", data);
 
                 if (!resp.ok || data.error) {
                     statusEl.textContent = '❌ ' + (data.error || `Error del proxy (código ${resp.status}).`);
+                    statusEl.className = 'text-xs mt-2 text-red-600';
+                    return;
+                }
+
+                // Verificación de seguridad por si data.consumptionData no viene
+                if (!data.consumptionData || !Array.isArray(data.consumptionData)) {
+                    statusEl.textContent = '❌ El servidor no devolvió datos de consumo válidos (revisa credenciales o fechas).';
                     statusEl.className = 'text-xs mt-2 text-red-600';
                     return;
                 }
