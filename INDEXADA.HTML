@@ -7067,7 +7067,7 @@ function saveActiveProfileToMemory() {
         // ========================================================
         window.parsedCnmcData = null;
 
-        function parseCnmcOfferText(text) {
+function parseCnmcOfferText(text) {
             if (!text || typeof text !== 'string') return null;
 
             const cleanText = text.replace(/\r/g, '\n');
@@ -7081,17 +7081,6 @@ function saveActiveProfileToMemory() {
                 bonoSocialDaily: null
             };
 
-            // Nombre comercial y comercializadora
-            const nameMatch = cleanText.match(/logoComercializadora\s*([^\n\r]+)/i);
-            if (nameMatch && nameMatch[1]) {
-                result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
-            } else {
-                const descMatch = cleanText.match(/Descripción oferta\s*([^\n\r]+)/i);
-                if (descMatch && descMatch[1]) {
-                    result.name = descMatch[1].substring(0, 40).trim();
-                }
-            }
-
             const parseNum = (str) => {
                 if (!str) return null;
                 const clean = str.trim().replace(/\.+$/, '').replace(',', '.');
@@ -7099,49 +7088,88 @@ function saveActiveProfileToMemory() {
                 return isNaN(val) ? null : val;
             };
 
-            // 1. Precios de Potencia
-            const p1Match = cleanText.match(/Potencia[^\n]*Punta[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
-                         || cleanText.match(/(?:Precios?\s+Potencia[^\n]*\n(?:[^\n]*\n)?)\s*Punta[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
-                         || cleanText.match(/(?:^|\n)\s*Punta[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
-            if (p1Match) result.powerP1 = parseNum(p1Match[1]);
+            // 1. NOMBRE DE LA OFERTA
+            const nameMatch = cleanText.match(/logoComercializadora\s*\n*([^\n\r]+)/i);
+            if (nameMatch && nameMatch[1]) {
+                result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
+            } else {
+                const descMatch = cleanText.match(/Descripción oferta\s*\n*([^\n\r]+)/i);
+                if (descMatch && descMatch[1]) {
+                    result.name = descMatch[1].substring(0, 45).trim();
+                }
+            }
 
-            const p2Match = cleanText.match(/Potencia[^\n]*Valle[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
-                         || cleanText.match(/(?:Precios?\s+Potencia[^\n]*\n(?:[^\n]*\n)?)\s*Valle[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i)
-                         || cleanText.match(/(?:^|\n)\s*Valle[:\s]+([\d.,]+)\s*€\/(?:kW\/año|kW\s*año)/i);
-            if (p2Match) result.powerP2 = parseNum(p2Match[1]);
+            // 2. PRECIOS DE POTENCIA (P1 Punta y P2 Valle)
+            // Soporta: "P1= 28,52", "P1: 28,52", "Potencia Punta: 28,52", "Punta: 28,52", "P1 ... €/kW"
+            const p1Regexes = [
+                /(?:P1|Potencia\s*Punta|Punta)[^\d\n]*[=:\s]+([\d.,]+)\s*€\/(?:kW[\s/]*año|kW)/i,
+                /P1\s*=\s*([\d.,]+)/i,
+                /Potencia\s*Punta[:\s]+([\d.,]+)/i
+            ];
+            for (let rx of p1Regexes) {
+                const m = cleanText.match(rx);
+                if (m && m[1]) { result.powerP1 = parseNum(m[1]); break; }
+            }
 
+            const p2Regexes = [
+                /(?:P2|Potencia\s*Valle|Valle)[^\d\n]*[=:\s]+([\d.,]+)\s*€\/(?:kW[\s/]*año|kW)/i,
+                /P2\s*=\s*([\d.,]+)/i,
+                /Potencia\s*Valle[:\s]+([\d.,]+)/i
+            ];
+            for (let rx of p2Regexes) {
+                const m = cleanText.match(rx);
+                if (m && m[1]) { result.powerP2 = parseNum(m[1]); break; }
+            }
+
+            // Si solo hay un precio de potencia (ej. tarifa con potencia única), P2 hereda P1
             if (result.powerP1 !== null && result.powerP2 === null) result.powerP2 = result.powerP1;
+            if (result.powerP2 !== null && result.powerP1 === null) result.powerP1 = result.powerP2;
 
-            // 2. Precios de Energía
-            const ePuntaMatch = cleanText.match(/Energ[ií]a[^\n]*Punta[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:Precios?\s+Energ[ií]a[^\n]*\n(?:[^\n]*\n)?)\s*Punta[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:^|\n)\s*Punta[:\s]+([\d.,]+)\s*€\/kWh/i);
-            const eLlanoMatch = cleanText.match(/Energ[ií]a[^\n]*Llano[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:Precios?\s+Energ[ií]a[^\n]*\n(?:[^\n]*\n)?)\s*Llano[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:^|\n)\s*Llano[:\s]+([\d.,]+)\s*€\/kWh/i);
-            const eValleMatch = cleanText.match(/Energ[ií]a[^\n]*Valle[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:Precios?\s+Energ[ií]a[^\n]*\n(?:[^\n]*\n)?)\s*Valle[:\s]+([\d.,]+)\s*€\/kWh/i)
-                             || cleanText.match(/(?:^|\n)\s*Valle[:\s]+([\d.,]+)\s*€\/kWh/i);
+
+            // 3. PRECIOS DE ENERGÍA (Punta, Llano, Valle o Precio Único/Fijo)
+            // A) Detección de tramos múltiples (3 precios)
+            const ePuntaMatch = cleanText.match(/(?:Energ[ií]a\s*Punta|Punta)[^\d\n]*[=:\s]+([\d.,]+)\s*€\/kWh/i);
+            const eLlanoMatch = cleanText.match(/(?:Energ[ií]a\s*Llano|Llano)[^\d\n]*[=:\s]+([\d.,]+)\s*€\/kWh/i);
+            const eValleMatch = cleanText.match(/(?:Energ[ií]a\s*Valle|Valle)[^\d\n]*[=:\s]+([\d.,]+)\s*€\/kWh/i);
 
             if (ePuntaMatch) result.energyPunta = parseNum(ePuntaMatch[1]);
             if (eLlanoMatch) result.energyLlano = parseNum(eLlanoMatch[1]);
             if (eValleMatch) result.energyValle = parseNum(eValleMatch[1]);
 
-            // Tarifa Plana / Precio Único de Energía
+            // B) Detección de Precio Único / Tarifa Plana (1 precio)
+            // Si la compañía indica precio con FNEE (Fondo de Eficiencia), priorizamos ese porque es el real a pagar:
+            const singleFneeMatch = cleanText.match(/T[eé]rmino\s+de\s+energ[ií]a\s+con\s+importe[^\n=:]*[=:\s]+([\d.,]+)\s*€\/kWh/i);
+            const singleStandardMatch = cleanText.match(/(?:T[eé]rmino\s+de\s+Energ[ií]a|Precio\s+de\s+la\s+energ[ií]a|Energ[ií]a)[^\d\n]*[=:\s]+([\d.,]+)\s*€\/kWh/i);
+
             if (result.energyPunta === null && result.energyLlano === null && result.energyValle === null) {
-                const singleMatch = cleanText.match(/(?:T[eé]rmino\s+de\s+Energ[ií]a|Precio\s+de\s+la\s+energ[ií]a|Energ[ií]a)[:\s]+([\d.,]+)\s*€\/kWh/i);
-                if (singleMatch) {
-                    const sp = parseNum(singleMatch[1]);
-                    result.energyPunta = sp;
-                    result.energyLlano = sp;
-                    result.energyValle = sp;
+                let singlePrice = null;
+                if (singleFneeMatch && singleFneeMatch[1]) {
+                    singlePrice = parseNum(singleFneeMatch[1]); // Precio real con fondo incluido
+                } else if (singleStandardMatch && singleStandardMatch[1]) {
+                    singlePrice = parseNum(singleStandardMatch[1]);
+                }
+
+                if (singlePrice !== null) {
+                    result.energyPunta = singlePrice;
+                    result.energyLlano = singlePrice;
+                    result.energyValle = singlePrice;
                 }
             }
 
-            // 3. Mecanismo de financiación del Bono Social
-            const bonoMatch = cleanText.match(/bono\s*social[^:]*:\s*(?:Coste\s*fijo\s*por\s*cliente)?\s*([\d.,]+)\s*€\/mes/i);
-            if (bonoMatch) {
-                const bMonth = parseNum(bonoMatch[1]);
+
+            // 4. BONO SOCIAL (Márgenes fijos)
+            // Caso A: Por CUPS/año (ej: "asciende a 9,011295 €/CUPS" o "€/año") -> dividimos entre 365 días
+            const bonoCupsMatch = cleanText.match(/bono\s*social[^\n\d]*asciende\s*a\s*([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i)
+                               || cleanText.match(/bono\s*social[^\n\d]*[:=]\s*([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
+            
+            // Caso B: Por mes (ej: "0.229 €/mes") -> dividimos entre 30 días
+            const bonoMonthMatch = cleanText.match(/bono\s*social[^:]*:\s*(?:Coste\s*fijo\s*por\s*cliente)?\s*([\d.,]+)\s*€\/mes/i);
+
+            if (bonoCupsMatch && bonoCupsMatch[1]) {
+                const bYear = parseNum(bonoCupsMatch[1]);
+                if (bYear !== null) result.bonoSocialDaily = parseFloat((bYear / 365).toFixed(4));
+            } else if (bonoMonthMatch && bonoMonthMatch[1]) {
+                const bMonth = parseNum(bonoMonthMatch[1]);
                 if (bMonth !== null) result.bonoSocialDaily = parseFloat((bMonth / 30).toFixed(4));
             }
 
