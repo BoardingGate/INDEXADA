@@ -1727,7 +1727,7 @@
        function toDatadisDate(isoDate) {
             if (!isoDate) return '';
             const parts = isoDate.split('-');
-            return `${parts[0]}/${parts[1]}`; // Devuelve YYYY/MM
+            return `${parts[0]}/${parts[1]}`; 
         }
 
         // Formato mensual exclusivo para contratos y potencias máximas (YYYY/MM)
@@ -1761,10 +1761,10 @@ async function descargarDesdeDatadis() {
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
-            const startDateStr = document.getElementById('datadisStart').value;
-            const endDateStr = document.getElementById('datadisEnd').value;
+            const startDate = document.getElementById('datadisStart').value;
+            const endDate = document.getElementById('datadisEnd').value;
 
-            if (!username || !password || !startDateStr || !endDateStr) {
+            if (!username || !password || !startDate || !endDate) {
                 statusEl.textContent = '⚠️ Rellena usuario, contraseña y ambas fechas.';
                 statusEl.className = 'text-xs mt-2 text-red-600';
                 return;
@@ -1776,12 +1776,6 @@ async function descargarDesdeDatadis() {
             window.lastDatadisCsv = null;
 
             try {
-                // Función estricta para enviar YYYY/MM al proxy
-                const toProxyMonth = (isoDate) => {
-                    const parts = isoDate.split('-');
-                    return `${parts[0]}/${parts[1]}`;
-                };
-
                 const resp = await fetch(DATADIS_PROXY_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1789,48 +1783,38 @@ async function descargarDesdeDatadis() {
                         username,
                         password,
                         cups: cups || undefined,
-                        startDate: toProxyMonth(startDateStr),
-                        endDate: toProxyMonth(endDateStr),
+                        startDate: toDatadisDate(startDate), // Envía YYYY/MM
+                        endDate: toDatadisDate(endDate),     // Envía YYYY/MM
                     }),
                 });
 
                 const data = await resp.json();
 
                 if (!resp.ok || data.error) {
-                    throw new Error(data.error || `Error del proxy (código ${resp.status}).`);
+                    statusEl.textContent = '❌ ' + (data.error || `Error del proxy (código ${resp.status}).`);
+                    statusEl.className = 'text-xs mt-2 text-red-600';
+                    return;
                 }
 
                 if (!data.consumptionData || !Array.isArray(data.consumptionData) || data.consumptionData.length === 0) {
-                    throw new Error("No hay lecturas disponibles para ese período.");
+                    statusEl.textContent = '❌ No hay lecturas de consumo disponibles para ese período.';
+                    statusEl.className = 'text-xs mt-2 text-red-600';
+                    return;
                 }
 
+                // Generación limpia del CSV utilizando la fecha real (x.date) y hora real (x.time) de cada registro
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
-                const finalCups = cups || data.cups || 'ES0022000007526050YT1P';
-
+                const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
+                
                 data.consumptionData.forEach((x) => {
-                    // CADA OBJETO 'x' TRAE SU PROPIA FECHA EN 'x.date' (ej: "2026-05-01" o "2026/05/01")
-                    let rawDate = x.date || '';
-                    let normalizedDate = '';
-
-                    if (rawDate) {
-                        let clean = String(rawDate).trim().split(/[ T]/)[0];
-                        let parts = clean.split(/[-/.]/).map(p => p.trim());
-                        if (parts.length === 3) {
-                            // Convertimos YYYY-MM-DD o YYYY/MM/DD a DD/MM/YYYY para la app
-                            normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                        }
-                    }
-
-                    // CADA HORA VIENE EN 'x.time' (ej: "01:00", "02:00"...)
-                    let rawTime = String(x.time || '0');
-                    let horaNum = parseInt(rawTime.split(':')[0], 10);
-                    if (isNaN(horaNum)) horaNum = 0;
-
+                    const normalizedDate = formatToDistributorDate(x.date);
+                    const rawTime = String(x.time || '0');
+                    const horaNum = parseInt(rawTime.split(':')[0], 10);
                     const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
-
+                    
                     if (normalizedDate) {
-                        csv += `${finalCups};${normalizedDate};${horaNum};${consumoStr};R\n`;
+                        csv += `${cupsVal};${normalizedDate};${isNaN(horaNum) ? 0 : horaNum};${consumoStr};R\n`;
                     }
                 });
 
@@ -1845,28 +1829,27 @@ async function descargarDesdeDatadis() {
                         if (window.calendarSelectedDates) {
                             window.calendarSelectedDates.clear();
                         }
-                        document.getElementById('filterStartDate').value = startDateStr;
-                        document.getElementById('filterEndDate').value = endDateStr;
+                        document.getElementById('filterStartDate').value = startDate;
+                        document.getElementById('filterEndDate').value = endDate;
                         saveConfig();
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas reales de Datadis.`;
+                        statusEl.textContent = `✅ Cargadas ${data.consumptionData.length} lecturas de Datadis.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         exportBtn.classList.remove('hidden');
                         
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
-                        fileNameSpan.textContent = `Datadis API (CUPS ${finalCups})`;
+                        fileNameSpan.textContent = `Datadis API (CUPS ${cupsVal})`;
                     },
                     error: (err) => {
                         statusEl.textContent = '❌ Error al procesar los datos recibidos: ' + err.message;
                         statusEl.className = 'text-xs mt-2 text-red-600';
                     },
                 });
-
             } catch (err) {
-                statusEl.textContent = '❌ ' + err.message;
+                statusEl.textContent = '❌ Error de conexión con el proxy: ' + err.message;
                 statusEl.className = 'text-xs mt-2 text-red-600';
             }
         }
