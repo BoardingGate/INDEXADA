@@ -1810,30 +1810,26 @@ async function descargarDesdeDatadis() {
 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
                 
-                data.consumptionData.forEach((x) => {
-                    let rawDate = x.date || x.dia || '';
-                    let normalizedDate = '';
+                // Parseamos la fecha de inicio seleccionada por el usuario (ej. "2026-03-01")
+                const startDateInput = document.getElementById('datadisStart').value;
+                let currentDate = new Date(startDateInput + 'T00:00:00');
 
-                    if (rawDate) {
-                        // Datadis manda YYYY-MM-DD. Lo convertimos a DD/MM/YYYY para que 'processData' lo lea perfecto.
-                        let clean = rawDate.trim().split(/[ T]/)[0];
-                        let parts = clean.split(/[-/.]/).map(p => p.trim());
-                        if (parts.length === 3) {
-                            // Si viene como YYYY-MM-DD
-                            if (parts[0].length === 4) {
-                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-                            } else {
-                                // Si ya viniera como DD/MM/YYYY
-                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-                            }
-                        } else {
-                            normalizedDate = rawDate;
-                        }
+                data.consumptionData.forEach((x, index) => {
+                    // Cada 24 horas (cuando la hora vuelve a ser 1 o 0), avanzamos un día en el calendario
+                    if (index > 0 && index % 24 === 0) {
+                        currentDate.setDate(currentDate.getDate() + 1);
                     }
 
+                    // Formateamos la fecha actual calculada a DD/MM/YYYY para que Excel y la app la lean bien
+                    const day = String(currentDate.getDate()).padStart(2, '0');
+                    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                    const year = currentDate.getFullYear();
+                    const normalizedDate = `${day}/${month}/${year}`;
+
+                    // Extraer la hora limpia de x.time (ej. "1", "24", "01:00")
                     let rawTime = String(x.time || x.hora || '0');
                     let horaNum = parseInt(rawTime.split(':')[0], 10);
-                    if (isNaN(horaNum)) horaNum = 0;
+                    if (isNaN(horaNum)) horaNum = (index % 24) + 1;
 
                     const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
