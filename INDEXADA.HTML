@@ -1829,7 +1829,12 @@ async function descargarDesdeDatadis() {
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const cupsVal = detectedCups || 'ES0022000007526050YT1P';
 
-                allConsumptionRows.forEach((x) => {
+                // --- IMPRIMIMOS EL PRIMER REGISTRO DE DATADIS EN LA CONSOLA ---
+                if (allConsumptionRows.length > 0) {
+                    console.log("PROPIEDADES REALES QUE DEVUELVE DATADIS:", allConsumptionRows[0]);
+                }
+
+                allConsumptionRows.forEach((x) => {              
                     // Datadis devuelve x.date (ej: "2026-02-01") y x.time (ej: "01:00")
                     let rawDate = x.date || '';
                     let normalizedDate = '';
