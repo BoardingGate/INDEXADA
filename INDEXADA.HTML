@@ -1807,20 +1807,42 @@ async function descargarDesdeDatadis() {
                     return;
                 }
 
-                let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
+let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const cupsVal = cups || data.cups || 'ES0022000007526050YT1P';
                 
-                // --- IMPRIMIMOS EL PRIMER OBJETO QUE DEVUELVE DATADIS PARA ANALIZARLO ---
-                console.log("Estructura de la primera lectura de Datadis:", data.consumptionData[0]);
-
                 data.consumptionData.forEach((x) => {
-                    // Imprimimos x.date y x.time de cada lectura en la consola
-                    console.log("Lectura cruda - date:", x.date, "| time:", x.time);
+                    // Datadis suele enviar la fecha en x.date o en x.dateTimestamp o x.time
+                    // Vamos a extraer la fecha y la hora de forma inteligente:
+                    let rawDate = x.date || x.dia || '';
+                    let normalizedDate = '';
 
-                    const normalizedDate = formatToDistributorDate(x.date);
-                    const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? 0;
+                    if (rawDate) {
+                        // Si viene en formato YYYY-MM-DD o YYYY/MM/DD
+                        let clean = rawDate.trim().split(/[ T]/)[0];
+                        let parts = clean.split(/[-/.]/).map(p => p.trim());
+                        if (parts.length === 3) {
+                            // Si viene como AAAA-MM-DD
+                            if (parts[0].length === 4) {
+                                normalizedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+                            } 
+                            // Si viene como DD-MM-AAAA
+                            else {
+                                normalizedDate = `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+                            }
+                        } else {
+                            normalizedDate = rawDate;
+                        }
+                    }
+
+                    // Extraer la hora correctamente de x.time (ej: "01:00", "01", o "1")
+                    let rawTime = String(x.time || x.hora || '0');
+                    let horaNum = parseInt(rawTime.split(':')[0], 10);
+                    if (isNaN(horaNum)) horaNum = 0;
+
+                    const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
                     const consumoStr = String(consumoValue).replace('.', ',');
-                    csv += `${cupsVal};${normalizedDate};${parseInt(x.time.split(':')[0], 10)};${consumoStr};R\n`;
+
+                    csv += `${cupsVal};${normalizedDate};${horaNum};${consumoStr};R\n`;
                 });
 
                 window.lastDatadisCsv = csv;
