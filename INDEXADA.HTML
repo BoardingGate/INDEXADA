@@ -1755,7 +1755,8 @@
             return rawDate;
         }
 
-async function descargarDesdeDatadis() {
+
+        async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
             const username = document.getElementById('datadisUser').value.trim();
@@ -1787,7 +1788,7 @@ async function descargarDesdeDatadis() {
                 while (cursor <= limit) {
                     const y = cursor.getFullYear();
                     const m = String(cursor.getMonth() + 1).padStart(2, '0');
-                    monthList = monthsToFetch.push(`${y}/${m}`);
+                    monthsToFetch.push(`${y}/${m}`);
                     cursor.setMonth(cursor.getMonth() + 1);
                 }
 
@@ -1820,47 +1821,7 @@ async function descargarDesdeDatadis() {
                     const rows = data.consumptionData || data;
 
                     if (Array.isArray(rows) && rows.length > 0) {
-                        // RECONSTRUCCIÓN INTELIGENTE DE FECHAS:
-                        // Si Datadis repite "YYYY/MM/01" en todas las horas de un mes,
-                        // asignamos el día real sumando 1 día cada 24 horas consecutivas.
-                        const [mYear, mMonth] = mStr.split('/').map(Number);
-                        let dayCounter = 1;
-                        let lastHour = -1;
-
-                        const fixedRows = rows.map((item, idx) => {
-                            let rawTime = String(item.time || '0');
-                            let currentHour = parseInt(rawTime.split(':')[0], 10);
-                            if (isNaN(currentHour)) currentHour = (idx % 24) + 1;
-
-                            // Si la hora es menor o igual a la anterior (ej. pasa de 24 a 1, o de 23 a 0), avanzamos de día
-                            if (lastHour !== -1 && currentHour <= lastHour) {
-                                dayCounter++;
-                            }
-                            lastHour = currentHour;
-
-                            // Si la fecha original ya traía días distintos del 01, respetamos la original
-                            let rawD = String(item.date || '').trim().split(/[ T]/)[0].replace(/\//g, '-');
-                            let parts = rawD.split('-');
-                            let realDateISO = '';
-
-                            if (parts.length === 3 && parseInt(parts[2], 10) > 1) {
-                                // Trae día real en parts[2]
-                                realDateISO = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-                            } else {
-                                // Datadis dejó el día atascado en 01: usamos nuestro contador de día real
-                                const dayStr = String(dayCounter).padStart(2, '0');
-                                const monthStr = String(mMonth).padStart(2, '0');
-                                realDateISO = `${mYear}-${monthStr}-${dayStr}`;
-                            }
-
-                            return {
-                                ...item,
-                                calculatedDateISO: realDateISO,
-                                calculatedHour: currentHour
-                            };
-                        });
-
-                        allRows = allRows.concat(fixedRows);
+                        allRows = allRows.concat(rows);
                     }
 
                     await new Promise(r => setTimeout(r, 150));
@@ -1870,27 +1831,48 @@ async function descargarDesdeDatadis() {
                     throw new Error("No se encontraron registros de consumo.");
                 }
 
-                // 3. Filtrar exactamente entre fecha inicio y fecha fin del formulario
-                const filteredRows = allRows.filter(x => {
-                    return x.calculatedDateISO >= startDateStr && x.calculatedDateISO <= endDateStr;
-                });
-
-                if (filteredRows.length === 0) {
-                    throw new Error("No hay lecturas dentro del rango de fechas seleccionado.");
-                }
-
-                // 4. Generar el CSV con fecha DD/MM/YYYY y hora limpia
+                // 3. Normalizar cada fila con la fecha y hora que viene de Datadis
+                // Datadis entrega en cada fila: date ("YYYY/MM/DD"), time ("HH:00"), consumptionKWh
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const finalCups = detectedCups || 'ES0022000007526050YT1P';
 
-                filteredRows.forEach((x) => {
-                    const [y, m, d] = x.calculatedDateISO.split('-');
-                    const dmyDate = `${d}/${m}/${y}`;
-                    const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
-                    const consumoStr = String(consumoValue).replace('.', ',');
+                let validRowsCount = 0;
 
-                    csv += `${finalCups};${dmyDate};${x.calculatedHour};${consumoStr};R\n`;
+                allRows.forEach((x) => {
+                    let rawDate = String(x.date || '').trim().split(/[ T]/)[0]; // "2025/08/01" o "2025-08-01"
+                    let parts = rawDate.split(/[-/.]/);
+
+                    if (parts.length === 3) {
+                        // Construir formato ISO YYYY-MM-DD para comparar con el filtro
+                        let y, m, d;
+                        if (parts[0].length === 4) {
+                            y = parts[0]; m = parts[1].padStart(2, '0'); d = parts[2].padStart(2, '0');
+                        } else {
+                            d = parts[0].padStart(2, '0'); m = parts[1].padStart(2, '0'); y = parts[2];
+                        }
+
+                        const isoDate = `${y}-${m}-${d}`;
+
+                        // Filtrar solo las fechas dentro del rango solicitado
+                        if (isoDate >= startDateStr && isoDate <= endDateStr) {
+                            const dmyDate = `${d}/${m}/${y}`;
+                            
+                            let rawTime = String(x.time || '0');
+                            let horaNum = parseInt(rawTime.split(':')[0], 10);
+                            if (isNaN(horaNum)) horaNum = 0;
+
+                            const consumoValue = x.consumptionKWh ?? x.consumptionkwh ?? x.consumo ?? 0;
+                            const consumoStr = String(consumoValue).replace('.', ',');
+
+                            csv += `${finalCups};${dmyDate};${horaNum};${consumoStr};R\n`;
+                            validRowsCount++;
+                        }
+                    }
                 });
+
+                if (validRowsCount === 0) {
+                    throw new Error("No hay lecturas dentro del rango de fechas seleccionado.");
+                }
 
                 window.lastDatadisCsv = csv;
 
@@ -1909,7 +1891,7 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${filteredRows.length} lecturas correctamente desglosadas.`;
+                        statusEl.textContent = `✅ Cargadas ${validRowsCount} lecturas reales de Datadis.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700';
                         exportBtn.classList.remove('hidden');
                         
@@ -1928,6 +1910,7 @@ async function descargarDesdeDatadis() {
                 statusEl.className = 'text-xs mt-2 text-red-600';
             }
         }
+
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
 
