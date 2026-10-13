@@ -7376,22 +7376,6 @@ async function ejecutarAnalisisOfertasIA() {
         return;
     }
 
-    const btn = document.getElementById('btnAnalizarOfertasIA');
-    const container = document.getElementById('aiOfferAnalysisContainer');
-    const body = document.getElementById('aiOfferAnalysisBody');
-    const badge = document.getElementById('aiModelBadge');
-
-    container.classList.remove('hidden');
-    badge.textContent = model;
-    body.innerHTML = `
-        <div class="flex items-center gap-2.5 py-4 text-purple-900 font-bold animate-pulse justify-center">
-            <span class="inline-block animate-spin text-lg">⏳</span>
-            <span>Analizando minuciosamente curva de consumo, término de potencia y ofertas comparadas con IA...</span>
-        </div>
-    `;
-    btn.disabled = true;
-    btn.classList.add('opacity-50', 'cursor-not-allowed');
-
     // 1. Recopilar datos técnicos del suministro y consumo
     const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
     const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
@@ -7418,40 +7402,73 @@ async function ejecutarAnalisisOfertasIA() {
         }
     });
 
-    // 2. Extraer cálculos de todas las tarifas comparadas
     saveActiveProfileToMemory();
     const simActive = window.assumeEquivalentTranches;
     const simP1 = window.customTrancheP1 || 0;
     const simP2 = window.customTrancheP2 || 0;
     const simP3 = window.customTrancheP3 || 0;
 
-    const tarifasCalculadas = window.tariffProfiles.map((prof, idx) => {
-        const c = calculateProfileInvoice(prof, window.lastFilteredData, numDays, totalKwh, p1Kw, p2Kw, simActive, simP1, simP2, simP3);
-        return {
-            perfil: `Perfil ${idx + 1}`,
-            nombre: prof.name || `Tarifa Manual ${idx + 1}`,
-            preciosEnergia: {
-                punta_P1: prof.pricePunta,
-                llano_P2: prof.priceLlano,
-                valle_P3: prof.priceValle
-            },
-            preciosPotenciaAnual: {
-                p1: prof.powerPriceP1Manual,
-                p2: prof.powerPriceP2Manual
-            },
-            bonoMargenDiario: prof.retailerMarginManual,
-            totalFacturaEstimada: parseFloat(c.grandTotal.toFixed(2)),
-            precioMedioKwhFinal: parseFloat(c.avgKwhPrice.toFixed(5))
-        };
-    });
+    // 2. FILTRAR OFERTAS: Solo incluir perfiles que tengan precios reales (> 0) tanto en energía como en potencia
+    const tarifasCalculadas = window.tariffProfiles
+        .map((prof, idx) => ({ prof, idx }))
+        .filter(({ prof }) => {
+            const tieneEnergia = (parseFloat(prof.pricePunta) > 0) || 
+                                 (parseFloat(prof.priceLlano) > 0) || 
+                                 (parseFloat(prof.priceValle) > 0);
+            const tienePotencia = (parseFloat(prof.powerPriceP1Manual) > 0) || 
+                                  (parseFloat(prof.powerPriceP2Manual) > 0);
+            return tieneEnergia && tienePotencia;
+        })
+        .map(({ prof, idx }) => {
+            const c = calculateProfileInvoice(prof, window.lastFilteredData, numDays, totalKwh, p1Kw, p2Kw, simActive, simP1, simP2, simP3);
+            return {
+                perfil: `Perfil ${idx + 1}`,
+                nombre: prof.name || `Tarifa Manual ${idx + 1}`,
+                preciosEnergia: {
+                    punta_P1: parseFloat(prof.pricePunta) || 0,
+                    llano_P2: parseFloat(prof.priceLlano) || 0,
+                    valle_P3: parseFloat(prof.priceValle) || 0
+                },
+                preciosPotenciaAnual_Eur_kW_ano: {
+                    p1: parseFloat(prof.powerPriceP1Manual) || 0,
+                    p2: parseFloat(prof.powerPriceP2Manual) || 0
+                },
+                bonoMargenDiario_Eur_dia: parseFloat(prof.retailerMarginManual) || 0,
+                descuentoEnergia_pct: parseFloat(prof.discountEnergyManual) || 0,
+                descuentoPotencia_pct: parseFloat(prof.discountPowerManual) || 0,
+                totalFacturaEstimada_Eur: parseFloat(c.grandTotal.toFixed(2)),
+                precioMedioKwhFinal_Eur: parseFloat(c.avgKwhPrice.toFixed(5))
+            };
+        });
 
-    // Añadir PVPC Oficial
-    const pvpcTotalText = document.getElementById('totalCost')?.textContent || '';
+    if (tarifasCalculadas.length === 0) {
+        alert('Ninguna de las 6 tarifas manuales tiene precios de energía y potencia configurados. Rellena al menos una oferta para poder compararla.');
+        return;
+    }
+
+    // 3. Activar interfaz de carga
+    const btn = document.getElementById('btnAnalizarOfertasIA');
+    const container = document.getElementById('aiOfferAnalysisContainer');
+    const body = document.getElementById('aiOfferAnalysisBody');
+    const badge = document.getElementById('aiModelBadge');
+
+    container.classList.remove('hidden');
+    badge.textContent = `${model} (${tarifasCalculadas.length} tarifas analizadas)`;
+    body.innerHTML = `
+        <div class="flex items-center gap-2.5 py-4 text-purple-900 font-bold animate-pulse justify-center">
+            <span class="inline-block animate-spin text-lg">⏳</span>
+            <span>Analizando ${tarifasCalculadas.length} oferta(s) válida(s) frente al mercado regulado PVPC con IA...</span>
+        </div>
+    `;
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    // 4. Datos del PVPC
     const pvpcData = {
         tarifa: "PVPC (Mercado Regulado Oficial)",
-        potenciaP1Pvpc: parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 30.81,
-        potenciaP2Pvpc: parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0.72,
-        margenDiario: parseFloat(document.getElementById('retailerMarginPvpc').value) || 0.019
+        potenciaP1Pvpc_Eur_kW_ano: parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 30.81,
+        potenciaP2Pvpc_Eur_kW_ano: parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0.72,
+        margenDiario_Eur_dia: parseFloat(document.getElementById('retailerMarginPvpc').value) || 0.019
     };
 
     const payloadPrompt = {
@@ -7469,19 +7486,19 @@ async function ejecutarAnalisisOfertasIA() {
             simulacionPorcentualActiva: simActive ? { p1: simP1, p2: simP2, p3: simP3 } : false
         },
         pvpcRegulado: pvpcData,
-        tarifasComercialesComparadas: tarifasCalculadas
+        tarifasComercialesActivasValidas: tarifasCalculadas
     };
 
     const systemPrompt = `
 Eres un auditor y consultor energético colegiado especialista en el mercado eléctrico español (tarifa de acceso 2.0TD).
-Analiza los datos técnicos del suministro, el desglose de consumo por tramos horarios (P1 Punta, P2 Llano, P3 Valle) y las ofertas comparadas.
+Se te facilitan los datos del suministro y ÚNICAMENTE las tarifas que el usuario tiene activas con precios completos (se han excluido las que estaban sin rellenar).
 
 Instrucciones de formato y análisis:
 1. Responde con un tono directo, estructurado y altamente profesional en formato HTML legible (usa etiquetas como <p>, <strong>, <ul>, <li>, <table>, badges estilizados). NO uses bloques \`\`\`html markdown.
-2. Comienza con un CUADRO O RANKING claro de menor a mayor coste estimado, indicando el ahorro potencial respecto a la peor alternativa.
-3. Analiza el impacto de la potencia contratada (P1/P2) y el bono social/margen diario en cada oferta (muchas ofertas baratan el kWh pero encarecen la potencia).
-4. Explica cuál es la oferta GANADORA y por qué se adapta al patrón horario concreto del cliente (especialmente su concentración en Valle o Punta).
-5. Termina con un apartado "VEREDICTO Y RECOMENDACIÓN FINAL" con los pasos directos a seguir por el usuario.
+2. Comienza con un CUADRO O RANKING claro de menor a mayor coste estimado, comparando las ofertas activas frente al PVPC regulado.
+3. Evalúa si el patrón horario del usuario (concentración en P3 Valle frente a P1 Punta) compensa contratar un precio fijo, 3 tramos o indexada.
+4. Identifica trampas comerciales comunes: ofertas que bajan el kWh pero inflan el término fijo de potencia (P1/P2) o el margen diario.
+5. Concluye con un "VEREDICTO Y RECOMENDACIÓN FINAL" claro de 2-3 frases recomendando la tarifa ganadora.
 `;
 
     try {
@@ -7497,7 +7514,7 @@ Instrucciones de formato y análisis:
                 model: model,
                 messages: [
                     { role: "system", content: systemPrompt },
-                    { role: "user", content: `Analiza esta comparativa de suministro y emite tu auditoría experta:\n\n${JSON.stringify(payloadPrompt, null, 2)}` }
+                    { role: "user", content: `Analiza esta comparativa de tarifas válidas y emite tu auditoría:\n\n${JSON.stringify(payloadPrompt, null, 2)}` }
                 ],
                 temperature: 0.2
             })
@@ -7511,9 +7528,7 @@ Instrucciones de formato y análisis:
         const dataRes = await response.json();
         let content = dataRes.candidates?.[0]?.content?.parts?.[0]?.text || dataRes.choices?.[0]?.message?.content || "";
         
-        // Limpieza de formato markdown si viene envuelto
         content = content.replace(/^```html/i, '').replace(/```$/i, '').trim();
-
         body.innerHTML = content;
     } catch (error) {
         console.error("Error al consultar OpenRouter:", error);
