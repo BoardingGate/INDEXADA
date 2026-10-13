@@ -3163,9 +3163,10 @@ async function descargarDesdeDatadis() {
                                     ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(o.energyBase)}</td>`).join('')}
                                 </tr>
 
-                                <tr class="bg-gray-50/60">
+                                    <tr class="bg-gray-50/60">
                                     <td class="py-2.5 px-3 font-semibold text-gray-800 whitespace-nowrap sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-300 shadow-sm">Término de Energía (Neto)</td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap bg-blue-50/60 border-b border-gray-100">${fmtEur(totalCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
+                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap border-b border-gray-100">${fmtEur(totalCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
+                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-blue-900 whitespace-nowrap bg-blue-50/60 border-b border-gray-100">${fmtEur(totalCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
                                     <td class="py-2.5 px-2.5 text-right font-mono font-semibold ${diffEnergyClass} border-b border-r border-gray-300 leading-tight whitespace-nowrap">${diffEnergyText}</td>
                                     ${otherProfiles.map(o => `<td class="py-2.5 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap border-b border-gray-100">${fmtEur(o.energyNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descEnergia}%)</span></td>`).join('')}
                                 </tr>
