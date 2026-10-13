@@ -1737,41 +1737,15 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
         }
 
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
-
 window.lastDatadisRawResponse = null;
 
-        // Formato con día completo para las lecturas de consumo (YYYY/MM/DD)
-        function toDatadisDate(isoDate) {
-            if (!isoDate) return '';
-            return isoDate.replace(/-/g, '/');
-        }
-
-        // Formato mensual exclusivo para contratos y potencias máximas (YYYY/MM)
         function toDatadisMonth(isoDate) {
             if (!isoDate) return '';
             const parts = isoDate.split('-');
             return `${parts[0]}/${parts[1]}`;
         }
 
-        function formatToDistributorDate(rawDate) {
-            if (!rawDate) return '';
-            let clean = rawDate.trim().split(/[ T]/)[0];
-            let parts = clean.split(/[-/.]/).map(p => p.trim());
-            if (parts.length === 3) {
-                let year = parts[0];
-                let month = parts[1];
-                let day = parts[2];
-                if (parts[2].length === 4) {
-                    year = parts[2];
-                    month = parts[1];
-                    day = parts[0];
-                }
-                return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-            }
-            return rawDate;
-        }
-
-        // Parser robusto para respetar la fecha real entregada por Datadis
+        // Parsea la fecha oficial entregada por Datadis en cada registro ("YYYY/MM/DD")
         function parseDatadisItemDate(rawDate) {
             if (!rawDate) return null;
             const clean = String(rawDate).trim().split(/[ T]/)[0];
@@ -1779,12 +1753,12 @@ window.lastDatadisRawResponse = null;
             if (parts.length === 3) {
                 let y, m, d;
                 if (parts[0].length === 4) {
-                    // Formato YYYY/MM/DD o YYYY-MM-DD
+                    // Formato estándar Datadis YYYY/MM/DD
                     y = parts[0];
                     m = parts[1].padStart(2, '0');
                     d = parts[2].padStart(2, '0');
                 } else if (parts[2].length === 4) {
-                    // Formato DD/MM/YYYY o DD-MM-YYYY
+                    // Formato alternativo DD/MM/YYYY
                     d = parts[0].padStart(2, '0');
                     m = parts[1].padStart(2, '0');
                     y = parts[2];
@@ -1812,7 +1786,7 @@ window.lastDatadisRawResponse = null;
 
             if (!username || !password || !startDateStr || !endDateStr) {
                 statusEl.textContent = '⚠️ Rellena usuario, contraseña y ambas fechas.';
-                statusEl.className = 'text-xs mt-2 text-red-600';
+                statusEl.className = 'text-xs mt-2 text-red-600 font-semibold';
                 return;
             }
 
@@ -1825,46 +1799,29 @@ window.lastDatadisRawResponse = null;
             window.lastDatadisRawResponse = null;
 
             try {
-                // 1. Obtener la lista de tramos con días reales YYYY/MM/DD
-                const sDate = new Date(startDateStr);
-                const eDate = new Date(endDateStr);
+                // 1. Obtener la lista de meses en formato YYYY/MM según la API
+                const [sY, sM] = startDateStr.split('-').map(Number);
+                const [eY, eM] = endDateStr.split('-').map(Number);
 
-                let cursor = new Date(sDate.getFullYear(), sDate.getMonth(), 1);
-                const limit = new Date(eDate.getFullYear(), eDate.getMonth(), 1);
-                const chunksToFetch = [];
+                let cursor = new Date(sY, sM - 1, 1);
+                const limit = new Date(eY, eM - 1, 1);
+                const monthsToFetch = [];
 
                 while (cursor <= limit) {
                     const y = cursor.getFullYear();
-                    const m = cursor.getMonth();
-
-                    const startDay = (cursor.getFullYear() === sDate.getFullYear() && cursor.getMonth() === sDate.getMonth())
-                        ? String(sDate.getDate()).padStart(2, '0')
-                        : '01';
-
-                    const lastDayOfMonth = new Date(y, m + 1, 0).getDate();
-                    const endDay = (cursor.getFullYear() === eDate.getFullYear() && cursor.getMonth() === eDate.getMonth())
-                        ? String(eDate.getDate()).padStart(2, '0')
-                        : String(lastDayOfMonth).padStart(2, '0');
-
-                    const monthStr = String(m + 1).padStart(2, '0');
-
-                    chunksToFetch.push({
-                        start: `${y}/${monthStr}/${startDay}`,
-                        end: `${y}/${monthStr}/${endDay}`,
-                        label: `${monthStr}/${y}`
-                    });
-
+                    const m = String(cursor.getMonth() + 1).padStart(2, '0');
+                    monthsToFetch.push({ year: y, month: m, str: `${y}/${m}` });
                     cursor.setMonth(cursor.getMonth() + 1);
                 }
 
                 let allCsvRows = [];
                 let detectedCups = cups;
-                let rawSamplesForDebug = [];
+                let rawDebugList = [];
 
-                // 2. Descargar cada mes enviando YYYY/MM/DD completo
-                for (let i = 0; i < chunksToFetch.length; i++) {
-                    const chunk = chunksToFetch[i];
-                    statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${chunksToFetch.length} (${chunk.label}: ${chunk.start} al ${chunk.end})...`;
+                // 2. Descargar cada mes en formato YYYY/MM
+                for (let i = 0; i < monthsToFetch.length; i++) {
+                    const mObj = monthsToFetch[i];
+                    statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${monthsToFetch.length} (${mObj.str})...`;
 
                     const resp = await fetch(DATADIS_PROXY_URL, {
                         method: 'POST',
@@ -1873,44 +1830,44 @@ window.lastDatadisRawResponse = null;
                             username,
                             password,
                             cups: cups || undefined,
-                            startDate: chunk.start, // YYYY/MM/DD con barras
-                            endDate: chunk.end      // YYYY/MM/DD con barras
+                            startDate: mObj.str, // Formato YYYY/MM
+                            endDate: mObj.str    // Formato YYYY/MM
                         }),
                     });
 
                     const data = await resp.json();
                     if (!resp.ok || data.error) {
-                        throw new Error(data.error || `Error al descargar el periodo ${chunk.label}`);
+                        throw new Error(data.error || `Error al descargar el mes ${mObj.str}`);
                     }
 
                     if (data.cups && !detectedCups) detectedCups = data.cups;
                     const rows = data.consumptionData || data;
 
                     if (Array.isArray(rows) && rows.length > 0) {
-                        rawSamplesForDebug.push({
-                            chunk: chunk,
-                            totalRowsInChunk: rows.length,
+                        rawDebugList.push({
+                            month: mObj.str,
+                            totalRecords: rows.length,
                             first3: rows.slice(0, 3),
                             last3: rows.slice(-3)
                         });
 
-                        // 3. Parsear cada fila respetando la fecha que entrega Datadis
+                        // 3. Extraer fecha oficial de cada registro (item.date)
                         rows.forEach((item, index) => {
-                            const parsedDate = parseDatadisItemDate(item.date || item.fecha);
+                            const rawDateField = item.date || item.fecha || item.datetime;
+                            const parsedDate = parseDatadisItemDate(rawDateField);
 
                             let isoDate = parsedDate ? parsedDate.iso : null;
                             let dmyDate = parsedDate ? parsedDate.dmy : null;
 
-                            // Fallback de seguridad en caso de que Datadis no incluya el campo date
+                            // Fallback solo por si un registro puntual no trajese el campo date
                             if (!isoDate) {
                                 const dayNum = Math.min(31, Math.floor(index / 24) + 1);
                                 const dStr = String(dayNum).padStart(2, '0');
-                                const [cY, cM] = chunk.start.split('/');
-                                isoDate = `${cY}-${cM}-${dStr}`;
-                                dmyDate = `${dStr}/${cM}/${cY}`;
+                                isoDate = `${mObj.year}-${mObj.month}-${dStr}`;
+                                dmyDate = `${dStr}/${mObj.month}/${mObj.year}`;
                             }
 
-                            // Filtrar solo las lecturas que caen estrictamente en el rango del usuario
+                            // Filtrar para ceñirse estrictamente al rango de días elegido
                             if (isoDate >= startDateStr && isoDate <= endDateStr) {
                                 let rawTime = String(item.time || item.hora || '01:00');
                                 let horaNum = parseInt(rawTime.split(':')[0], 10);
@@ -1931,13 +1888,13 @@ window.lastDatadisRawResponse = null;
                     await new Promise(r => setTimeout(r, 150));
                 }
 
-                window.lastDatadisRawResponse = rawSamplesForDebug;
+                window.lastDatadisRawResponse = rawDebugList;
 
                 if (allCsvRows.length === 0) {
                     throw new Error("No hay lecturas disponibles para el período seleccionado.");
                 }
 
-                // 4. Construir el CSV con fechas y horas reales
+                // 4. Construir CSV con los días y horas reales de la distribuidora
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const finalCups = detectedCups || 'ES0022000007526050YT1P';
 
@@ -1979,7 +1936,7 @@ window.lastDatadisRawResponse = null;
 
             } catch (err) {
                 statusEl.textContent = '❌ ' + err.message;
-                statusEl.className = 'text-xs mt-2 text-red-600';
+                statusEl.className = 'text-xs mt-2 text-red-600 font-semibold';
                 if (debugBtn && window.lastDatadisRawResponse) debugBtn.classList.remove('hidden');
             }
         }
