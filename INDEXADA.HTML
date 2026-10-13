@@ -1300,6 +1300,39 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIGURACIÓN OPENROUTER IA -->
+<div id="modal-openrouter-config" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-5 space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <span class="text-purple-600">🤖</span> Configuración de OpenRouter API
+            </h3>
+            <button type="button" onclick="cerrarModalOpenRouter()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Introduce tu API Key de OpenRouter y el identificador del modelo que deseas utilizar para las comparativas automáticas.
+        </p>
+        <div class="space-y-3">
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="block text-xs font-bold text-slate-700">API Key de OpenRouter:</label>
+                    <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" class="text-[10px] text-indigo-600 hover:underline font-bold">Obtener clave ↗</a>
+                </div>
+                <input type="password" id="input-openrouter-key" placeholder="sk-or-v1-..." class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono outline-none focus:ring-2 focus:ring-purple-400">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Modelo de IA (OpenRouter Model ID):</label>
+                <input type="text" id="input-openrouter-model" value="google/gemini-2.5-flash" placeholder="Ej: google/gemini-2.5-flash, anthropic/claude-3.5-sonnet..." class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono font-bold text-purple-900 outline-none focus:ring-2 focus:ring-purple-400">
+                <span class="text-[10px] text-slate-400 block mt-1">Recomendados: <code>google/gemini-2.5-flash</code>, <code>meta-llama/llama-3.3-70b-instruct</code></span>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onclick="cerrarModalOpenRouter()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-xs transition">Cancelar</button>
+            <button type="button" onclick="guardarConfigOpenRouter()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-xs transition shadow-xs">Guardar Ajustes</button>
+        </div>
+    </div>
+</div>
+
 
     <script>
         window.todayPricesMap = {};
@@ -3051,6 +3084,15 @@ async function descargarDesdeDatadis() {
                         <div>
                             <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
                             <p class="text-[11px] text-gray-500">Desglose integral de conceptos. Desliza horizontalmente para ver las 5 tarifas restantes.</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <button type="button" id="btnAnalizarOfertasIA" onclick="ejecutarAnalisisOfertasIA()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
+                                    <span>✨ ANALIZAR OFERTAS CON iA</span>
+                                </button>
+                                <button type="button" onclick="abrirModalOpenRouter()" title="Configurar API Key y Modelo de OpenRouter" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold p-1.5 rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1">
+                                    <span>⚙️</span>
+                                    <span class="text-[10px] hidden sm:inline">Configurar API</span>
+                                </button>
+                            </div>
                         </div>
                         
                         <!-- Panel de Simulación de Reparto por Porcentajes -->
@@ -3208,8 +3250,22 @@ async function descargarDesdeDatadis() {
                         </table>
                     </div>
 
-                    <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
+                 <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
                         ${bannerText}
+                    </div>
+
+                    <!-- CONTENEDOR DEL INFORME AUDITORÍA DE IA -->
+                    <div id="aiOfferAnalysisContainer" class="hidden mt-4 p-4 bg-gradient-to-br from-purple-50/90 via-indigo-50/80 to-blue-50/90 border-2 border-purple-300 rounded-xl shadow-sm text-xs space-y-3">
+                        <div class="flex justify-between items-center border-b border-purple-200/80 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🤖</span>
+                                <h5 class="font-black text-purple-950 uppercase tracking-wide text-xs">
+                                    Dictamen Energético Experto emitido por Inteligencia Artificial
+                                </h5>
+                            </div>
+                            <span id="aiModelBadge" class="text-[10px] font-mono font-bold bg-purple-200/70 text-purple-900 px-2 py-0.5 rounded-full border border-purple-300"></span>
+                        </div>
+                        <div id="aiOfferAnalysisBody" class="text-slate-800 leading-relaxed space-y-2"></div>
                     </div>
                 </div>
             `;
@@ -7275,6 +7331,203 @@ document.getElementById('cnmcApplyBtn')?.addEventListener('click', () => {
                 status.className = 'text-xs font-extrabold text-emerald-700 mt-1';
             }
         });
+
+        // ==============================================================
+// GESTIÓN DE AUDITORÍA Y COMPARACIÓN DE TARIFAS CON OPENROUTER IA
+// ==============================================================
+
+const OPENROUTER_KEY_STORAGE = 'OPENROUTER_API_KEY_ANALIZADOR';
+const OPENROUTER_MODEL_STORAGE = 'OPENROUTER_MODEL_ANALIZADOR';
+
+function abrirModalOpenRouter() {
+    const key = localStorage.getItem(OPENROUTER_KEY_STORAGE) || '';
+    const model = localStorage.getItem(OPENROUTER_MODEL_STORAGE) || 'google/gemini-2.5-flash';
+    document.getElementById('input-openrouter-key').value = key;
+    document.getElementById('input-openrouter-model').value = model;
+    document.getElementById('modal-openrouter-config').classList.remove('hidden');
+}
+
+function cerrarModalOpenRouter() {
+    document.getElementById('modal-openrouter-config').classList.add('hidden');
+}
+
+function guardarConfigOpenRouter() {
+    const key = document.getElementById('input-openrouter-key').value.trim();
+    const model = document.getElementById('input-openrouter-model').value.trim() || 'google/gemini-2.5-flash';
+    
+    localStorage.setItem(OPENROUTER_KEY_STORAGE, key);
+    localStorage.setItem(OPENROUTER_MODEL_STORAGE, model);
+    cerrarModalOpenRouter();
+    alert('✅ Configuración de OpenRouter guardada correctamente.');
+}
+
+async function ejecutarAnalisisOfertasIA() {
+    const apiKey = localStorage.getItem(OPENROUTER_KEY_STORAGE) || '';
+    const model = localStorage.getItem(OPENROUTER_MODEL_STORAGE) || 'google/gemini-2.5-flash';
+
+    if (!apiKey) {
+        alert('Por favor, configura primero tu clave API de OpenRouter pulsando en "⚙️ Configurar API".');
+        abrirModalOpenRouter();
+        return;
+    }
+
+    if (!window.lastFilteredData || window.lastFilteredData.length === 0) {
+        alert('Carga primero un archivo CSV o importa datos desde Datadis para poder analizar tus ofertas.');
+        return;
+    }
+
+    const btn = document.getElementById('btnAnalizarOfertasIA');
+    const container = document.getElementById('aiOfferAnalysisContainer');
+    const body = document.getElementById('aiOfferAnalysisBody');
+    const badge = document.getElementById('aiModelBadge');
+
+    container.classList.remove('hidden');
+    badge.textContent = model;
+    body.innerHTML = `
+        <div class="flex items-center gap-2.5 py-4 text-purple-900 font-bold animate-pulse justify-center">
+            <span class="inline-block animate-spin text-lg">⏳</span>
+            <span>Analizando minuciosamente curva de consumo, término de potencia y ofertas comparadas con IA...</span>
+        </div>
+    `;
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    // 1. Recopilar datos técnicos del suministro y consumo
+    const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+    const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+    const numDays = (window.lastFilteredData && Object.keys(window.allAvailableDays || {}).length) || 1;
+
+    let totalKwh = 0, p1Kwh = 0, p2Kwh = 0, p3Kwh = 0;
+    window.lastFilteredData.forEach(item => {
+        totalKwh += item.consumo;
+        // Segmentación oficial 2.0TD
+        const dateParts = item.fechaStr.split('-');
+        const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+        const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
+        const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
+
+        if (isWe || isHol) {
+            p3Kwh += item.consumo;
+        } else if ((item.hora >= 10 && item.hora < 14) || (item.hora >= 18 && item.hora < 22)) {
+            p1Kwh += item.consumo;
+        } else if ((item.hora >= 8 && item.hora < 10) || (item.hora >= 14 && item.hora < 18) || (item.hora >= 22 && item.hora < 24)) {
+            p2Kwh += item.consumo;
+        } else {
+            p3Kwh += item.consumo;
+        }
+    });
+
+    // 2. Extraer cálculos de todas las tarifas comparadas
+    saveActiveProfileToMemory();
+    const simActive = window.assumeEquivalentTranches;
+    const simP1 = window.customTrancheP1 || 0;
+    const simP2 = window.customTrancheP2 || 0;
+    const simP3 = window.customTrancheP3 || 0;
+
+    const tarifasCalculadas = window.tariffProfiles.map((prof, idx) => {
+        const c = calculateProfileInvoice(prof, window.lastFilteredData, numDays, totalKwh, p1Kw, p2Kw, simActive, simP1, simP2, simP3);
+        return {
+            perfil: `Perfil ${idx + 1}`,
+            nombre: prof.name || `Tarifa Manual ${idx + 1}`,
+            preciosEnergia: {
+                punta_P1: prof.pricePunta,
+                llano_P2: prof.priceLlano,
+                valle_P3: prof.priceValle
+            },
+            preciosPotenciaAnual: {
+                p1: prof.powerPriceP1Manual,
+                p2: prof.powerPriceP2Manual
+            },
+            bonoMargenDiario: prof.retailerMarginManual,
+            totalFacturaEstimada: parseFloat(c.grandTotal.toFixed(2)),
+            precioMedioKwhFinal: parseFloat(c.avgKwhPrice.toFixed(5))
+        };
+    });
+
+    // Añadir PVPC Oficial
+    const pvpcTotalText = document.getElementById('totalCost')?.textContent || '';
+    const pvpcData = {
+        tarifa: "PVPC (Mercado Regulado Oficial)",
+        potenciaP1Pvpc: parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 30.81,
+        potenciaP2Pvpc: parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0.72,
+        margenDiario: parseFloat(document.getElementById('retailerMarginPvpc').value) || 0.019
+    };
+
+    const payloadPrompt = {
+        suministro: {
+            potenciaContratadaP1_kW: p1Kw,
+            potenciaContratadaP2_kW: p2Kw,
+            diasPeriodo: numDays,
+            consumoTotal_kWh: parseFloat(totalKwh.toFixed(2)),
+            consumoMedioDiario_kWh: parseFloat((totalKwh / numDays).toFixed(2)),
+            distribucionPorTramos20TD: {
+                P1_Punta: { kWh: parseFloat(p1Kwh.toFixed(2)), pct: parseFloat(((p1Kwh / totalKwh) * 100).toFixed(1)) },
+                P2_Llano: { kWh: parseFloat(p2Kwh.toFixed(2)), pct: parseFloat(((p2Kwh / totalKwh) * 100).toFixed(1)) },
+                P3_Valle: { kWh: parseFloat(p3Kwh.toFixed(2)), pct: parseFloat(((p3Kwh / totalKwh) * 100).toFixed(1)) }
+            },
+            simulacionPorcentualActiva: simActive ? { p1: simP1, p2: simP2, p3: simP3 } : false
+        },
+        pvpcRegulado: pvpcData,
+        tarifasComercialesComparadas: tarifasCalculadas
+    };
+
+    const systemPrompt = `
+Eres un auditor y consultor energético colegiado especialista en el mercado eléctrico español (tarifa de acceso 2.0TD).
+Analiza los datos técnicos del suministro, el desglose de consumo por tramos horarios (P1 Punta, P2 Llano, P3 Valle) y las ofertas comparadas.
+
+Instrucciones de formato y análisis:
+1. Responde con un tono directo, estructurado y altamente profesional en formato HTML legible (usa etiquetas como <p>, <strong>, <ul>, <li>, <table>, badges estilizados). NO uses bloques \`\`\`html markdown.
+2. Comienza con un CUADRO O RANKING claro de menor a mayor coste estimado, indicando el ahorro potencial respecto a la peor alternativa.
+3. Analiza el impacto de la potencia contratada (P1/P2) y el bono social/margen diario en cada oferta (muchas ofertas baratan el kWh pero encarecen la potencia).
+4. Explica cuál es la oferta GANADORA y por qué se adapta al patrón horario concreto del cliente (especialmente su concentración en Valle o Punta).
+5. Termina con un apartado "VEREDICTO Y RECOMENDACIÓN FINAL" con los pasos directos a seguir por el usuario.
+`;
+
+    try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": window.location.origin,
+                "X-Title": "Analizador de Consumo Electrico"
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: `Analiza esta comparativa de suministro y emite tu auditoría experta:\n\n${JSON.stringify(payloadPrompt, null, 2)}` }
+                ],
+                temperature: 0.2
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error?.message || `Error del servidor OpenRouter (${response.status})`);
+        }
+
+        const dataRes = await response.json();
+        let content = dataRes.candidates?.[0]?.content?.parts?.[0]?.text || dataRes.choices?.[0]?.message?.content || "";
+        
+        // Limpieza de formato markdown si viene envuelto
+        content = content.replace(/^```html/i, '').replace(/```$/i, '').trim();
+
+        body.innerHTML = content;
+    } catch (error) {
+        console.error("Error al consultar OpenRouter:", error);
+        body.innerHTML = `
+            <div class="p-3 bg-red-100 text-red-800 rounded-lg border border-red-200">
+                <strong>❌ Error al generar el análisis con la IA:</strong><br>
+                ${error.message}
+            </div>
+        `;
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
 
 
     </script>
