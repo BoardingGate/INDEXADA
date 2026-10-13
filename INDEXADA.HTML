@@ -197,7 +197,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
+                       <div class="flex flex-wrap items-center justify-between gap-2 mt-3 w-full">
                                 <div class="flex flex-wrap gap-2">
                                     <button id="datadisDirectBtn" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
                                         ⬇️ Descargar y analizar directamente
@@ -205,13 +205,23 @@
                                     <button id="datadisExportBtn" type="button" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
                                         💾 Guardar como archivo CSV
                                     </button>
+                                    <button id="datadisDebugBtn" type="button" class="hidden bg-gray-700 hover:bg-gray-800 text-white font-semibold py-1.5 px-3 rounded-md text-xs transition-colors">
+                                        🔍 Inspeccionar JSON Datadis
+                                    </button>
                                 </div>
                                 <button id="datadisContractsBtn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-md text-xs transition-colors">
                                     📋 Datos Identificativos CUPS
                                 </button>
                             </div>              
                             <p id="datadisDirectStatus" class="text-xs mt-2"></p>
-                        </div>
+                            <!-- Panel desplegable de depuración Raw JSON -->
+                            <div id="datadisDebugPanel" class="hidden mt-3 p-3 bg-slate-900 text-emerald-400 rounded-lg text-xs font-mono border border-slate-700 space-y-2">
+                                <div class="flex justify-between items-center border-b border-slate-700 pb-1.5 text-slate-300">
+                                    <span class="font-bold">Respuesta Raw de Datadis (Datos en crudo)</span>
+                                    <button type="button" id="copyDatadisDebugBtn" class="bg-slate-700 hover:bg-slate-600 text-white px-2 py-0.5 rounded text-[10px]">Copiar JSON</button>
+                                </div>
+                                <pre id="datadisDebugContent" class="overflow-x-auto max-h-64 whitespace-pre-wrap text-[11px]"></pre>
+                            </div>
                     </div>
 
                     <!-- Solapa 2: Filtros -->
@@ -1728,11 +1738,12 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
 
         const DATADIS_PROXY_URL = 'https://datadis-proxy.vercel.app/api/datadis-proxy';
 
+window.lastDatadisRawResponse = null;
+
         // Formato con día completo para las lecturas de consumo (YYYY/MM/DD)
-       function toDatadisDate(isoDate) {
+        function toDatadisDate(isoDate) {
             if (!isoDate) return '';
-            const parts = isoDate.split('-');
-            return `${parts[0]}/${parts[1]}`; 
+            return isoDate.replace(/-/g, '/');
         }
 
         // Formato mensual exclusivo para contratos y potencias máximas (YYYY/MM)
@@ -1760,10 +1771,39 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
             return rawDate;
         }
 
+        // Parser robusto para respetar la fecha real entregada por Datadis
+        function parseDatadisItemDate(rawDate) {
+            if (!rawDate) return null;
+            const clean = String(rawDate).trim().split(/[ T]/)[0];
+            const parts = clean.split(/[-/.]/).map(p => p.trim());
+            if (parts.length === 3) {
+                let y, m, d;
+                if (parts[0].length === 4) {
+                    // Formato YYYY/MM/DD o YYYY-MM-DD
+                    y = parts[0];
+                    m = parts[1].padStart(2, '0');
+                    d = parts[2].padStart(2, '0');
+                } else if (parts[2].length === 4) {
+                    // Formato DD/MM/YYYY o DD-MM-YYYY
+                    d = parts[0].padStart(2, '0');
+                    m = parts[1].padStart(2, '0');
+                    y = parts[2];
+                } else {
+                    return null;
+                }
+                return {
+                    iso: `${y}-${m}-${d}`,
+                    dmy: `${d}/${m}/${y}`
+                };
+            }
+            return null;
+        }
 
-async function descargarDesdeDatadis() {
+        async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
+            const debugBtn = document.getElementById('datadisDebugBtn');
+            const debugPanel = document.getElementById('datadisDebugPanel');
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
@@ -1779,31 +1819,52 @@ async function descargarDesdeDatadis() {
             statusEl.textContent = '⏳ Conectando con Datadis...';
             statusEl.className = 'text-xs mt-2 text-gray-600';
             exportBtn.classList.add('hidden');
+            if (debugBtn) debugBtn.classList.add('hidden');
+            if (debugPanel) debugPanel.classList.add('hidden');
             window.lastDatadisCsv = null;
+            window.lastDatadisRawResponse = null;
 
             try {
-                // 1. Obtener la lista de meses del rango solicitado
-                const [sY, sM] = startDateStr.split('-').map(Number);
-                const [eY, eM] = endDateStr.split('-').map(Number);
+                // 1. Obtener la lista de tramos con días reales YYYY/MM/DD
+                const sDate = new Date(startDateStr);
+                const eDate = new Date(endDateStr);
 
-                let cursor = new Date(sY, sM - 1, 1);
-                const limit = new Date(eY, eM - 1, 1);
-                const monthsToFetch = [];
+                let cursor = new Date(sDate.getFullYear(), sDate.getMonth(), 1);
+                const limit = new Date(eDate.getFullYear(), eDate.getMonth(), 1);
+                const chunksToFetch = [];
 
                 while (cursor <= limit) {
                     const y = cursor.getFullYear();
-                    const m = String(cursor.getMonth() + 1).padStart(2, '0');
-                    monthsToFetch.push({ year: y, month: m, str: `${y}/${m}` });
+                    const m = cursor.getMonth();
+
+                    const startDay = (cursor.getFullYear() === sDate.getFullYear() && cursor.getMonth() === sDate.getMonth())
+                        ? String(sDate.getDate()).padStart(2, '0')
+                        : '01';
+
+                    const lastDayOfMonth = new Date(y, m + 1, 0).getDate();
+                    const endDay = (cursor.getFullYear() === eDate.getFullYear() && cursor.getMonth() === eDate.getMonth())
+                        ? String(eDate.getDate()).padStart(2, '0')
+                        : String(lastDayOfMonth).padStart(2, '0');
+
+                    const monthStr = String(m + 1).padStart(2, '0');
+
+                    chunksToFetch.push({
+                        start: `${y}/${monthStr}/${startDay}`,
+                        end: `${y}/${monthStr}/${endDay}`,
+                        label: `${monthStr}/${y}`
+                    });
+
                     cursor.setMonth(cursor.getMonth() + 1);
                 }
 
                 let allCsvRows = [];
                 let detectedCups = cups;
+                let rawSamplesForDebug = [];
 
-                // 2. Descargar cada mes
-                for (let i = 0; i < monthsToFetch.length; i++) {
-                    const mObj = monthsToFetch[i];
-                    statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${monthsToFetch.length} (${mObj.str})...`;
+                // 2. Descargar cada mes enviando YYYY/MM/DD completo
+                for (let i = 0; i < chunksToFetch.length; i++) {
+                    const chunk = chunksToFetch[i];
+                    statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${chunksToFetch.length} (${chunk.label}: ${chunk.start} al ${chunk.end})...`;
 
                     const resp = await fetch(DATADIS_PROXY_URL, {
                         method: 'POST',
@@ -1812,35 +1873,46 @@ async function descargarDesdeDatadis() {
                             username,
                             password,
                             cups: cups || undefined,
-                            startDate: mObj.str,
-                            endDate: mObj.str
+                            startDate: chunk.start, // YYYY/MM/DD con barras
+                            endDate: chunk.end      // YYYY/MM/DD con barras
                         }),
                     });
 
                     const data = await resp.json();
                     if (!resp.ok || data.error) {
-                        throw new Error(data.error || `Error al descargar el mes ${mObj.str}`);
+                        throw new Error(data.error || `Error al descargar el periodo ${chunk.label}`);
                     }
 
                     if (data.cups && !detectedCups) detectedCups = data.cups;
                     const rows = data.consumptionData || data;
 
                     if (Array.isArray(rows) && rows.length > 0) {
-                        // REPARTO DÍA A DÍA:
-                        // Cada 24 lecturas corresponden exactamente a un día consecutivo (Día 1, Día 2, Día 3...)
-                        let currentDay = 1;
+                        rawSamplesForDebug.push({
+                            chunk: chunk,
+                            totalRowsInChunk: rows.length,
+                            first3: rows.slice(0, 3),
+                            last3: rows.slice(-3)
+                        });
 
+                        // 3. Parsear cada fila respetando la fecha que entrega Datadis
                         rows.forEach((item, index) => {
-                            // Cuando completamos 24 horas, avanzamos al siguiente día
-                            currentDay = Math.floor(index / 24) + 1;
+                            const parsedDate = parseDatadisItemDate(item.date || item.fecha);
 
-                            const dayFormatted = String(currentDay).padStart(2, '0');
-                            const isoDate = `${mObj.year}-${mObj.month}-${dayFormatted}`;
-                            const dmyDate = `${dayFormatted}/${mObj.month}/${mObj.year}`;
+                            let isoDate = parsedDate ? parsedDate.iso : null;
+                            let dmyDate = parsedDate ? parsedDate.dmy : null;
 
-                            // Filtrar solo las lecturas que caen dentro del rango exacto del usuario
+                            // Fallback de seguridad en caso de que Datadis no incluya el campo date
+                            if (!isoDate) {
+                                const dayNum = Math.min(31, Math.floor(index / 24) + 1);
+                                const dStr = String(dayNum).padStart(2, '0');
+                                const [cY, cM] = chunk.start.split('/');
+                                isoDate = `${cY}-${cM}-${dStr}`;
+                                dmyDate = `${dStr}/${cM}/${cY}`;
+                            }
+
+                            // Filtrar solo las lecturas que caen estrictamente en el rango del usuario
                             if (isoDate >= startDateStr && isoDate <= endDateStr) {
-                                let rawTime = String(item.time || '0');
+                                let rawTime = String(item.time || item.hora || '01:00');
                                 let horaNum = parseInt(rawTime.split(':')[0], 10);
                                 if (isNaN(horaNum)) horaNum = (index % 24) + 1;
 
@@ -1859,11 +1931,13 @@ async function descargarDesdeDatadis() {
                     await new Promise(r => setTimeout(r, 150));
                 }
 
+                window.lastDatadisRawResponse = rawSamplesForDebug;
+
                 if (allCsvRows.length === 0) {
                     throw new Error("No hay lecturas disponibles para el período seleccionado.");
                 }
 
-                // 3. Construir el archivo CSV con los días correlativos reales
+                // 4. Construir el CSV con fechas y horas reales
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const finalCups = detectedCups || 'ES0022000007526050YT1P';
 
@@ -1888,16 +1962,17 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas repartidas en todos los días.`;
-                        statusEl.className = 'text-xs mt-2 text-emerald-700';
+                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas correctamente distribuidas por días.`;
+                        statusEl.className = 'text-xs mt-2 text-emerald-700 font-semibold';
                         exportBtn.classList.remove('hidden');
-                        
+                        if (debugBtn) debugBtn.classList.remove('hidden');
+
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
-                        fileNameSpan.textContent = `Datadis API (CUPS ${finalCups})`;
+                        fileNameSpan.textContent = `Datadis API (${finalCups})`;
                     },
                     error: (err) => {
-                        statusEl.textContent = '❌ Error al procesar: ' + err.message;
+                        statusEl.textContent = '❌ Error al procesar CSV: ' + err.message;
                         statusEl.className = 'text-xs mt-2 text-red-600';
                     },
                 });
@@ -1905,8 +1980,31 @@ async function descargarDesdeDatadis() {
             } catch (err) {
                 statusEl.textContent = '❌ ' + err.message;
                 statusEl.className = 'text-xs mt-2 text-red-600';
+                if (debugBtn && window.lastDatadisRawResponse) debugBtn.classList.remove('hidden');
             }
         }
+
+        // Listeners para el botón y panel de inspección JSON
+        document.getElementById('datadisDebugBtn')?.addEventListener('click', () => {
+            const panel = document.getElementById('datadisDebugPanel');
+            const content = document.getElementById('datadisDebugContent');
+            if (!panel || !content) return;
+
+            const isHidden = panel.classList.toggle('hidden');
+            if (!isHidden && window.lastDatadisRawResponse) {
+                content.textContent = JSON.stringify(window.lastDatadisRawResponse, null, 2);
+            }
+        });
+
+        document.getElementById('copyDatadisDebugBtn')?.addEventListener('click', () => {
+            const content = document.getElementById('datadisDebugContent')?.textContent;
+            if (content) {
+                navigator.clipboard.writeText(content).then(() => {
+                    alert('✅ JSON copiado al portapapeles.');
+                });
+            }
+        });
+
 
 
         document.getElementById('datadisDirectBtn').addEventListener('click', descargarDesdeDatadis);
