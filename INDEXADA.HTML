@@ -1773,11 +1773,10 @@ window.lastDatadisRawResponse = null;
             return null;
         }
 
-        async function descargarDesdeDatadis() {
+
+async function descargarDesdeDatadis() {
             const statusEl = document.getElementById('datadisDirectStatus');
             const exportBtn = document.getElementById('datadisExportBtn');
-            const debugBtn = document.getElementById('datadisDebugBtn');
-            const debugPanel = document.getElementById('datadisDebugPanel');
             const username = document.getElementById('datadisUser').value.trim();
             const password = document.getElementById('datadisPass').value;
             const cups = document.getElementById('datadisCups').value.trim();
@@ -1793,13 +1792,10 @@ window.lastDatadisRawResponse = null;
             statusEl.textContent = '⏳ Conectando con Datadis...';
             statusEl.className = 'text-xs mt-2 text-gray-600';
             exportBtn.classList.add('hidden');
-            if (debugBtn) debugBtn.classList.add('hidden');
-            if (debugPanel) debugPanel.classList.add('hidden');
             window.lastDatadisCsv = null;
-            window.lastDatadisRawResponse = null;
 
             try {
-                // 1. Obtener la lista de meses en formato YYYY/MM según la API
+                // 1. Obtener la lista de meses en formato YYYY/MM
                 const [sY, sM] = startDateStr.split('-').map(Number);
                 const [eY, eM] = endDateStr.split('-').map(Number);
 
@@ -1816,9 +1812,8 @@ window.lastDatadisRawResponse = null;
 
                 let allCsvRows = [];
                 let detectedCups = cups;
-                let rawDebugList = [];
 
-                // 2. Descargar cada mes en formato YYYY/MM
+                // 2. Descargar cada mes
                 for (let i = 0; i < monthsToFetch.length; i++) {
                     const mObj = monthsToFetch[i];
                     statusEl.textContent = `⏳ Descargando mes ${i + 1} de ${monthsToFetch.length} (${mObj.str})...`;
@@ -1830,8 +1825,8 @@ window.lastDatadisRawResponse = null;
                             username,
                             password,
                             cups: cups || undefined,
-                            startDate: mObj.str, // Formato YYYY/MM
-                            endDate: mObj.str    // Formato YYYY/MM
+                            startDate: mObj.str,
+                            endDate: mObj.str
                         }),
                     });
 
@@ -1844,32 +1839,38 @@ window.lastDatadisRawResponse = null;
                     const rows = data.consumptionData || data;
 
                     if (Array.isArray(rows) && rows.length > 0) {
-                        rawDebugList.push({
-                            month: mObj.str,
-                            totalRecords: rows.length,
-                            first3: rows.slice(0, 3),
-                            last3: rows.slice(-3)
-                        });
+                        const [mYear, mMonth] = mObj.str.split('/');
 
-                        // 3. Extraer fecha oficial de cada registro (item.date)
+                        // Comprobar si Datadis viene con la fecha fija en el día 1
+                        const uniqueDates = new Set(rows.map(r => r.date || r.fecha).filter(Boolean));
+                        const isDateStuck = (rows.length > 24 && uniqueDates.size === 1);
+
+                        // 3. REPARTO DÍA A DÍA: Cada bloque de 24 horas corresponde a un día correlativo
                         rows.forEach((item, index) => {
-                            const rawDateField = item.date || item.fecha || item.datetime;
-                            const parsedDate = parseDatadisItemDate(rawDateField);
+                            let isoDate = null;
+                            let dmyDate = null;
 
-                            let isoDate = parsedDate ? parsedDate.iso : null;
-                            let dmyDate = parsedDate ? parsedDate.dmy : null;
-
-                            // Fallback solo por si un registro puntual no trajese el campo date
-                            if (!isoDate) {
-                                const dayNum = Math.min(31, Math.floor(index / 24) + 1);
-                                const dStr = String(dayNum).padStart(2, '0');
-                                isoDate = `${mObj.year}-${mObj.month}-${dStr}`;
-                                dmyDate = `${dStr}/${mObj.month}/${mObj.year}`;
+                            // Si Datadis entrega fechas normales que avanzan día a día, las respetamos
+                            if (!isDateStuck) {
+                                const rawDateField = item.date || item.fecha || item.datetime;
+                                const parsedDate = parseDatadisItemDate(rawDateField);
+                                if (parsedDate) {
+                                    isoDate = parsedDate.iso;
+                                    dmyDate = parsedDate.dmy;
+                                }
                             }
 
-                            // Filtrar para ceñirse estrictamente al rango de días elegido
+                            // Si la fecha de Datadis está fija en el día 1, avanzamos el día cada 24 horas
+                            if (!isoDate) {
+                                const currentDay = Math.floor(index / 24) + 1;
+                                const dStr = String(currentDay).padStart(2, '0');
+                                isoDate = `${mYear}-${mMonth}-${dStr}`;
+                                dmyDate = `${dStr}/${mMonth}/${mYear}`;
+                            }
+
+                            // Filtrar solo las lecturas que caen dentro del rango exacto del usuario
                             if (isoDate >= startDateStr && isoDate <= endDateStr) {
-                                let rawTime = String(item.time || item.hora || '01:00');
+                                let rawTime = String(item.time || item.hora || '1');
                                 let horaNum = parseInt(rawTime.split(':')[0], 10);
                                 if (isNaN(horaNum)) horaNum = (index % 24) + 1;
 
@@ -1888,13 +1889,11 @@ window.lastDatadisRawResponse = null;
                     await new Promise(r => setTimeout(r, 150));
                 }
 
-                window.lastDatadisRawResponse = rawDebugList;
-
                 if (allCsvRows.length === 0) {
                     throw new Error("No hay lecturas disponibles para el período seleccionado.");
                 }
 
-                // 4. Construir CSV con los días y horas reales de la distribuidora
+                // 4. Construir el archivo CSV con los días correlativos (01/09, 02/09, ... 30/09)
                 let csv = 'CUPS;Fecha;Hora;Consumo_kWh;Metodo_obtencion\n';
                 const finalCups = detectedCups || 'ES0022000007526050YT1P';
 
@@ -1919,10 +1918,9 @@ window.lastDatadisRawResponse = null;
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas correctamente distribuidas por días.`;
+                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas repartidas en todos los días del mes.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700 font-semibold';
                         exportBtn.classList.remove('hidden');
-                        if (debugBtn) debugBtn.classList.remove('hidden');
 
                         dropZonePrompt.classList.add('hidden');
                         fileSuccessText.classList.remove('hidden');
@@ -1937,7 +1935,6 @@ window.lastDatadisRawResponse = null;
             } catch (err) {
                 statusEl.textContent = '❌ ' + err.message;
                 statusEl.className = 'text-xs mt-2 text-red-600 font-semibold';
-                if (debugBtn && window.lastDatadisRawResponse) debugBtn.classList.remove('hidden');
             }
         }
 
@@ -2099,6 +2096,16 @@ window.lastDatadisRawResponse = null;
                 if (cleanData.length === 0) {
                     showStatus("No se encontraron registros de fecha válidos en el archivo.", "error");
                     return;
+                }
+
+                // Si el CSV arrastrado viene con la fecha congelada en el día 1, repartir las 24h día a día
+                const uniqueDatesInClean = new Set(cleanData.map(d => d.fechaStr));
+                if (cleanData.length > 24 && uniqueDatesInClean.size === 1) {
+                    const [bY, bM] = cleanData[0].fechaStr.split('-');
+                    cleanData.forEach((item, idx) => {
+                        const dayNum = Math.floor(idx / 24) + 1;
+                        item.fechaStr = `${bY}-${bM}-${String(dayNum).padStart(2, '0')}`;
+                    });
                 }
 
                 const fechas = cleanData.map(d => d.fechaStr);
