@@ -1861,12 +1861,15 @@ async function descargarDesdeDatadis() {
                                 }
                             }
 
-                            // Si la fecha de Datadis está fija en el día 1, avanzamos el día cada 24 horas
+                       // Si la fecha de Datadis está fija en el día 1, avanzamos el día con calendario real
                             if (!isoDate) {
-                                const currentDay = Math.floor(index / 24) + 1;
-                                const dStr = String(currentDay).padStart(2, '0');
-                                isoDate = `${mYear}-${mMonth}-${dStr}`;
-                                dmyDate = `${dStr}/${mMonth}/${mYear}`;
+                                const dayOffset = Math.floor(index / 24);
+                                const dObj = new Date(Number(mYear), Number(mMonth) - 1, 1 + dayOffset);
+                                const yStr = dObj.getFullYear();
+                                const mStr = String(dObj.getMonth() + 1).padStart(2, '0');
+                                const dStr = String(dObj.getDate()).padStart(2, '0');
+                                isoDate = `${yStr}-${mStr}-${dStr}`;
+                                dmyDate = `${dStr}/${mStr}/${yStr}`;
                             }
 
                             // Filtrar solo las lecturas que caen dentro del rango exacto del usuario
@@ -2099,13 +2102,20 @@ async function descargarDesdeDatadis() {
                     return;
                 }
 
-                // Si el CSV arrastrado viene con la fecha congelada en el día 1, repartir las 24h día a día
+            // Si el archivo viene con fechas congeladas, repartir las 24h día a día saltando de mes correctamente
                 const uniqueDatesInClean = new Set(cleanData.map(d => d.fechaStr));
-                if (cleanData.length > 24 && uniqueDatesInClean.size === 1) {
-                    const [bY, bM] = cleanData[0].fechaStr.split('-');
+                const expectedDays = Math.floor(cleanData.length / 24);
+
+                if (cleanData.length > 24 && uniqueDatesInClean.size < expectedDays) {
+                    const [bY, bM, bD] = cleanData[0].fechaStr.split('-').map(Number);
                     cleanData.forEach((item, idx) => {
-                        const dayNum = Math.floor(idx / 24) + 1;
-                        item.fechaStr = `${bY}-${bM}-${String(dayNum).padStart(2, '0')}`;
+                        const dayOffset = Math.floor(idx / 24);
+                        // El objeto Date gestiona automáticamente los fines de mes (30, 31, bisiestos)
+                        const dObj = new Date(bY, bM - 1, bD + dayOffset);
+                        const yStr = dObj.getFullYear();
+                        const mStr = String(dObj.getMonth() + 1).padStart(2, '0');
+                        const dStr = String(dObj.getDate()).padStart(2, '0');
+                        item.fechaStr = `${yStr}-${mStr}-${dStr}`;
                     });
                 }
 
