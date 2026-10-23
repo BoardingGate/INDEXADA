@@ -3096,15 +3096,14 @@ async function descargarDesdeDatadis() {
             const p2PctIndCost = computedTotalCostInd > 0 ? (finalP2CostInd / computedTotalCostInd) * 100 : 0;
             const p3PctIndCost = computedTotalCostInd > 0 ? (finalP3CostInd / computedTotalCostInd) * 100 : 0;
 
-
-            // --- RENDERIZADO SECCIÓN 1 (Horario) ---
+// --- RENDERIZADO SECCIÓN 1 (Horario) con inputs reactivos ---
             const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
             const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
             const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
 
             document.getElementById('p1KwhTimeText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP1TimeKwh.toFixed(1)}" onchange="updatePatronKwh('time', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP1TimeKwh.toFixed(1)}" oninput="updatePatronKwh('time', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>
@@ -3113,7 +3112,7 @@ async function descargarDesdeDatadis() {
 
             document.getElementById('p2KwhTimeText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP2TimeKwh.toFixed(1)}" onchange="updatePatronKwh('time', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP2TimeKwh.toFixed(1)}" oninput="updatePatronKwh('time', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>
@@ -3122,7 +3121,7 @@ async function descargarDesdeDatadis() {
 
             document.getElementById('p3KwhTimeText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP3TimeKwh.toFixed(1)}" onchange="updatePatronKwh('time', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP3TimeKwh.toFixed(1)}" oninput="updatePatronKwh('time', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>
@@ -3136,14 +3135,14 @@ async function descargarDesdeDatadis() {
             document.getElementById('totalCostTimeText').innerHTML = `${computedTotalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med: ${avgTimePriceTotal.toFixed(5)} €/kWh]</span>`;
 
 
-            // --- RENDERIZADO SECCIÓN 2 (Coste Real PVPC) ---
+            // --- RENDERIZADO SECCIÓN 2 (Coste Real PVPC) con inputs reactivos ---
             const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
             const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
             const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
 
             document.getElementById('p1KwhPriceText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP1PriceKwh.toFixed(1)}" onchange="updatePatronKwh('price', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP1PriceKwh.toFixed(1)}" oninput="updatePatronKwh('price', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>
@@ -3152,7 +3151,7 @@ async function descargarDesdeDatadis() {
 
             document.getElementById('p2KwhPriceText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP2PriceKwh.toFixed(1)}" onchange="updatePatronKwh('price', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP2PriceKwh.toFixed(1)}" oninput="updatePatronKwh('price', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>
@@ -3161,7 +3160,7 @@ async function descargarDesdeDatadis() {
 
             document.getElementById('p3KwhPriceText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP3PriceKwh.toFixed(1)}" onchange="updatePatronKwh('price', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP3PriceKwh.toFixed(1)}" oninput="updatePatronKwh('price', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>
@@ -3175,10 +3174,10 @@ async function descargarDesdeDatadis() {
             document.getElementById('totalCostPriceText').innerHTML = `${computedTotalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgCostPriceTotal.toFixed(5)} €/kWh]</span>`;
 
 
-            // --- RENDERIZADO SECCIÓN 3 (Tramos Oficiales 2.0TD) ---
+            // --- RENDERIZADO SECCIÓN 3 (Tramos Oficiales 2.0TD) con inputs reactivos ---
             document.getElementById('p1KwhIndexedTimeText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP1IndKwh.toFixed(1)}" onchange="updatePatronKwh('indexed', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP1IndKwh.toFixed(1)}" oninput="updatePatronKwh('indexed', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p1PctIndKwh.toFixed(1)}%)</span>
@@ -3187,7 +3186,7 @@ async function descargarDesdeDatadis() {
 
             document.getElementById('p2KwhIndexedTimeText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP2IndKwh.toFixed(1)}" onchange="updatePatronKwh('indexed', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP2IndKwh.toFixed(1)}" oninput="updatePatronKwh('indexed', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p2PctIndKwh.toFixed(1)}%)</span>
@@ -3196,7 +3195,7 @@ async function descargarDesdeDatadis() {
 
             document.getElementById('p3KwhIndexedTimeText').innerHTML = `
                 <div class="flex items-center gap-1 my-0.5">
-                    <input type="number" step="0.1" value="${finalP3IndKwh.toFixed(1)}" onchange="updatePatronKwh('indexed', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <input type="number" step="0.1" value="${finalP3IndKwh.toFixed(1)}" oninput="updatePatronKwh('indexed', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
                     <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
                 </div>
                 <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndKwh.toFixed(1)}%)</span>
@@ -3208,6 +3207,7 @@ async function descargarDesdeDatadis() {
             if (totalIndexedTimeTitleEl) totalIndexedTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
             document.getElementById('totalKwhIndexedTimeText').innerHTML = `${computedTotalIndKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
             document.getElementById('totalCostIndexedTimeText').innerHTML = `${computedTotalCostInd.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
+
 
             // 3. Comparación Global de Sistemas de Facturación
             const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
