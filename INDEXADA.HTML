@@ -1342,63 +1342,84 @@
             indexed: { P1: null, P2: null, P3: null }
         };
         
-        window.updatePatronKwh = function(category, tranche, value) {
-            const val = parseFloat(value);
-            if (isNaN(val) || val < 0) {
-                window.overrideTrancheKwh[category][tranche] = null;
-            } else {
-                window.overrideTrancheKwh[category][tranche] = val;
-            }
+window.overrideTrancheKwh = {
+    time: { P1: null, P2: null, P3: null },
+    price: { P1: null, P2: null, P3: null },
+    indexed: { P1: null, P2: null, P3: null }
+};
+
+window.updatePatronKwh = function(category, tranche, value) {
+    const val = parseFloat(value);
+    if (isNaN(val) || val < 0) {
+        window.overrideTrancheKwh[category][tranche] = null;
+    } else {
+        window.overrideTrancheKwh[category][tranche] = val;
+    }
+
+    // Sincronizar porcentajes para el simulador de la tabla inferior si se edita la sección 1 (Horario)
+    if (category === 'time' && window.lastFilteredData) {
+        const p1 = window.overrideTrancheKwh.time.P1;
+        const p2 = window.overrideTrancheKwh.time.P2;
+        const p3 = window.overrideTrancheKwh.time.P3;
+
+        let origP1 = 0, origP2 = 0, origP3 = 0;
+        window.lastFilteredData.forEach(item => {
+            const dateParts = item.fechaStr.split('-');
+            const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+            const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
+            const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
             
-            if (window.lastFilteredData) {
-                // Sincronizar porcentajes para la tabla inferior si se modifica la sección 1
-                if (category === 'time') {
-                    const p1 = window.overrideTrancheKwh.time.P1;
-                    const p2 = window.overrideTrancheKwh.time.P2;
-                    const p3 = window.overrideTrancheKwh.time.P3;
-        
-                    let origP1 = 0, origP2 = 0, origP3 = 0;
-                    window.lastFilteredData.forEach(item => {
-                        const dateParts = item.fechaStr.split('-');
-                        const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                        const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
-                        const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
-                        const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
-                        
-                        const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
-                        const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
-                        const useWeekendValle = document.getElementById('weekendValle').checked;
-        
-                        let slot = 'P3';
-                        if ((isWe && useWeekendValle) || isHol) slot = 'P3';
-                        else if (hoursPunta.includes(item.hora)) slot = 'P1';
-                        else if (hoursLlano.includes(item.hora)) slot = 'P2';
-        
-                        if (slot === 'P1') origP1 += item.consumo;
-                        else if (slot === 'P2') origP2 += item.consumo;
-                        else origP3 += item.consumo;
-                    });
-        
-                    const finalP1 = p1 !== null ? p1 : origP1;
-                    const finalP2 = p2 !== null ? p2 : origP2;
-                    const finalP3 = p3 !== null ? p3 : origP3;
-                    const totalSum = finalP1 + finalP2 + finalP3;
-        
-                    if (totalSum > 0) {
-                        window.customTrancheP1 = parseFloat(((finalP1 / totalSum) * 100).toFixed(1));
-                        window.customTrancheP2 = parseFloat(((finalP2 / totalSum) * 100).toFixed(1));
-                        window.customTrancheP3 = parseFloat(((finalP3 / totalSum) * 100).toFixed(1));
-                        
-                        window.assumeEquivalentTranches = true;
-                        const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
-                        if (checkbox) checkbox.checked = true;
-                    }
-                }
-        
-                // Llamamos a renderResultsAndCharts para forzar el recálculo total de la vista, tarjetas y tabla inferior
-                renderResultsAndCharts(window.lastFilteredData);
-            }
-        };
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+
+            let slot = 'P3';
+            if ((isWe && useWeekendValle) || isHol) slot = 'P3';
+            else if (hoursPunta.includes(item.hora)) slot = 'P1';
+            else if (hoursLlano.includes(item.hora)) slot = 'P2';
+
+            if (slot === 'P1') origP1 += item.consumo;
+            else if (slot === 'P2') origP2 += item.consumo;
+            else origP3 += item.consumo;
+        });
+
+        const finalP1 = p1 !== null ? p1 : origP1;
+        const finalP2 = p2 !== null ? p2 : origP2;
+        const finalP3 = p3 !== null ? p3 : origP3;
+        const totalSum = finalP1 + finalP2 + finalP3;
+
+        if (totalSum > 0) {
+            window.customTrancheP1 = parseFloat(((finalP1 / totalSum) * 100).toFixed(1));
+            window.customTrancheP2 = parseFloat(((finalP2 / totalSum) * 100).toFixed(1));
+            window.customTrancheP3 = parseFloat(((finalP3 / totalSum) * 100).toFixed(1));
+            
+            window.assumeEquivalentTranches = true;
+            const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
+            if (checkbox) checkbox.checked = true;
+        }
+    }
+
+    // FUERZA EL RECÁLCULO GLOBAL DE LOS DATOS Y FACTURAS AL MODIFICAR CUALQUIER VALOR
+    if (window.rawCsvData) {
+        processData(window.rawCsvData);
+    } else if (window.lastFilteredData) {
+        renderResultsAndCharts(window.lastFilteredData);
+    }
+};
+
+window.resetPatronKwh = function() {
+    window.overrideTrancheKwh = {
+        time: { P1: null, P2: null, P3: null },
+        price: { P1: null, P2: null, P3: null },
+        indexed: { P1: null, P2: null, P3: null }
+    };
+    if (window.rawCsvData) {
+        processData(window.rawCsvData);
+    } else if (window.lastFilteredData) {
+        renderResultsAndCharts(window.lastFilteredData);
+    }
+};
         
         window.resetPatronKwh = function() {
             window.overrideTrancheKwh = {
