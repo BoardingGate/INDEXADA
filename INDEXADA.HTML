@@ -1335,13 +1335,13 @@
 
 
 <script>
-     
+     // Control de kWh sobrescritos en el Patrón de Consumo
         window.overrideTrancheKwh = {
             time: { P1: null, P2: null, P3: null },
             price: { P1: null, P2: null, P3: null },
             indexed: { P1: null, P2: null, P3: null }
         };
-        
+
         window.updatePatronKwh = function(category, tranche, value) {
             const val = parseFloat(value);
             if (isNaN(val) || val < 0) {
@@ -1349,11 +1349,23 @@
             } else {
                 window.overrideTrancheKwh[category][tranche] = val;
             }
-        
+
             if (window.lastFilteredData) {
                 renderResultsAndCharts(window.lastFilteredData);
             }
         };
+
+        window.resetPatronKwh = function() {
+            window.overrideTrancheKwh = {
+                time: { P1: null, P2: null, P3: null },
+                price: { P1: null, P2: null, P3: null },
+                indexed: { P1: null, P2: null, P3: null }
+            };
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        };
+
 
         window.todayPricesMap = {};
         window.queryPricesDb = {}; 
@@ -2992,9 +3004,7 @@ async function descargarDesdeDatadis() {
             if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Intermedios) [${p2PriceHours} h] (${p2PriceHoursPct.toFixed(1)}%)`;
             if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Umbral Barato) [${p3PriceHours} h] (${p3PriceHoursPct.toFixed(1)}%)`;
 
-
-            // 1. GESTIÓN DE kWh EDITABLES (SECCIÓN 1: HORARIO)
-// --- GESTIÓN DE kWh EDITABLES EN LAS 3 SECCIONES DEL PATRÓN ---
+// 1. GESTIÓN DE kWh EDITABLES EN LAS 3 SECCIONES DEL PATRÓN
             
             // Sección 1 (Horario)
             const finalP1TimeKwh = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
@@ -3178,34 +3188,32 @@ async function descargarDesdeDatadis() {
             document.getElementById('totalKwhIndexedTimeText').innerHTML = `${computedTotalIndKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
             document.getElementById('totalCostIndexedTimeText').innerHTML = `${computedTotalCostInd.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
 
-            // 3. Comparación Global de Sistemas de Facturación
-            const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
-            const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
-            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
 
-            const diffPower = totalPowerCostPvpcNeto - totalPowerCostManualNeto;
-            const diffPowerPct = totalPowerCostManualNeto > 0 ? (diffPower / totalPowerCostManualNeto) * 100 : 0;
-            const diffPowerClass = diffPower < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+            // --- CÁLCULO DE LA COMPARATIVA ECONÓMICA USANDO LOS kWh EDITADOS ---
+            const activeComparisonKwhP1 = finalP1TimeKwh;
+            const activeComparisonKwhP2 = finalP2TimeKwh;
+            const activeComparisonKwhP3 = finalP3TimeKwh;
+            const activeComparisonTotalKwh = computedTotalTimeKwh;
 
-            const diffTotal = grandTotalPvpcSimulated - grandTotalManualSimulated;
-            const diffTotalPct = grandTotalManualSimulated > 0 ? (diffTotal / grandTotalManualSimulated) * 100 : 0;
-            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+            let compEnergyPvpc = (activeComparisonKwhP1 * avgP1Price) + (activeComparisonKwhP2 * avgP2Price) + (activeComparisonKwhP3 * avgP3Price);
+            let compEnergyManual = (activeComparisonKwhP1 * pPunta) + (activeComparisonKwhP2 * pLlano) + (activeComparisonKwhP3 * pValle);
 
-            const isPvpcCheaper = diffTotal < 0;
-            const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
-            const bannerText = isPvpcCheaper 
-                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
-                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
+            const p1SimPct = activeComparisonTotalKwh > 0 ? (activeComparisonKwhP1 / activeComparisonTotalKwh) * 100 : 33.3;
+            const p2SimPct = activeComparisonTotalKwh > 0 ? (activeComparisonKwhP2 / activeComparisonTotalKwh) * 100 : 33.3;
+            const p3SimPct = activeComparisonTotalKwh > 0 ? (activeComparisonKwhP3 / activeComparisonTotalKwh) * 100 : 33.3;
 
-            const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
-            const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
-            const isSumOk = Math.abs(sumPercents - 100.0) <= 0.1;
-            const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
+            if (window.assumeEquivalentTranches) {
+                const kwhSimP1 = activeComparisonTotalKwh * (simPctP1 / 100);
+                const kwhSimP2 = activeComparisonTotalKwh * (simPctP2 / 100);
+                const kwhSimP3 = activeComparisonTotalKwh * (simPctP3 / 100);
+                
+                if (mode === 'pvpc') {
+                    compEnergyManual = (kwhSimP1 * pPunta) + (kwhSimP2 * pLlano) + (kwhSimP3 * pValle);
+                } else {
+                    compEnergyPvpc = (kwhSimP1 * avgP1Price) + (kwhSimP2 * avgP2Price) + (kwhSimP3 * avgP3Price);
+                }
+            }
 
-            // Guardar perfil activo y calcular los 5 perfiles restantes
             saveActiveProfileToMemory();
             const otherProfiles = window.tariffProfiles
                 .map((prof, idx) => ({ prof, idx }))
@@ -3215,17 +3223,18 @@ async function descargarDesdeDatadis() {
                         item.prof,
                         data,
                         numDays,
-                        totalKwh,
+                        activeComparisonTotalKwh,
                         p1Kw,
                         p2Kw,
-                        window.assumeEquivalentTranches,
-                        simPctP1,
-                        simPctP2,
-                        simPctP3
+                        true,
+                        p1SimPct,
+                        p2SimPct,
+                        p3SimPct
                     );
                     return { ...calc, idx: item.idx };
                 });
-
+                 
+    
             const fmtEur = (val) => val.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
             let comparisonHtml = `
