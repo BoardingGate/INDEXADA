@@ -1336,24 +1336,70 @@
 
 <script>
      
-        window.overrideTrancheKwh = {
-            time: { P1: null, P2: null, P3: null },
-            price: { P1: null, P2: null, P3: null },
-            indexed: { P1: null, P2: null, P3: null }
-        };
-        
-        window.updatePatronKwh = function(category, tranche, value) {
-            const val = parseFloat(value);
-            if (isNaN(val) || val < 0) {
-                window.overrideTrancheKwh[category][tranche] = null;
-            } else {
-                window.overrideTrancheKwh[category][tranche] = val;
-            }
-        
-            if (window.lastFilteredData) {
-                renderResultsAndCharts(window.lastFilteredData);
-            }
-        };
+window.overrideTrancheKwh = {
+    time: { P1: null, P2: null, P3: null },
+    price: { P1: null, P2: null, P3: null },
+    indexed: { P1: null, P2: null, P3: null }
+};
+
+window.updatePatronKwh = function(category, tranche, value) {
+    const val = parseFloat(value);
+    if (isNaN(val) || val < 0) {
+        window.overrideTrancheKwh[category][tranche] = null;
+    } else {
+        window.overrideTrancheKwh[category][tranche] = val;
+    }
+
+    // FUERZA LA ACTUALIZACIÓN GLOBAL SI SE MODIFICA LA SECCIÓN 1 (HORARIO)
+    if (category === 'time' && window.lastFilteredData) {
+        const p1Over = window.overrideTrancheKwh.time.P1;
+        const p2Over = window.overrideTrancheKwh.time.P2;
+        const p3Over = window.overrideTrancheKwh.time.P3;
+
+        // Calculamos los kWh originales de base para mantener proporciones de coste si es necesario
+        let origP1 = 0, origP2 = 0, origP3 = 0;
+        window.lastFilteredData.forEach(item => {
+            const dateParts = item.fechaStr.split('-');
+            const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+            const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
+            const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
+            
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+
+            let slot = 'P3';
+            if ((isWe && useWeekendValle) || isHol) slot = 'P3';
+            else if (hoursPunta.includes(item.hora)) slot = 'P1';
+            else if (hoursLlano.includes(item.hora)) slot = 'P2';
+
+            if (slot === 'P1') origP1 += item.consumo;
+            else if (slot === 'P2') origP2 += item.consumo;
+            else origP3 += item.consumo;
+        });
+
+        // Actualizamos los porcentajes del simulador automáticamente para que la tabla inferior los coja
+        const newTotal = (p1Over !== null ? p1Over : origP1) + 
+                         (p2Over !== null ? p2Over : origP2) + 
+                         (p3Over !== null ? p3Over : origP3);
+
+        if (newTotal > 0) {
+            window.customTrancheP1 = parseFloat((((p1Over !== null ? p1Over : origP1) / newTotal) * 100).toFixed(1));
+            window.customTrancheP2 = parseFloat((((p2Over !== null ? p2Over : origP2) / newTotal) * 100).toFixed(1));
+            window.customTrancheP3 = parseFloat((((p3Over !== null ? p3Over : origP3) / newTotal) * 100).toFixed(1));
+            
+            // Activamos el flag de simulación por tramos para que la tabla inferior use estos valores
+            window.assumeEquivalentTranches = true;
+            const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
+            if (checkbox) checkbox.checked = true;
+        }
+    }
+
+    if (window.lastFilteredData) {
+        renderResultsAndCharts(window.lastFilteredData);
+    }
+};
 
         window.todayPricesMap = {};
         window.queryPricesDb = {}; 
