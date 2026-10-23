@@ -2782,27 +2782,19 @@ async function descargarDesdeDatadis() {
             const simPctP2 = window.customTrancheP2;
             const simPctP3 = window.customTrancheP3;
 
-           // Si el usuario ha editado los kWh en la Sección 1 (Horario), usamos esos totales para la comparativa inferior
-            const activeComparisonKwhP1 = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
-            const activeComparisonKwhP2 = window.overrideTrancheKwh.time.P2 !== null ? window.overrideTrancheKwh.time.P2 : p2KwhTime;
-            const activeComparisonKwhP3 = window.overrideTrancheKwh.time.P3 !== null ? window.overrideTrancheKwh.time.P3 : p3KwhTime;
-            const activeComparisonTotalKwh = activeComparisonKwhP1 + activeComparisonKwhP2 + activeComparisonKwhP3;
+            let compEnergyPvpc = totalCostPvpc;
+            let compEnergyManual = totalCostManual;
 
-            // Recalcular coste de energía PVPC adaptado a los kWh editados
-            let compEnergyPvpc = (activeComparisonKwhP1 * avgP1Price) + (activeComparisonKwhP2 * avgP2Price) + (activeComparisonKwhP3 * avgP3Price);
-            
-            // Recalcular coste de energía Manual adaptado a los kWh editados
-            let compEnergyManual = (activeComparisonKwhP1 * pPunta) + (activeComparisonKwhP2 * pLlano) + (activeComparisonKwhP3 * pValle);
-
-            // Si está activo el simulador por porcentajes, tiene prioridad sobre los kWh fijos
             if (window.assumeEquivalentTranches) {
-                const kwhSimP1 = activeComparisonTotalKwh * (simPctP1 / 100);
-                const kwhSimP2 = activeComparisonTotalKwh * (simPctP2 / 100);
-                const kwhSimP3 = activeComparisonTotalKwh * (simPctP3 / 100);
-                
                 if (mode === 'pvpc') {
+                    const kwhSimP1 = totalKwh * (simPctP1 / 100);
+                    const kwhSimP2 = totalKwh * (simPctP2 / 100);
+                    const kwhSimP3 = totalKwh * (simPctP3 / 100);
                     compEnergyManual = (kwhSimP1 * pPunta) + (kwhSimP2 * pLlano) + (kwhSimP3 * pValle);
                 } else {
+                    const kwhSimP1 = totalKwh * (simPctP1 / 100);
+                    const kwhSimP2 = totalKwh * (simPctP2 / 100);
+                    const kwhSimP3 = totalKwh * (simPctP3 / 100);
                     compEnergyPvpc = (kwhSimP1 * avgP1Price) + (kwhSimP2 * avgP2Price) + (kwhSimP3 * avgP3Price);
                 }
             }
@@ -3214,18 +3206,7 @@ async function descargarDesdeDatadis() {
             const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
 
             // Guardar perfil activo y calcular los 5 perfiles restantes
-        // Guardar perfil activo y calcular los 5 perfiles restantes usando los kWh modificados en los tarjetones
             saveActiveProfileToMemory();
-            
-            const activeComparisonKwhP1 = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
-            const activeComparisonKwhP2 = window.overrideTrancheKwh.time.P2 !== null ? window.overrideTrancheKwh.time.P2 : p2KwhTime;
-            const activeComparisonKwhP3 = window.overrideTrancheKwh.time.P3 !== null ? window.overrideTrancheKwh.time.P3 : p3KwhTime;
-            const activeComparisonTotalKwh = activeComparisonKwhP1 + activeComparisonKwhP2 + activeComparisonKwhP3;
-
-            const p1SimPct = activeComparisonTotalKwh > 0 ? (activeComparisonKwhP1 / activeComparisonTotalKwh) * 100 : 33.3;
-            const p2SimPct = activeComparisonTotalKwh > 0 ? (activeComparisonKwhP2 / activeComparisonTotalKwh) * 100 : 33.3;
-            const p3SimPct = activeComparisonTotalKwh > 0 ? (activeComparisonKwhP3 / activeComparisonTotalKwh) * 100 : 33.3;
-
             const otherProfiles = window.tariffProfiles
                 .map((prof, idx) => ({ prof, idx }))
                 .filter(item => item.idx !== window.activeProfileIndex)
@@ -3234,13 +3215,13 @@ async function descargarDesdeDatadis() {
                         item.prof,
                         data,
                         numDays,
-                        activeComparisonTotalKwh,
+                        totalKwh,
                         p1Kw,
                         p2Kw,
-                        true, // Forzamos true para que aplique el reparto proporcional de los kWh modificados en los tarjetones
-                        p1SimPct,
-                        p2SimPct,
-                        p3SimPct
+                        window.assumeEquivalentTranches,
+                        simPctP1,
+                        simPctP2,
+                        simPctP3
                     );
                     return { ...calc, idx: item.idx };
                 });
