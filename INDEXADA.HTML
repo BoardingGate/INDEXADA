@@ -1336,146 +1336,80 @@
 
 <script>
 
-window.overrideTrancheKwh = {
-    time: { P1: null, P2: null, P3: null },
-    price: { P1: null, P2: null, P3: null },
-    indexed: { P1: null, P2: null, P3: null }
-};
-
-window.updatePatronKwh = function(category, tranche, value) {
-    const val = parseFloat(value);
-    if (isNaN(val) || val < 0) {
-        window.overrideTrancheKwh[category][tranche] = null;
-    } else {
-        window.overrideTrancheKwh[category][tranche] = val;
-    }
-
-    // 1. Recalcular el tarjetón de ACUMULADOS de la sección correspondiente en tiempo real
-    if (category === 'time') {
-        const p1 = window.overrideTrancheKwh.time.P1;
-        const p2 = window.overrideTrancheKwh.time.P2;
-        const p3 = window.overrideTrancheKwh.time.P3;
-
-        // Obtener bases originales si son null
-        let origP1 = 0, origP2 = 0, origP3 = 0, origCostMan = 0;
-        if (window.lastFilteredData) {
-            window.lastFilteredData.forEach(item => {
-                const dateParts = item.fechaStr.split('-');
-                const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
-                const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
-                const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
-                const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
-                const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
-                const useWeekendValle = document.getElementById('weekendValle').checked;
-
-                let slot = 'P3';
-                if ((isWe && useWeekendValle) || isHol) slot = 'P3';
-                else if (hoursPunta.includes(item.hora)) slot = 'P1';
-                else if (hoursLlano.includes(item.hora)) slot = 'P2';
-
-                if (slot === 'P1') origP1 += item.consumo;
-                else if (slot === 'P2') origP2 += item.consumo;
-                else origP3 += item.consumo;
-                origCostMan += item.costeManual;
-            });
-        }
-
-        const fP1 = p1 !== null ? p1 : origP1;
-        const fP2 = p2 !== null ? p2 : origP2;
-        const fP3 = p3 !== null ? p3 : origP3;
-        const totalKwhSum = fP1 + fP2 + fP3;
-
-        const ratio1 = origP1 > 0 ? fP1 / origP1 : 1;
-        const ratio2 = origP2 > 0 ? fP2 / origP2 : 1;
-        const ratio3 = origP3 > 0 ? fP3 / origP3 : 1;
-
-        // Actualizar visualmente el acumulado de la sección 1
-        const totalKwhEl = document.getElementById('totalKwhTimeText');
-        const totalCostEl = document.getElementById('totalCostTimeText');
-        if (totalKwhEl) totalKwhEl.innerHTML = `${totalKwhSum.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+        window.overrideTrancheKwh = {
+            time: { P1: null, P2: null, P3: null },
+            price: { P1: null, P2: null, P3: null },
+            indexed: { P1: null, P2: null, P3: null }
+        };
         
-        // Sincronizar porcentajes para la tabla inferior
-        if (totalKwhSum > 0) {
-            window.customTrancheP1 = parseFloat(((fP1 / totalKwhSum) * 100).toFixed(1));
-            window.customTrancheP2 = parseFloat(((fP2 / totalKwhSum) * 100).toFixed(1));
-            window.customTrancheP3 = parseFloat(((fP3 / totalKwhSum) * 100).toFixed(1));
-            window.assumeEquivalentTranches = true;
-            const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
-            if (checkbox) checkbox.checked = true;
-        }
-    } else if (category === 'price') {
-        const p1 = window.overrideTrancheKwh.price.P1;
-        const p2 = window.overrideTrancheKwh.price.P2;
-        const p3 = window.overrideTrancheKwh.price.P3;
-        let origP1 = 0, origP2 = 0, origP3 = 0, origCostPvpc = 0;
-        const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold')?.value) || 0.15;
-        const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold')?.value) || 0.08;
-
-        if (window.lastFilteredData) {
-            window.lastFilteredData.forEach(item => {
-                if (item.precioPvpc >= pvpcHigh) origP1 += item.consumo;
-                else if (item.precioPvpc <= pvpcLow) origP3 += item.consumo;
-                else origP2 += item.consumo;
-                origCostPvpc += item.costePvpc;
-            });
-        }
-        const fP1 = p1 !== null ? p1 : origP1;
-        const fP2 = p2 !== null ? p2 : origP2;
-        const fP3 = p3 !== null ? p3 : origP3;
-        const totalSum = fP1 + fP2 + fP3;
-
-        const totalKwhEl = document.getElementById('totalKwhPriceText');
-        if (totalKwhEl) totalKwhEl.innerHTML = `${totalSum.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-    } else if (category === 'indexed') {
-        const p1 = window.overrideTrancheKwh.indexed.P1;
-        const p2 = window.overrideTrancheKwh.indexed.P2;
-        const p3 = window.overrideTrancheKwh.indexed.P3;
-        let origP1 = 0, origP2 = 0, origP3 = 0;
-
-        if (window.lastFilteredData) {
-            window.lastFilteredData.forEach(item => {
-                const dateParts = item.fechaStr.split('-');
-                const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
-                const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
-                const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
-                
-                let slot = 'P3';
-                if (!isWe && !isHol) {
-                    if ((item.hora >= 10 && item.hora < 14) || (item.hora >= 18 && item.hora < 22)) slot = 'P1';
-                    else if ((item.hora >= 8 && item.hora < 10) || (item.hora >= 14 && item.hora < 18) || (item.hora >= 22 && item.hora < 24)) slot = 'P2';
+        window.updatePatronKwh = function(category, tranche, value) {
+            const val = parseFloat(value);
+            if (isNaN(val) || val < 0) {
+                window.overrideTrancheKwh[category][tranche] = null;
+            } else {
+                window.overrideTrancheKwh[category][tranche] = val;
+            }
+            
+            if (window.lastFilteredData) {
+                // Sincronizar porcentajes para la tabla inferior si se modifica la sección 1
+                if (category === 'time') {
+                    const p1 = window.overrideTrancheKwh.time.P1;
+                    const p2 = window.overrideTrancheKwh.time.P2;
+                    const p3 = window.overrideTrancheKwh.time.P3;
+        
+                    let origP1 = 0, origP2 = 0, origP3 = 0;
+                    window.lastFilteredData.forEach(item => {
+                        const dateParts = item.fechaStr.split('-');
+                        const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+                        const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
+                        const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
+                        
+                        const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+                        const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+                        const useWeekendValle = document.getElementById('weekendValle').checked;
+        
+                        let slot = 'P3';
+                        if ((isWe && useWeekendValle) || isHol) slot = 'P3';
+                        else if (hoursPunta.includes(item.hora)) slot = 'P1';
+                        else if (hoursLlano.includes(item.hora)) slot = 'P2';
+        
+                        if (slot === 'P1') origP1 += item.consumo;
+                        else if (slot === 'P2') origP2 += item.consumo;
+                        else origP3 += item.consumo;
+                    });
+        
+                    const finalP1 = p1 !== null ? p1 : origP1;
+                    const finalP2 = p2 !== null ? p2 : origP2;
+                    const finalP3 = p3 !== null ? p3 : origP3;
+                    const totalSum = finalP1 + finalP2 + finalP3;
+        
+                    if (totalSum > 0) {
+                        window.customTrancheP1 = parseFloat(((finalP1 / totalSum) * 100).toFixed(1));
+                        window.customTrancheP2 = parseFloat(((finalP2 / totalSum) * 100).toFixed(1));
+                        window.customTrancheP3 = parseFloat(((finalP3 / totalSum) * 100).toFixed(1));
+                        
+                        window.assumeEquivalentTranches = true;
+                        const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
+                        if (checkbox) checkbox.checked = true;
+                    }
                 }
-                if (slot === 'P1') origP1 += item.consumo;
-                else if (slot === 'P2') origP2 += item.consumo;
-                else origP3 += item.consumo;
-            });
-        }
-        const fP1 = p1 !== null ? p1 : origP1;
-        const fP2 = p2 !== null ? p2 : origP2;
-        const fP3 = p3 !== null ? p3 : origP3;
-        const totalSum = fP1 + fP2 + fP3;
-
-        const totalKwhEl = document.getElementById('totalKwhIndexedTimeText');
-        if (totalKwhEl) totalKwhEl.innerHTML = `${totalSum.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-    }
-
-    // 2. Refrescar toda la vista de resultados y la tabla comparativa inferior
-    if (window.lastFilteredData) {
-        renderResultsAndCharts(window.lastFilteredData);
-    }
-};
-
-window.resetPatronKwh = function() {
-    window.overrideTrancheKwh = {
-        time: { P1: null, P2: null, P3: null },
-        price: { P1: null, P2: null, P3: null },
-        indexed: { P1: null, P2: null, P3: null }
-    };
-    if (window.lastFilteredData) {
-        renderResultsAndCharts(window.lastFilteredData);
-    }
-};
+        
+                // Llamamos a renderResultsAndCharts para forzar el recálculo total de la vista, tarjetas y tabla inferior
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        };
+        
+        window.resetPatronKwh = function() {
+            window.overrideTrancheKwh = {
+                time: { P1: null, P2: null, P3: null },
+                price: { P1: null, P2: null, P3: null },
+                indexed: { P1: null, P2: null, P3: null }
+            };
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        };
 
 
         window.todayPricesMap = {};
@@ -2866,23 +2800,14 @@ async function descargarDesdeDatadis() {
             const simPctP3 = window.customTrancheP3;
 
 
-            const hasCustomTimeKwh = (window.overrideTrancheKwh.time.P1 !== null || 
-                                      window.overrideTrancheKwh.time.P2 !== null || 
-                                      window.overrideTrancheKwh.time.P3 !== null);
+         // Usamos siempre los kWh efectivos de la Sección 1 (ya sean los del archivo o los editados a mano)
+            let effectiveP1Kwh = finalP1TimeKwh;
+            let effectiveP2Kwh = finalP2TimeKwh;
+            let effectiveP3Kwh = finalP3TimeKwh;
+            let effectiveTotalKwh = computedTotalTimeKwh;
 
-            let effectiveP1Kwh = hasCustomTimeKwh ? finalP1TimeKwh : p1KwhTime;
-            let effectiveP2Kwh = hasCustomTimeKwh ? finalP2TimeKwh : p2KwhTime;
-            let effectiveP3Kwh = hasCustomTimeKwh ? finalP3TimeKwh : p3KwhTime;
-            let effectiveTotalKwh = effectiveP1Kwh + effectiveP2Kwh + effectiveP3Kwh;
-
-            // Recalcular coste de energía Manual con los kWh efectivos (ya sean reales o editados)
+            // Recalcular coste de energía Manual y PVPC con los kWh editados de la Sección 1
             let compEnergyManual = (effectiveP1Kwh * pPunta) + (effectiveP2Kwh * pLlano) + (effectiveP3Kwh * pValle);
-            
-            // Recalcular coste de energía PVPC proporcional a los kWh efectivos
-            let avgPvpcP1Price = p1KwhTime > 0 ? (p1CostTime / p1KwhTime) : avgP1Price;
-            let avgPvpcP2Price = p2KwhTime > 0 ? (p2CostTime / p2KwhTime) : avgP2Price;
-            let avgPvpcP3Price = p3KwhTime > 0 ? (p3CostTime / p3KwhTime) : avgP3Price;
-            
             let compEnergyPvpc = (effectiveP1Kwh * avgP1Price) + (effectiveP2Kwh * avgP2Price) + (effectiveP3Kwh * avgP3Price);
 
             // Si está activo el simulador por porcentajes, tiene prioridad
@@ -3095,19 +3020,18 @@ async function descargarDesdeDatadis() {
            
 // --- GESTIÓN DE kWh EDITABLES EN LAS 3 SECCIONES DEL PATRÓN ---
             
+// --- GESTIÓN DE kWh EDITABLES EN LAS 3 SECCIONES DEL PATRÓN ---
+            
             // Sección 1 (Horario)
             const finalP1TimeKwh = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
             const finalP2TimeKwh = window.overrideTrancheKwh.time.P2 !== null ? window.overrideTrancheKwh.time.P2 : p2KwhTime;
             const finalP3TimeKwh = window.overrideTrancheKwh.time.P3 !== null ? window.overrideTrancheKwh.time.P3 : p3KwhTime;
             const computedTotalTimeKwh = finalP1TimeKwh + finalP2TimeKwh + finalP3TimeKwh;
 
-            const ratioTimeP1 = p1KwhTime > 0 ? (finalP1TimeKwh / p1KwhTime) : 1;
-            const ratioTimeP2 = p2KwhTime > 0 ? (finalP2TimeKwh / p2KwhTime) : 1;
-            const ratioTimeP3 = p3KwhTime > 0 ? (finalP3TimeKwh / p3KwhTime) : 1;
-
-            const finalP1CostTime = p1CostTime * ratioTimeP1;
-            const finalP2CostTime = p2CostTime * ratioTimeP2;
-            const finalP3CostTime = p3CostTime * ratioTimeP3;
+            // Recalculamos los costes monetarios multiplicando directamente los kWh introducidos por el precio de cada tramo
+            const finalP1CostTime = finalP1TimeKwh * pPunta;
+            const finalP2CostTime = finalP2TimeKwh * pLlano;
+            const finalP3CostTime = finalP3TimeKwh * pValle;
             const computedTotalCostManual = finalP1CostTime + finalP2CostTime + finalP3CostTime;
 
             const p1PctTimeKwh = computedTotalTimeKwh > 0 ? (finalP1TimeKwh / computedTotalTimeKwh) * 100 : 0;
@@ -3124,13 +3048,9 @@ async function descargarDesdeDatadis() {
             const finalP3PriceKwh = window.overrideTrancheKwh.price.P3 !== null ? window.overrideTrancheKwh.price.P3 : p3KwhPrice;
             const computedTotalPriceKwh = finalP1PriceKwh + finalP2PriceKwh + finalP3PriceKwh;
 
-            const ratioPriceP1 = p1KwhPrice > 0 ? (finalP1PriceKwh / p1KwhPrice) : 1;
-            const ratioPriceP2 = p2KwhPrice > 0 ? (finalP2PriceKwh / p2KwhPrice) : 1;
-            const ratioPriceP3 = p3KwhPrice > 0 ? (finalP3PriceKwh / p3KwhPrice) : 1;
-
-            const finalP1CostPrice = p1CostPrice * ratioPriceP1;
-            const finalP2CostPrice = p2CostPrice * ratioPriceP2;
-            const finalP3CostPrice = p3CostPrice * ratioPriceP3;
+            const finalP1CostPrice = finalP1PriceKwh * avgP1Price;
+            const finalP2CostPrice = finalP2PriceKwh * avgP2Price;
+            const finalP3CostPrice = finalP3PriceKwh * avgP3Price;
             const computedTotalCostPvpc = finalP1CostPrice + finalP2CostPrice + finalP3CostPrice;
 
             const p1PctPriceKwh = computedTotalPriceKwh > 0 ? (finalP1PriceKwh / computedTotalPriceKwh) * 100 : 0;
@@ -3147,13 +3067,9 @@ async function descargarDesdeDatadis() {
             const finalP3IndKwh = window.overrideTrancheKwh.indexed.P3 !== null ? window.overrideTrancheKwh.indexed.P3 : p3KwhIndexedTime;
             const computedTotalIndKwh = finalP1IndKwh + finalP2IndKwh + finalP3IndKwh;
 
-            const ratioIndP1 = p1KwhIndexedTime > 0 ? (finalP1IndKwh / p1KwhIndexedTime) : 1;
-            const ratioIndP2 = p2KwhIndexedTime > 0 ? (finalP2IndKwh / p2KwhIndexedTime) : 1;
-            const ratioIndP3 = p3KwhIndexedTime > 0 ? (finalP3IndKwh / p3KwhIndexedTime) : 1;
-
-            const finalP1CostInd = p1CostIndexedTime * ratioIndP1;
-            const finalP2CostInd = p2CostIndexedTime * ratioIndP2;
-            const finalP3CostInd = p3CostIndexedTime * ratioIndP3;
+            const finalP1CostInd = finalP1IndKwh * (avgP1IndexedPrice > 0 ? avgP1IndexedPrice : pvpcHigh);
+            const finalP2CostInd = finalP2IndKwh * (avgP2IndexedPrice > 0 ? avgP2IndexedPrice : ((pvpcHigh+pvpcLow)/2));
+            const finalP3CostInd = finalP3IndKwh * (avgP3IndexedPrice > 0 ? avgP3IndexedPrice : pvpcLow);
             const computedTotalCostInd = finalP1CostInd + finalP2CostInd + finalP3CostInd;
 
             const p1PctIndKwh = computedTotalIndKwh > 0 ? (finalP1IndKwh / computedTotalIndKwh) * 100 : 0;
