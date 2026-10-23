@@ -2782,19 +2782,35 @@ async function descargarDesdeDatadis() {
             const simPctP2 = window.customTrancheP2;
             const simPctP3 = window.customTrancheP3;
 
-            let compEnergyPvpc = totalCostPvpc;
-            let compEnergyManual = totalCostManual;
 
+            const hasCustomTimeKwh = (window.overrideTrancheKwh.time.P1 !== null || 
+                                      window.overrideTrancheKwh.time.P2 !== null || 
+                                      window.overrideTrancheKwh.time.P3 !== null);
+
+            let effectiveP1Kwh = hasCustomTimeKwh ? finalP1TimeKwh : p1KwhTime;
+            let effectiveP2Kwh = hasCustomTimeKwh ? finalP2TimeKwh : p2KwhTime;
+            let effectiveP3Kwh = hasCustomTimeKwh ? finalP3TimeKwh : p3KwhTime;
+            let effectiveTotalKwh = effectiveP1Kwh + effectiveP2Kwh + effectiveP3Kwh;
+
+            // Recalcular coste de energía Manual con los kWh efectivos (ya sean reales o editados)
+            let compEnergyManual = (effectiveP1Kwh * pPunta) + (effectiveP2Kwh * pLlano) + (effectiveP3Kwh * pValle);
+            
+            // Recalcular coste de energía PVPC proporcional a los kWh efectivos
+            let avgPvpcP1Price = p1KwhTime > 0 ? (p1CostTime / p1KwhTime) : avgP1Price;
+            let avgPvpcP2Price = p2KwhTime > 0 ? (p2CostTime / p2KwhTime) : avgP2Price;
+            let avgPvpcP3Price = p3KwhTime > 0 ? (p3CostTime / p3KwhTime) : avgP3Price;
+            
+            let compEnergyPvpc = (effectiveP1Kwh * avgP1Price) + (effectiveP2Kwh * avgP2Price) + (effectiveP3Kwh * avgP3Price);
+
+            // Si está activo el simulador por porcentajes, tiene prioridad
             if (window.assumeEquivalentTranches) {
+                const kwhSimP1 = effectiveTotalKwh * (simPctP1 / 100);
+                const kwhSimP2 = effectiveTotalKwh * (simPctP2 / 100);
+                const kwhSimP3 = effectiveTotalKwh * (simPctP3 / 100);
+                
                 if (mode === 'pvpc') {
-                    const kwhSimP1 = totalKwh * (simPctP1 / 100);
-                    const kwhSimP2 = totalKwh * (simPctP2 / 100);
-                    const kwhSimP3 = totalKwh * (simPctP3 / 100);
                     compEnergyManual = (kwhSimP1 * pPunta) + (kwhSimP2 * pLlano) + (kwhSimP3 * pValle);
                 } else {
-                    const kwhSimP1 = totalKwh * (simPctP1 / 100);
-                    const kwhSimP2 = totalKwh * (simPctP2 / 100);
-                    const kwhSimP3 = totalKwh * (simPctP3 / 100);
                     compEnergyPvpc = (kwhSimP1 * avgP1Price) + (kwhSimP2 * avgP2Price) + (kwhSimP3 * avgP3Price);
                 }
             }
@@ -3215,13 +3231,13 @@ async function descargarDesdeDatadis() {
                         item.prof,
                         data,
                         numDays,
-                        totalKwh,
+                        effectiveTotalKwh, // <-- Usar effectiveTotalKwh aquí
                         p1Kw,
                         p2Kw,
-                        window.assumeEquivalentTranches,
-                        simPctP1,
-                        simPctP2,
-                        simPctP3
+                        true, // Forzar cálculo por tramos proporcionales
+                        (effectiveP1Kwh / effectiveTotalKwh) * 100,
+                        (effectiveP2Kwh / effectiveTotalKwh) * 100,
+                        (effectiveP3Kwh / effectiveTotalKwh) * 100
                     );
                     return { ...calc, idx: item.idx };
                 });
