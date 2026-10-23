@@ -2944,13 +2944,7 @@ async function descargarDesdeDatadis() {
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            const p1TimeTitleEl = document.getElementById('p1TimeTitle');
-            const p2TimeTitleEl = document.getElementById('p2TimeTitle');
-            const p3TimeTitleEl = document.getElementById('p3TimeTitle');
-            const p1PriceTitleEl = document.getElementById('p1PriceTitle');
-            const p2PriceTitleEl = document.getElementById('p2PriceTitle');
-            const p3PriceTitleEl = document.getElementById('p3PriceTitle');
-
+  // --- ACTUALIZACIÓN TÍTULOS (Horas de cada tramo) ---
             const totalHoursPeriod = data.length || 1;
             const p1TimeHoursPct = (p1TimeHours / totalHoursPeriod) * 100;
             const p2TimeHoursPct = (p2TimeHours / totalHoursPeriod) * 100;
@@ -2960,140 +2954,25 @@ async function descargarDesdeDatadis() {
             const p2PriceHoursPct = (p2PriceHours / totalHoursPeriod) * 100;
             const p3PriceHoursPct = (p3PriceHours / totalHoursPeriod) * 100;
 
-            if (p1TimeTitleEl) p1TimeTitleEl.textContent = `P1 (Horas Punta) [${p1TimeHours} h] (${p1TimeHoursPct.toFixed(1)}%)`;
-            if (p2TimeTitleEl) p2TimeTitleEl.textContent = `P2 (Horas Llano) [${p2TimeHours} h] (${p2TimeHoursPct.toFixed(1)}%)`;
-            if (p3TimeTitleEl) p3TimeTitleEl.textContent = `P3 (Horas Valle) [${p3TimeHours} h] (${p3TimeHoursPct.toFixed(1)}%)`;
-            
-            if (p1PriceTitleEl) p1PriceTitleEl.textContent = `Coste Alto (Umbral Caro) [${p1PriceHours} h] (${p1PriceHoursPct.toFixed(1)}%)`;
-            if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Intermedios) [${p2PriceHours} h] (${p2PriceHoursPct.toFixed(1)}%)`;
-            if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Umbral Barato) [${p3PriceHours} h] (${p3PriceHoursPct.toFixed(1)}%)`;
-
-            const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
-            const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
-            const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
-
-            const p1PctTimeCost = totalCostManual > 0 ? (p1CostTime / totalCostManual) * 100 : 0;
-            const p2PctTimeCost = totalCostManual > 0 ? (p2CostTime / totalCostManual) * 100 : 0;
-            const p3PctTimeCost = totalCostManual > 0 ? (p3CostTime / totalCostManual) * 100 : 0;
-
-            const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
-            const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
-            const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
-
-            document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
-
-            document.getElementById('p2KwhTimeText').innerHTML = `${p2KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostTimeText').innerHTML = `${p2CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-yellow-600 font-normal text-[10px]">(${p2PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2PriceLabel}</span>`;
-
-            document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
-
-            // 4ª Tarjeta Sección 1: Acumulados
-            const avgTimePriceTotal = totalKwh > 0 ? (totalCostManual / totalKwh) : 0;
-            const totalTimeTitleEl = document.getElementById('totalTimeTitle');
-            if (totalTimeTitleEl) totalTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhTimeEl = document.getElementById('totalKwhTimeText');
-            if (totalKwhTimeEl) totalKwhTimeEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostTimeEl = document.getElementById('totalCostTimeText');
-            if (totalCostTimeEl) totalCostTimeEl.innerHTML = `${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med: ${avgTimePriceTotal.toFixed(5)} €/kWh]</span>`;
-
-            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
-            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
-            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
-
-            const p1PctPriceCost = totalCostPvpc > 0 ? (p1CostPrice / totalCostPvpc) * 100 : 0;
-            const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
-            const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
-
-            const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
-            const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
-            const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
-
-            document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
-
-            document.getElementById('p2KwhPriceText').innerHTML = `${p2KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
-
-            document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
-
-            // 4ª Tarjeta Sección 2: Acumulados
-            const avgCostPriceTotal = totalKwh > 0 ? (totalCostPvpc / totalKwh) : 0;
-            const totalPriceTitleEl = document.getElementById('totalPriceTitle');
-            if (totalPriceTitleEl) totalPriceTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhPriceEl = document.getElementById('totalKwhPriceText');
-            if (totalKwhPriceEl) totalKwhPriceEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostPriceEl = document.getElementById('totalCostPriceText');
-            if (totalCostPriceEl) totalCostPriceEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgCostPriceTotal.toFixed(5)} €/kWh]</span>`;
-
-            const p1PctIndexedTimeKwh = totalKwh > 0 ? (p1KwhIndexedTime / totalKwh) * 100 : 0;
-            const p2PctIndexedTimeKwh = totalKwh > 0 ? (p2KwhIndexedTime / totalKwh) * 100 : 0;
-            const p3PctIndexedTimeKwh = totalKwh > 0 ? (p3KwhIndexedTime / totalKwh) * 100 : 0;
-
-            const p1PctIndexedTimeCost = totalCostPvpc > 0 ? (p1CostIndexedTime / totalCostPvpc) * 100 : 0;
-            const p2PctIndexedTimeCost = totalCostPvpc > 0 ? (p2CostIndexedTime / totalCostPvpc) * 100 : 0;
-            const p3PctIndexedTimeCost = totalCostPvpc > 0 ? (p3CostIndexedTime / totalCostPvpc) * 100 : 0;
-
-            const p1IndexedTimeTitleEl = document.getElementById('p1IndexedTimeTitle');
-            const p2IndexedTimeTitleEl = document.getElementById('p2IndexedTimeTitle');
-            const p3IndexedTimeTitleEl = document.getElementById('p3IndexedTimeTitle');
-
             const p1IndexedTimeHoursPct = (p1IndexedTimeHours / totalHoursPeriod) * 100;
             const p2IndexedTimeHoursPct = (p2IndexedTimeHours / totalHoursPeriod) * 100;
             const p3IndexedTimeHoursPct = (p3IndexedTimeHours / totalHoursPeriod) * 100;
 
-            if (p1IndexedTimeTitleEl) p1IndexedTimeTitleEl.textContent = `P1 Punta (Horas Punta =PVPC) [${p1IndexedTimeHours} h] (${p1IndexedTimeHoursPct.toFixed(1)}%)`;
-            if (p2IndexedTimeTitleEl) p2IndexedTimeTitleEl.textContent = `P2 Llano (Horas Llano =PVPC) [${p2IndexedTimeHours} h] (${p2IndexedTimeHoursPct.toFixed(1)}%)`;
-            if (p3IndexedTimeTitleEl) p3IndexedTimeTitleEl.textContent = `P3 Valle (Horas Valle =PVPC) [${p3IndexedTimeHours} h] (${p3IndexedTimeHoursPct.toFixed(1)}%)`;
-            document.getElementById('p1KwhIndexedTimeText').innerHTML = `${p1KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostIndexedTimeText').innerHTML = `${p1CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP1IndexedPrice.toFixed(5)} €/kWh]</span>`;
+            const safeEl = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
-            document.getElementById('p2KwhIndexedTimeText').innerHTML = `${p2KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostIndexedTimeText').innerHTML = `${p2CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP2IndexedPrice.toFixed(5)} €/kWh]</span>`;
+            safeEl('p1TimeTitle', `P1 (Horas Punta) [${p1TimeHours} h] (${p1TimeHoursPct.toFixed(1)}%)`);
+            safeEl('p2TimeTitle', `P2 (Horas Llano) [${p2TimeHours} h] (${p2TimeHoursPct.toFixed(1)}%)`);
+            safeEl('p3TimeTitle', `P3 (Horas Valle) [${p3TimeHours} h] (${p3TimeHoursPct.toFixed(1)}%)`);
 
-            document.getElementById('p3KwhIndexedTimeText').innerHTML = `${p3KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostIndexedTimeText').innerHTML = `${p3CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
+            safeEl('p1PriceTitle', `Coste Alto (Umbral Caro) [${p1PriceHours} h] (${p1PriceHoursPct.toFixed(1)}%)`);
+            safeEl('p2PriceTitle', `Coste Medio (Intermedios) [${p2PriceHours} h] (${p2PriceHoursPct.toFixed(1)}%)`);
+            safeEl('p3PriceTitle', `Coste Bajo (Umbral Barato) [${p3PriceHours} h] (${p3PriceHoursPct.toFixed(1)}%)`);
 
-            // 4ª Tarjeta Sección 3: Acumulados
-            const avgIndexedPriceTotal = totalKwh > 0 ? (totalCostPvpc / totalKwh) : 0;
-            const totalIndexedTimeTitleEl = document.getElementById('totalIndexedTimeTitle');
-            if (totalIndexedTimeTitleEl) totalIndexedTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhIndexedTimeEl = document.getElementById('totalKwhIndexedTimeText');
-            if (totalKwhIndexedTimeEl) totalKwhIndexedTimeEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostIndexedTimeEl = document.getElementById('totalCostIndexedTimeText');
-            if (totalCostIndexedTimeEl) totalCostIndexedTimeEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
+            safeEl('p1IndexedTimeTitle', `P1 Punta (Oficial @ PVPC) [${p1IndexedTimeHours} h] (${p1IndexedTimeHoursPct.toFixed(1)}%)`);
+            safeEl('p2IndexedTimeTitle', `P2 Llano (Oficial @ PVPC) [${p2IndexedTimeHours} h] (${p2IndexedTimeHoursPct.toFixed(1)}%)`);
+            safeEl('p3IndexedTimeTitle', `P3 Valle (Oficial @ PVPC) [${p3IndexedTimeHours} h] (${p3IndexedTimeHoursPct.toFixed(1)}%)`);
 
-            // 3. Comparación Global de Sistemas de Facturación
-            const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
-            const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
-            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
-
-            const diffPower = totalPowerCostPvpcNeto - totalPowerCostManualNeto;
-            const diffPowerPct = totalPowerCostManualNeto > 0 ? (diffPower / totalPowerCostManualNeto) * 100 : 0;
-            const diffPowerClass = diffPower < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
-
-            const diffTotal = grandTotalPvpcSimulated - grandTotalManualSimulated;
-            const diffTotalPct = grandTotalManualSimulated > 0 ? (diffTotal / grandTotalManualSimulated) * 100 : 0;
-            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
-
-            const isPvpcCheaper = diffTotal < 0;
-            const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
-            const bannerText = isPvpcCheaper 
-                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
-                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
-
-            const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
-            const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
-            const isSumOk = Math.abs(sumPercents - 100.0) <= 0.1;
-            const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
-
-         
-            // 3. ENVIAR DATOS A LOS INPUTS EDITABLES Y LLAMAR AL MOTOR DE RECÁLCULO MANUAL
+            // --- ENVIAR DATOS A LOS INPUTS EDITABLES Y LLAMAR AL MOTOR DE RECÁLCULO MANUAL ---
             window.analyzedDays = numDays;
 
             // Guardar precios medios en el almacén global
@@ -3128,7 +3007,6 @@ async function descargarDesdeDatadis() {
             recalcTime();
             recalcPrice();
             recalcOfficial();
-      
 
 
             const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
@@ -7814,8 +7692,22 @@ window.recalcInvoiceTable = function() {
                 </table>
             </div>
 
-            <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
+<div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
                 ${bannerText}
+            </div>
+
+            <!-- CONTENEDOR DEL INFORME AUDITORÍA DE IA -->
+            <div id="aiOfferAnalysisContainer" class="hidden mt-4 p-4 bg-gradient-to-br from-purple-50/90 via-indigo-50/80 to-blue-50/90 border-2 border-purple-300 rounded-xl shadow-sm text-xs space-y-3">
+                <div class="flex justify-between items-center border-b border-purple-200/80 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">🤖</span>
+                        <h5 class="font-black text-purple-950 uppercase tracking-wide text-xs">
+                            Dictamen Energético Experto emitido por Inteligencia Artificial
+                        </h5>
+                    </div>
+                    <span id="aiModelBadge" class="text-[10px] font-mono font-bold bg-purple-200/70 text-purple-900 px-2 py-0.5 rounded-full border border-purple-300"></span>
+                </div>
+                <div id="aiOfferAnalysisBody" class="text-slate-800 leading-relaxed space-y-2"></div>
             </div>
         </div>
     `;
