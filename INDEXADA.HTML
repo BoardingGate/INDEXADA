@@ -1334,7 +1334,14 @@
 </div>
 
 
-    <script>
+<script>
+     
+        window.overrideTrancheKwh = {
+            time: { P1: null, P2: null, P3: null },
+            price: { P1: null, P2: null, P3: null },
+            indexed: { P1: null, P2: null, P3: null }
+        };
+
         window.todayPricesMap = {};
         window.queryPricesDb = {}; 
         window.todayChartInstance = null;
@@ -1415,6 +1422,47 @@
             switchTab('cluster-config', window.activeTabs['cluster-config'], false);
             switchTab('cluster-charts', window.activeTabs['cluster-charts'], false);
         }
+
+
+window.updatePatronKwh = function(category, tranche, value) {
+    const val = parseFloat(value);
+    if (isNaN(val) || val < 0) {
+        window.overrideTrancheKwh[category][tranche] = null;
+    } else {
+        window.overrideTrancheKwh[category][tranche] = val;
+    }
+    
+    // Si modifica los kWh del apartado 1 (Horario), sincronizamos automáticamente con el simulador de porcentajes
+    if (category === 'time' && window.lastFilteredData) {
+        let total = 0;
+        const p1 = window.overrideTrancheKwh.time.P1 ?? 0;
+        const p2 = window.overrideTrancheKwh.time.P2 ?? 0;
+        const p3 = window.overrideTrancheKwh.time.P3 ?? 0;
+        total = p1 + p2 + p3;
+        
+        if (total > 0) {
+            window.customTrancheP1 = parseFloat(((p1 / total) * 100).toFixed(1));
+            window.customTrancheP2 = parseFloat(((p2 / total) * 100).toFixed(1));
+            window.customTrancheP3 = parseFloat(((p3 / total) * 100).toFixed(1));
+        }
+    }
+
+    if (window.lastFilteredData) {
+        renderResultsAndCharts(window.lastFilteredData);
+    }
+};
+
+window.resetPatronKwh = function() {
+    window.overrideTrancheKwh = {
+        time: { P1: null, P2: null, P3: null },
+        price: { P1: null, P2: null, P3: null },
+        indexed: { P1: null, P2: null, P3: null }
+    };
+    if (window.lastFilteredData) {
+        renderResultsAndCharts(window.lastFilteredData);
+    }
+};
+
 
 window.switchTab = function(clusterId, tabPaneId, save = true) {
             const cluster = document.getElementById(clusterId);
@@ -2931,26 +2979,61 @@ async function descargarDesdeDatadis() {
             if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Intermedios) [${p2PriceHours} h] (${p2PriceHoursPct.toFixed(1)}%)`;
             if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Umbral Barato) [${p3PriceHours} h] (${p3PriceHoursPct.toFixed(1)}%)`;
 
-            const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
-            const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
-            const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
 
-            const p1PctTimeCost = totalCostManual > 0 ? (p1CostTime / totalCostManual) * 100 : 0;
-            const p2PctTimeCost = totalCostManual > 0 ? (p2CostTime / totalCostManual) * 100 : 0;
-            const p3PctTimeCost = totalCostManual > 0 ? (p3CostTime / totalCostManual) * 100 : 0;
+            // 1. GESTIÓN DE kWh EDITABLES (SECCIÓN 1: HORARIO)
+            const finalP1TimeKwh = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
+            const finalP2TimeKwh = window.overrideTrancheKwh.time.P2 !== null ? window.overrideTrancheKwh.time.P2 : p2KwhTime;
+            const finalP3TimeKwh = window.overrideTrancheKwh.time.P3 !== null ? window.overrideTrancheKwh.time.P3 : p3KwhTime;
+            const computedTotalTimeKwh = finalP1TimeKwh + finalP2TimeKwh + finalP3TimeKwh;
+
+            // Recalcular costes proporcionales si el usuario ha alterado los kWh manualmente
+            const ratioP1 = p1KwhTime > 0 ? (finalP1TimeKwh / p1KwhTime) : 1;
+            const ratioP2 = p2KwhTime > 0 ? (finalP2TimeKwh / p2KwhTime) : 1;
+            const ratioP3 = p3KwhTime > 0 ? (finalP3TimeKwh / p3KwhTime) : 1;
+
+            const finalP1CostTime = p1CostTime * ratioP1;
+            const finalP2CostTime = p2CostTime * ratioP2;
+            const finalP3CostTime = p3CostTime * ratioP3;
+            const computedTotalCostManual = finalP1CostTime + finalP2CostTime + finalP3CostTime;
+
+            const p1PctTimeKwh = computedTotalTimeKwh > 0 ? (finalP1TimeKwh / computedTotalTimeKwh) * 100 : 0;
+            const p2PctTimeKwh = computedTotalTimeKwh > 0 ? (finalP2TimeKwh / computedTotalTimeKwh) * 100 : 0;
+            const p3PctTimeKwh = computedTotalTimeKwh > 0 ? (finalP3TimeKwh / computedTotalTimeKwh) * 100 : 0;
+
+            const p1PctTimeCost = computedTotalCostManual > 0 ? (finalP1CostTime / computedTotalCostManual) * 100 : 0;
+            const p2PctTimeCost = computedTotalCostManual > 0 ? (finalP2CostTime / computedTotalCostManual) * 100 : 0;
+            const p3PctTimeCost = computedTotalCostManual > 0 ? (finalP3CostTime / computedTotalCostManual) * 100 : 0;
 
             const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
             const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
             const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
 
-            document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
+            document.getElementById('p1KwhTimeText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP1TimeKwh.toFixed(1)}" onchange="updatePatronKwh('time', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p1CostTimeText').innerHTML = `${finalP1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
 
-            document.getElementById('p2KwhTimeText').innerHTML = `${p2KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostTimeText').innerHTML = `${p2CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-yellow-600 font-normal text-[10px]">(${p2PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2PriceLabel}</span>`;
+            document.getElementById('p2KwhTimeText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP2TimeKwh.toFixed(1)}" onchange="updatePatronKwh('time', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p2CostTimeText').innerHTML = `${finalP2CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-yellow-600 font-normal text-[10px]">(${p2PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2PriceLabel}</span>`;
 
-            document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
+            document.getElementById('p3KwhTimeText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP3TimeKwh.toFixed(1)}" onchange="updatePatronKwh('time', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p3CostTimeText').innerHTML = `${finalP3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
 
             // 4ª Tarjeta Sección 1: Acumulados
             const avgTimePriceTotal = totalKwh > 0 ? (totalCostManual / totalKwh) : 0;
