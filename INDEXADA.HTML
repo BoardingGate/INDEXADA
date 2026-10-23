@@ -1335,6 +1335,7 @@
 
 
 <script>
+
 window.overrideTrancheKwh = {
     time: { P1: null, P2: null, P3: null },
     price: { P1: null, P2: null, P3: null },
@@ -1348,22 +1349,22 @@ window.updatePatronKwh = function(category, tranche, value) {
     } else {
         window.overrideTrancheKwh[category][tranche] = val;
     }
-    
-    if (window.lastFilteredData) {
-        // Sincronizar porcentajes para la tabla inferior si se modifica la sección 1
-        if (category === 'time') {
-            const p1 = window.overrideTrancheKwh.time.P1;
-            const p2 = window.overrideTrancheKwh.time.P2;
-            const p3 = window.overrideTrancheKwh.time.P3;
 
-            let origP1 = 0, origP2 = 0, origP3 = 0;
+    // 1. Recalcular el tarjetón de ACUMULADOS de la sección correspondiente en tiempo real
+    if (category === 'time') {
+        const p1 = window.overrideTrancheKwh.time.P1;
+        const p2 = window.overrideTrancheKwh.time.P2;
+        const p3 = window.overrideTrancheKwh.time.P3;
+
+        // Obtener bases originales si son null
+        let origP1 = 0, origP2 = 0, origP3 = 0, origCostMan = 0;
+        if (window.lastFilteredData) {
             window.lastFilteredData.forEach(item => {
                 const dateParts = item.fechaStr.split('-');
                 const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                 const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
                 const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
                 const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
-                
                 const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
                 const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
                 const useWeekendValle = document.getElementById('weekendValle').checked;
@@ -1376,24 +1377,91 @@ window.updatePatronKwh = function(category, tranche, value) {
                 if (slot === 'P1') origP1 += item.consumo;
                 else if (slot === 'P2') origP2 += item.consumo;
                 else origP3 += item.consumo;
+                origCostMan += item.costeManual;
             });
-
-            const finalP1 = p1 !== null ? p1 : origP1;
-            const finalP2 = p2 !== null ? p2 : origP2;
-            const finalP3 = p3 !== null ? p3 : origP3;
-            const totalSum = finalP1 + finalP2 + finalP3;
-
-            if (totalSum > 0) {
-                window.customTrancheP1 = parseFloat(((finalP1 / totalSum) * 100).toFixed(1));
-                window.customTrancheP2 = parseFloat(((finalP2 / totalSum) * 100).toFixed(1));
-                window.customTrancheP3 = parseFloat(((finalP3 / totalSum) * 100).toFixed(1));
-                
-                window.assumeEquivalentTranches = true;
-                const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
-                if (checkbox) checkbox.checked = true;
-            }
         }
 
+        const fP1 = p1 !== null ? p1 : origP1;
+        const fP2 = p2 !== null ? p2 : origP2;
+        const fP3 = p3 !== null ? p3 : origP3;
+        const totalKwhSum = fP1 + fP2 + fP3;
+
+        const ratio1 = origP1 > 0 ? fP1 / origP1 : 1;
+        const ratio2 = origP2 > 0 ? fP2 / origP2 : 1;
+        const ratio3 = origP3 > 0 ? fP3 / origP3 : 1;
+
+        // Actualizar visualmente el acumulado de la sección 1
+        const totalKwhEl = document.getElementById('totalKwhTimeText');
+        const totalCostEl = document.getElementById('totalCostTimeText');
+        if (totalKwhEl) totalKwhEl.innerHTML = `${totalKwhSum.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+        
+        // Sincronizar porcentajes para la tabla inferior
+        if (totalKwhSum > 0) {
+            window.customTrancheP1 = parseFloat(((fP1 / totalKwhSum) * 100).toFixed(1));
+            window.customTrancheP2 = parseFloat(((fP2 / totalKwhSum) * 100).toFixed(1));
+            window.customTrancheP3 = parseFloat(((fP3 / totalKwhSum) * 100).toFixed(1));
+            window.assumeEquivalentTranches = true;
+            const checkbox = document.getElementById('assumeEquivalentTranchesCheckbox');
+            if (checkbox) checkbox.checked = true;
+        }
+    } else if (category === 'price') {
+        const p1 = window.overrideTrancheKwh.price.P1;
+        const p2 = window.overrideTrancheKwh.price.P2;
+        const p3 = window.overrideTrancheKwh.price.P3;
+        let origP1 = 0, origP2 = 0, origP3 = 0, origCostPvpc = 0;
+        const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold')?.value) || 0.15;
+        const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold')?.value) || 0.08;
+
+        if (window.lastFilteredData) {
+            window.lastFilteredData.forEach(item => {
+                if (item.precioPvpc >= pvpcHigh) origP1 += item.consumo;
+                else if (item.precioPvpc <= pvpcLow) origP3 += item.consumo;
+                else origP2 += item.consumo;
+                origCostPvpc += item.costePvpc;
+            });
+        }
+        const fP1 = p1 !== null ? p1 : origP1;
+        const fP2 = p2 !== null ? p2 : origP2;
+        const fP3 = p3 !== null ? p3 : origP3;
+        const totalSum = fP1 + fP2 + fP3;
+
+        const totalKwhEl = document.getElementById('totalKwhPriceText');
+        if (totalKwhEl) totalKwhEl.innerHTML = `${totalSum.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+    } else if (category === 'indexed') {
+        const p1 = window.overrideTrancheKwh.indexed.P1;
+        const p2 = window.overrideTrancheKwh.indexed.P2;
+        const p3 = window.overrideTrancheKwh.indexed.P3;
+        let origP1 = 0, origP2 = 0, origP3 = 0;
+
+        if (window.lastFilteredData) {
+            window.lastFilteredData.forEach(item => {
+                const dateParts = item.fechaStr.split('-');
+                const dObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const isWe = (dObj.getDay() === 0 || dObj.getDay() === 6);
+                const holidays = document.getElementById('holidaysInput')?.value.split(',').map(d => d.trim()) || [];
+                const isHol = holidays.includes(`${dateParts[2]}-${dateParts[1]}`);
+                
+                let slot = 'P3';
+                if (!isWe && !isHol) {
+                    if ((item.hora >= 10 && item.hora < 14) || (item.hora >= 18 && item.hora < 22)) slot = 'P1';
+                    else if ((item.hora >= 8 && item.hora < 10) || (item.hora >= 14 && item.hora < 18) || (item.hora >= 22 && item.hora < 24)) slot = 'P2';
+                }
+                if (slot === 'P1') origP1 += item.consumo;
+                else if (slot === 'P2') origP2 += item.consumo;
+                else origP3 += item.consumo;
+            });
+        }
+        const fP1 = p1 !== null ? p1 : origP1;
+        const fP2 = p2 !== null ? p2 : origP2;
+        const fP3 = p3 !== null ? p3 : origP3;
+        const totalSum = fP1 + fP2 + fP3;
+
+        const totalKwhEl = document.getElementById('totalKwhIndexedTimeText');
+        if (totalKwhEl) totalKwhEl.innerHTML = `${totalSum.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+    }
+
+    // 2. Refrescar toda la vista de resultados y la tabla comparativa inferior
+    if (window.lastFilteredData) {
         renderResultsAndCharts(window.lastFilteredData);
     }
 };
