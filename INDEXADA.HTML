@@ -575,8 +575,14 @@
                     <p id="totalCost" class="text-lg font-bold text-gray-900 mt-2">0.00 €</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-purple-500">
-                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Nº de Días</h3>
-                    <p id="totalDays" class="text-lg font-bold text-gray-900 mt-2">0 días</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase flex justify-between items-center">
+                        Nº de Días <span class="bg-purple-100 text-purple-700 px-1 py-0.5 rounded text-[8px]">EDITABLE</span>
+                    </h3>
+                    <div class="mt-1.5 flex items-center gap-1.5">
+                        <input type="number" id="input-manual-days" oninput="recalcInvoiceTable()" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-lg font-bold text-purple-900 focus:ring-2 focus:ring-purple-500 outline-none bg-purple-50/50" value="0" min="1" step="1">
+                        <span class="text-gray-600 text-sm font-semibold">días</span>
+                    </div>
+                    <p id="totalDaysSubtitle" class="text-[9px] text-gray-500 mt-1.5 leading-relaxed font-normal empty:hidden"></p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
@@ -2853,10 +2859,13 @@ async function descargarDesdeDatadis() {
                 dateRangeText = `${formatDmy(firstDate)} al ${formatDmy(lastDate)}`;
             }
 
-            totalDaysEl.innerHTML = `
-                ${numDays} días
-                ${dateRangeText ? `<p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed font-normal">${dateRangeText}</p>` : ''}
-            `;
+            const manualDaysInput = document.getElementById('input-manual-days');
+            if (manualDaysInput) manualDaysInput.value = numDays;
+            
+            const totalDaysSubtitleEl = document.getElementById('totalDaysSubtitle');
+            if (totalDaysSubtitleEl) {
+                totalDaysSubtitleEl.textContent = dateRangeText || '';
+            }
 
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
@@ -7467,8 +7476,11 @@ function calculateProfileAggregated(prof, kwhP1, kwhP2, kwhP3, numDays, p1Kw, p2
     };
 }
 
-window.recalcInvoiceTable = function() {
-    const numDays = window.analyzedDays || 30;
+    window.recalcInvoiceTable = function() {
+    // Leemos los días editables desde la interfaz
+    const numDays = parseInt(document.getElementById('input-manual-days').value, 10) || 30;
+    window.analyzedDays = numDays; // Sincronizamos
+
     const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
     const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
     const mode = document.getElementById('rateMode').value;
