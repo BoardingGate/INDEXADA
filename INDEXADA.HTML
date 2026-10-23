@@ -1341,6 +1341,19 @@
             price: { P1: null, P2: null, P3: null },
             indexed: { P1: null, P2: null, P3: null }
         };
+        
+        window.updatePatronKwh = function(category, tranche, value) {
+            const val = parseFloat(value);
+            if (isNaN(val) || val < 0) {
+                window.overrideTrancheKwh[category][tranche] = null;
+            } else {
+                window.overrideTrancheKwh[category][tranche] = val;
+            }
+        
+            if (window.lastFilteredData) {
+                renderResultsAndCharts(window.lastFilteredData);
+            }
+        };
 
         window.todayPricesMap = {};
         window.queryPricesDb = {}; 
@@ -2981,19 +2994,21 @@ async function descargarDesdeDatadis() {
 
 
             // 1. GESTIÓN DE kWh EDITABLES (SECCIÓN 1: HORARIO)
+// --- GESTIÓN DE kWh EDITABLES EN LAS 3 SECCIONES DEL PATRÓN ---
+            
+            // Sección 1 (Horario)
             const finalP1TimeKwh = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
             const finalP2TimeKwh = window.overrideTrancheKwh.time.P2 !== null ? window.overrideTrancheKwh.time.P2 : p2KwhTime;
             const finalP3TimeKwh = window.overrideTrancheKwh.time.P3 !== null ? window.overrideTrancheKwh.time.P3 : p3KwhTime;
             const computedTotalTimeKwh = finalP1TimeKwh + finalP2TimeKwh + finalP3TimeKwh;
 
-            // Recalcular costes proporcionales si el usuario ha alterado los kWh manualmente
-            const ratioP1 = p1KwhTime > 0 ? (finalP1TimeKwh / p1KwhTime) : 1;
-            const ratioP2 = p2KwhTime > 0 ? (finalP2TimeKwh / p2KwhTime) : 1;
-            const ratioP3 = p3KwhTime > 0 ? (finalP3TimeKwh / p3KwhTime) : 1;
+            const ratioTimeP1 = p1KwhTime > 0 ? (finalP1TimeKwh / p1KwhTime) : 1;
+            const ratioTimeP2 = p2KwhTime > 0 ? (finalP2TimeKwh / p2KwhTime) : 1;
+            const ratioTimeP3 = p3KwhTime > 0 ? (finalP3TimeKwh / p3KwhTime) : 1;
 
-            const finalP1CostTime = p1CostTime * ratioP1;
-            const finalP2CostTime = p2CostTime * ratioP2;
-            const finalP3CostTime = p3CostTime * ratioP3;
+            const finalP1CostTime = p1CostTime * ratioTimeP1;
+            const finalP2CostTime = p2CostTime * ratioTimeP2;
+            const finalP3CostTime = p3CostTime * ratioTimeP3;
             const computedTotalCostManual = finalP1CostTime + finalP2CostTime + finalP3CostTime;
 
             const p1PctTimeKwh = computedTotalTimeKwh > 0 ? (finalP1TimeKwh / computedTotalTimeKwh) * 100 : 0;
@@ -3004,6 +3019,54 @@ async function descargarDesdeDatadis() {
             const p2PctTimeCost = computedTotalCostManual > 0 ? (finalP2CostTime / computedTotalCostManual) * 100 : 0;
             const p3PctTimeCost = computedTotalCostManual > 0 ? (finalP3CostTime / computedTotalCostManual) * 100 : 0;
 
+            // Sección 2 (Coste Real PVPC)
+            const finalP1PriceKwh = window.overrideTrancheKwh.price.P1 !== null ? window.overrideTrancheKwh.price.P1 : p1KwhPrice;
+            const finalP2PriceKwh = window.overrideTrancheKwh.price.P2 !== null ? window.overrideTrancheKwh.price.P2 : p2KwhPrice;
+            const finalP3PriceKwh = window.overrideTrancheKwh.price.P3 !== null ? window.overrideTrancheKwh.price.P3 : p3KwhPrice;
+            const computedTotalPriceKwh = finalP1PriceKwh + finalP2PriceKwh + finalP3PriceKwh;
+
+            const ratioPriceP1 = p1KwhPrice > 0 ? (finalP1PriceKwh / p1KwhPrice) : 1;
+            const ratioPriceP2 = p2KwhPrice > 0 ? (finalP2PriceKwh / p2KwhPrice) : 1;
+            const ratioPriceP3 = p3KwhPrice > 0 ? (finalP3PriceKwh / p3KwhPrice) : 1;
+
+            const finalP1CostPrice = p1CostPrice * ratioPriceP1;
+            const finalP2CostPrice = p2CostPrice * ratioPriceP2;
+            const finalP3CostPrice = p3CostPrice * ratioPriceP3;
+            const computedTotalCostPvpc = finalP1CostPrice + finalP2CostPrice + finalP3CostPrice;
+
+            const p1PctPriceKwh = computedTotalPriceKwh > 0 ? (finalP1PriceKwh / computedTotalPriceKwh) * 100 : 0;
+            const p2PctPriceKwh = computedTotalPriceKwh > 0 ? (finalP2PriceKwh / computedTotalPriceKwh) * 100 : 0;
+            const p3PctPriceKwh = computedTotalPriceKwh > 0 ? (finalP3PriceKwh / computedTotalPriceKwh) * 100 : 0;
+
+            const p1PctPriceCost = computedTotalCostPvpc > 0 ? (finalP1CostPrice / computedTotalCostPvpc) * 100 : 0;
+            const p2PctPriceCost = computedTotalCostPvpc > 0 ? (finalP2CostPrice / computedTotalCostPvpc) * 100 : 0;
+            const p3PctPriceCost = computedTotalCostPvpc > 0 ? (finalP3CostPrice / computedTotalCostPvpc) * 100 : 0;
+
+            // Sección 3 (Tramos Oficiales 2.0TD)
+            const finalP1IndKwh = window.overrideTrancheKwh.indexed.P1 !== null ? window.overrideTrancheKwh.indexed.P1 : p1KwhIndexedTime;
+            const finalP2IndKwh = window.overrideTrancheKwh.indexed.P2 !== null ? window.overrideTrancheKwh.indexed.P2 : p2KwhIndexedTime;
+            const finalP3IndKwh = window.overrideTrancheKwh.indexed.P3 !== null ? window.overrideTrancheKwh.indexed.P3 : p3KwhIndexedTime;
+            const computedTotalIndKwh = finalP1IndKwh + finalP2IndKwh + finalP3IndKwh;
+
+            const ratioIndP1 = p1KwhIndexedTime > 0 ? (finalP1IndKwh / p1KwhIndexedTime) : 1;
+            const ratioIndP2 = p2KwhIndexedTime > 0 ? (finalP2IndKwh / p2KwhIndexedTime) : 1;
+            const ratioIndP3 = p3KwhIndexedTime > 0 ? (finalP3IndKwh / p3KwhIndexedTime) : 1;
+
+            const finalP1CostInd = p1CostIndexedTime * ratioIndP1;
+            const finalP2CostInd = p2CostIndexedTime * ratioIndP2;
+            const finalP3CostInd = p3CostIndexedTime * ratioIndP3;
+            const computedTotalCostInd = finalP1CostInd + finalP2CostInd + finalP3CostInd;
+
+            const p1PctIndKwh = computedTotalIndKwh > 0 ? (finalP1IndKwh / computedTotalIndKwh) * 100 : 0;
+            const p2PctIndKwh = computedTotalIndKwh > 0 ? (finalP2IndKwh / computedTotalIndKwh) * 100 : 0;
+            const p3PctIndKwh = computedTotalIndKwh > 0 ? (finalP3IndKwh / computedTotalIndKwh) * 100 : 0;
+
+            const p1PctIndCost = computedTotalCostInd > 0 ? (finalP1CostInd / computedTotalCostInd) * 100 : 0;
+            const p2PctIndCost = computedTotalCostInd > 0 ? (finalP2CostInd / computedTotalCostInd) * 100 : 0;
+            const p3PctIndCost = computedTotalCostInd > 0 ? (finalP3CostInd / computedTotalCostInd) * 100 : 0;
+
+
+            // --- RENDERIZADO SECCIÓN 1 (Horario) ---
             const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
             const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
             const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
@@ -3035,81 +3098,85 @@ async function descargarDesdeDatadis() {
             `;
             document.getElementById('p3CostTimeText').innerHTML = `${finalP3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
 
-            // 4ª Tarjeta Sección 1: Acumulados
-            const avgTimePriceTotal = totalKwh > 0 ? (totalCostManual / totalKwh) : 0;
+            const avgTimePriceTotal = computedTotalTimeKwh > 0 ? (computedTotalCostManual / computedTotalTimeKwh) : 0;
             const totalTimeTitleEl = document.getElementById('totalTimeTitle');
             if (totalTimeTitleEl) totalTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhTimeEl = document.getElementById('totalKwhTimeText');
-            if (totalKwhTimeEl) totalKwhTimeEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostTimeEl = document.getElementById('totalCostTimeText');
-            if (totalCostTimeEl) totalCostTimeEl.innerHTML = `${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med: ${avgTimePriceTotal.toFixed(5)} €/kWh]</span>`;
+            document.getElementById('totalKwhTimeText').innerHTML = `${computedTotalTimeKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+            document.getElementById('totalCostTimeText').innerHTML = `${computedTotalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med: ${avgTimePriceTotal.toFixed(5)} €/kWh]</span>`;
 
-            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
-            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
-            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
 
-            const p1PctPriceCost = totalCostPvpc > 0 ? (p1CostPrice / totalCostPvpc) * 100 : 0;
-            const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
-            const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
-
+            // --- RENDERIZADO SECCIÓN 2 (Coste Real PVPC) ---
             const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
             const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
             const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
 
-            document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
+            document.getElementById('p1KwhPriceText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP1PriceKwh.toFixed(1)}" onchange="updatePatronKwh('price', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p1CostPriceText').innerHTML = `${finalP1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
 
-            document.getElementById('p2KwhPriceText').innerHTML = `${p2KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
+            document.getElementById('p2KwhPriceText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP2PriceKwh.toFixed(1)}" onchange="updatePatronKwh('price', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p2CostPriceText').innerHTML = `${finalP2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
 
-            document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
+            document.getElementById('p3KwhPriceText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP3PriceKwh.toFixed(1)}" onchange="updatePatronKwh('price', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p3CostPriceText').innerHTML = `${finalP3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
 
-            // 4ª Tarjeta Sección 2: Acumulados
-            const avgCostPriceTotal = totalKwh > 0 ? (totalCostPvpc / totalKwh) : 0;
+            const avgCostPriceTotal = computedTotalPriceKwh > 0 ? (computedTotalCostPvpc / computedTotalPriceKwh) : 0;
             const totalPriceTitleEl = document.getElementById('totalPriceTitle');
             if (totalPriceTitleEl) totalPriceTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhPriceEl = document.getElementById('totalKwhPriceText');
-            if (totalKwhPriceEl) totalKwhPriceEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostPriceEl = document.getElementById('totalCostPriceText');
-            if (totalCostPriceEl) totalCostPriceEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgCostPriceTotal.toFixed(5)} €/kWh]</span>`;
+            document.getElementById('totalKwhPriceText').innerHTML = `${computedTotalPriceKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+            document.getElementById('totalCostPriceText').innerHTML = `${computedTotalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgCostPriceTotal.toFixed(5)} €/kWh]</span>`;
 
-            const p1PctIndexedTimeKwh = totalKwh > 0 ? (p1KwhIndexedTime / totalKwh) * 100 : 0;
-            const p2PctIndexedTimeKwh = totalKwh > 0 ? (p2KwhIndexedTime / totalKwh) * 100 : 0;
-            const p3PctIndexedTimeKwh = totalKwh > 0 ? (p3KwhIndexedTime / totalKwh) * 100 : 0;
 
-            const p1PctIndexedTimeCost = totalCostPvpc > 0 ? (p1CostIndexedTime / totalCostPvpc) * 100 : 0;
-            const p2PctIndexedTimeCost = totalCostPvpc > 0 ? (p2CostIndexedTime / totalCostPvpc) * 100 : 0;
-            const p3PctIndexedTimeCost = totalCostPvpc > 0 ? (p3CostIndexedTime / totalCostPvpc) * 100 : 0;
+            // --- RENDERIZADO SECCIÓN 3 (Tramos Oficiales 2.0TD) ---
+            document.getElementById('p1KwhIndexedTimeText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP1IndKwh.toFixed(1)}" onchange="updatePatronKwh('indexed', 'P1', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-red-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p1PctIndKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p1CostIndexedTimeText').innerHTML = `${finalP1CostInd.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctIndCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP1IndexedPrice.toFixed(5)} €/kWh]</span>`;
 
-            const p1IndexedTimeTitleEl = document.getElementById('p1IndexedTimeTitle');
-            const p2IndexedTimeTitleEl = document.getElementById('p2IndexedTimeTitle');
-            const p3IndexedTimeTitleEl = document.getElementById('p3IndexedTimeTitle');
+            document.getElementById('p2KwhIndexedTimeText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP2IndKwh.toFixed(1)}" onchange="updatePatronKwh('indexed', 'P2', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-amber-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p2PctIndKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p2CostIndexedTimeText').innerHTML = `${finalP2CostInd.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctIndCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP2IndexedPrice.toFixed(5)} €/kWh]</span>`;
 
-            const p1IndexedTimeHoursPct = (p1IndexedTimeHours / totalHoursPeriod) * 100;
-            const p2IndexedTimeHoursPct = (p2IndexedTimeHours / totalHoursPeriod) * 100;
-            const p3IndexedTimeHoursPct = (p3IndexedTimeHours / totalHoursPeriod) * 100;
+            document.getElementById('p3KwhIndexedTimeText').innerHTML = `
+                <div class="flex items-center gap-1 my-0.5">
+                    <input type="number" step="0.1" value="${finalP3IndKwh.toFixed(1)}" onchange="updatePatronKwh('indexed', 'P3', this.value)" class="w-20 font-bold text-gray-950 bg-white border border-emerald-300 rounded px-1.5 py-0.5 text-xs font-mono shadow-2xs">
+                    <span class="text-[10px] text-gray-500 font-semibold">kWh</span>
+                </div>
+                <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndKwh.toFixed(1)}%)</span>
+            `;
+            document.getElementById('p3CostIndexedTimeText').innerHTML = `${finalP3CostInd.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
 
-            if (p1IndexedTimeTitleEl) p1IndexedTimeTitleEl.textContent = `P1 Punta (Horas Punta =PVPC) [${p1IndexedTimeHours} h] (${p1IndexedTimeHoursPct.toFixed(1)}%)`;
-            if (p2IndexedTimeTitleEl) p2IndexedTimeTitleEl.textContent = `P2 Llano (Horas Llano =PVPC) [${p2IndexedTimeHours} h] (${p2IndexedTimeHoursPct.toFixed(1)}%)`;
-            if (p3IndexedTimeTitleEl) p3IndexedTimeTitleEl.textContent = `P3 Valle (Horas Valle =PVPC) [${p3IndexedTimeHours} h] (${p3IndexedTimeHoursPct.toFixed(1)}%)`;
-            document.getElementById('p1KwhIndexedTimeText').innerHTML = `${p1KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostIndexedTimeText').innerHTML = `${p1CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP1IndexedPrice.toFixed(5)} €/kWh]</span>`;
-
-            document.getElementById('p2KwhIndexedTimeText').innerHTML = `${p2KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostIndexedTimeText').innerHTML = `${p2CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP2IndexedPrice.toFixed(5)} €/kWh]</span>`;
-
-            document.getElementById('p3KwhIndexedTimeText').innerHTML = `${p3KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostIndexedTimeText').innerHTML = `${p3CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
-
-            // 4ª Tarjeta Sección 3: Acumulados
-            const avgIndexedPriceTotal = totalKwh > 0 ? (totalCostPvpc / totalKwh) : 0;
+            const avgIndexedPriceTotal = computedTotalIndKwh > 0 ? (computedTotalCostInd / computedTotalIndKwh) : 0;
             const totalIndexedTimeTitleEl = document.getElementById('totalIndexedTimeTitle');
             if (totalIndexedTimeTitleEl) totalIndexedTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhIndexedTimeEl = document.getElementById('totalKwhIndexedTimeText');
-            if (totalKwhIndexedTimeEl) totalKwhIndexedTimeEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostIndexedTimeEl = document.getElementById('totalCostIndexedTimeText');
-            if (totalCostIndexedTimeEl) totalCostIndexedTimeEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
+            document.getElementById('totalKwhIndexedTimeText').innerHTML = `${computedTotalIndKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
+            document.getElementById('totalCostIndexedTimeText').innerHTML = `${computedTotalCostInd.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
 
             // 3. Comparación Global de Sistemas de Facturación
             const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
