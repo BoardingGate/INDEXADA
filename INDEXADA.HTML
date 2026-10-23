@@ -2526,7 +2526,7 @@ async function descargarDesdeDatadis() {
             };
         }
 
-        function renderResultsAndCharts(data) {
+function renderResultsAndCharts(data) {
             window.lastFilteredData = data; 
 
             const threshold = parseFloat(thresholdInput.value) || 0;
@@ -2535,6 +2535,80 @@ async function descargarDesdeDatadis() {
 
             const minMaxDailyKwhTextEl = document.getElementById('minMaxDailyKwhText');
             const minMaxPriceKwhTextEl = document.getElementById('minMaxPriceKwhText');
+
+            const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+            const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
+            const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+            const hoursLlano = document.getElementById('hoursLlano').value.split(',').map(n => parseInt(n.trim(), 10));
+            const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
+            const useWeekendValle = document.getElementById('weekendValle').checked;
+            const holidaysInputEl = document.getElementById('holidaysInput');
+            const holidaysList = holidaysInputEl ? holidaysInputEl.value.split(',').map(d => d.trim()) : [];
+
+            const pvpcHigh = parseFloat(document.getElementById('pvpcHighThreshold').value) || 0.15;
+            const pvpcLow = parseFloat(document.getElementById('pvpcLowThreshold').value) || 0.08;
+
+            let totalKwh = 0;
+            let totalCost = 0;
+            let filteredKwh = 0;
+            let filteredCost = 0;
+            let filteredHoursCount = 0;
+            let tableRowsHtml = ''; 
+
+            let maxPeakHourly = 0;
+            let maxPeakP1 = 0;
+            let maxPeakP2 = 0;
+            let totalKwhP1 = 0;
+            let countP1 = 0;
+            let totalKwhP2 = 0;
+            let countP2 = 0;
+
+            let p1KwhTime = 0, p2KwhTime = 0, p3KwhTime = 0;   
+            let p1CostTime = 0, p2CostTime = 0, p3CostTime = 0; 
+
+            let p1KwhPrice = 0, p2KwhPrice = 0, p3KwhPrice = 0; 
+            let p1CostPrice = 0, p2CostPrice = 0, p3CostPrice = 0; 
+
+            let p1KwhIndexedTime = 0, p2KwhIndexedTime = 0, p3KwhIndexedTime = 0;   
+            let p1CostIndexedTime = 0, p2CostIndexedTime = 0, p3CostIndexedTime = 0; 
+            let p1IndexedTimeHours = 0, p2IndexedTimeHours = 0, p3IndexedTimeHours = 0;
+
+            let totalCostPvpc = 0;
+            let totalCostManual = 0;
+
+            let minPrice = Infinity;
+            let maxPrice = -Infinity;
+
+            let p1TimeHours = 0, p2TimeHours = 0, p3TimeHours = 0;
+            let p1PriceHours = 0, p2PriceHours = 0, p3PriceHours = 0;
+
+            let hourlyFilteredKwhP1 = 0;
+            let hourlyFilteredKwhP2 = 0;
+            let hourlyFilteredKwhP3 = 0;
+            let hourlyFilteredCostP1 = 0;
+            let hourlyFilteredCostP2 = 0;
+            let hourlyFilteredCostP3 = 0;
+            let hourlyFilteredPvpcCostP1 = 0;
+            let hourlyFilteredPvpcCostP2 = 0;
+            let hourlyFilteredPvpcCostP3 = 0;
+
+            let wdGlobalKwh = 0;
+            let wdGlobalCost = 0;
+            let weGlobalKwh = 0;
+            let weGlobalCost = 0;
+
+            // ---- DECLARACIÓN PREVIA DE LAS VARIABLES EDITABLES PARA EVITAR ERRORES ----
+            const finalP1TimeKwh = window.overrideTrancheKwh.time.P1 !== null ? window.overrideTrancheKwh.time.P1 : p1KwhTime;
+            const finalP2TimeKwh = window.overrideTrancheKwh.time.P2 !== null ? window.overrideTrancheKwh.time.P2 : p2KwhTime;
+            const finalP3TimeKwh = window.overrideTrancheKwh.time.P3 !== null ? window.overrideTrancheKwh.time.P3 : p3KwhTime;
+
+            const finalP1PriceKwh = window.overrideTrancheKwh.price.P1 !== null ? window.overrideTrancheKwh.price.P1 : p1KwhPrice;
+            const finalP2PriceKwh = window.overrideTrancheKwh.price.P2 !== null ? window.overrideTrancheKwh.price.P2 : p2KwhPrice;
+            const finalP3PriceKwh = window.overrideTrancheKwh.price.P3 !== null ? window.overrideTrancheKwh.price.P3 : p3KwhPrice;
+
+            const finalP1IndKwh = window.overrideTrancheKwh.indexed.P1 !== null ? window.overrideTrancheKwh.indexed.P1 : p1KwhIndexedTime;
+            const finalP2IndKwh = window.overrideTrancheKwh.indexed.P2 !== null ? window.overrideTrancheKwh.indexed.P2 : p2KwhIndexedTime;
+            const finalP3IndKwh = window.overrideTrancheKwh.indexed.P3 !== null ? window.overrideTrancheKwh.indexed.P3 : p3KwhIndexedTime;
 
             const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
             const hoursPunta = document.getElementById('hoursPunta').value.split(',').map(n => parseInt(n.trim(), 10));
