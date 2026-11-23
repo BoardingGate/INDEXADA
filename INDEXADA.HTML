@@ -3886,8 +3886,13 @@ function saveActiveProfileToMemory() {
             };
         }
 
-        function loadProfileFromMemory(index) {
+       function loadProfileFromMemory(index) {
+            if (index < 0 || index >= 6) return;
+            window.activeProfileIndex = index;
+            const profile = window.tariffProfiles[index];
+            if (!profile) return;
 
+            // Sincronizar interruptor de activación
             const isEnabled = profile.enabled !== false;
             const enabledCheckbox = document.getElementById('tariffProfileEnabled');
             const enabledLabel = document.getElementById('tariffProfileEnabledLabel');
@@ -3896,11 +3901,6 @@ function saveActiveProfileToMemory() {
                 enabledLabel.textContent = isEnabled ? 'Tarifa Activa' : 'Desactivada';
                 enabledLabel.className = isEnabled ? 'ml-2 text-xs font-bold text-emerald-800' : 'ml-2 text-xs font-bold text-gray-400';
             }
-
-            if (index < 0 || index >= 6) return;
-            window.activeProfileIndex = index;
-            const profile = window.tariffProfiles[index];
-            if (!profile) return;
             
             const setVal = (id, val, def) => {
                 const el = document.getElementById(id);
@@ -3933,7 +3933,6 @@ function saveActiveProfileToMemory() {
             if (sel) sel.value = index;
             updateProfileDropdownNames();
         }
-
        function updateProfileDropdownNames() {
             const selector = document.getElementById('tariffProfileSelector');
             if (!selector) return;
