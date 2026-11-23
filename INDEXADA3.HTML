@@ -575,8 +575,14 @@
                     <p id="totalCost" class="text-lg font-bold text-gray-900 mt-2">0.00 €</p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-purple-500">
-                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Nº de Días</h3>
-                    <p id="totalDays" class="text-lg font-bold text-gray-900 mt-2">0 días</p>
+                    <h3 class="text-gray-500 text-[10px] font-semibold uppercase flex justify-between items-center">
+                        Nº de Días <span class="bg-purple-100 text-purple-700 px-1 py-0.5 rounded text-[8px]">EDITABLE</span>
+                    </h3>
+                    <div class="mt-1.5 flex items-center gap-1.5">
+                        <input type="number" id="input-manual-days" oninput="recalcInvoiceTable()" class="w-16 px-1.5 py-0.5 border border-gray-300 rounded text-lg font-bold text-purple-900 focus:ring-2 focus:ring-purple-500 outline-none bg-purple-50/50" value="0" min="1" step="1">
+                        <span class="text-gray-600 text-sm font-semibold">días</span>
+                    </div>
+                    <p id="totalDaysSubtitle" class="text-[9px] text-gray-500 mt-1.5 leading-relaxed font-normal empty:hidden"></p>
                 </div>
                 <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-yellow-500">
                     <h3 class="text-gray-500 text-[10px] font-semibold uppercase">Consumo Medio Diario</h3>
@@ -616,46 +622,58 @@
                 </div>
 
                 <div id="body-pattern" class="space-y-6">
-                    <!-- 1. Clasificación por Tramos Horarios -->
+<!-- 1. Clasificación por Tramos Horarios -->
                     <div>
                         <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">1. Clasificación por Horario 2.0TD de 3 tramos o precio fijo (Introducido por el usuario en opción MANUAL POR TRAMOS)</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
                                 <span id="p1TimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 (Horas Punta)</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p1KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-time-p1" oninput="recalcTime()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-red-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-time-p1" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                        <span id="p1CostTimeText" class="text-red-800">0.00 € (0.0%)</span>
+                                        <span id="cost-time-p1" class="text-red-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
                                 <span id="p2TimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 (Horas Llano)</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p2KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-time-p2" oninput="recalcTime()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-amber-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-time-p2" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                        <span id="p2CostTimeText" class="text-amber-800">0.00 € (0.0%)</span>
+                                        <span id="cost-time-p2" class="text-amber-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
                                 <span id="p3TimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 (Horas Valle)</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p3KwhTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-time-p3" oninput="recalcTime()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-emerald-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-time-p3" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                        <span id="p3CostTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                        <span id="cost-time-p3" class="text-emerald-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -668,7 +686,7 @@
                                     </div>
                                     <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste Tarifa Manual:</span>
-                                        <span id="totalCostTimeText" class="text-blue-900">0.00 € (100.0%)</span>
+                                        <span id="totalCostTimeText" class="text-blue-900">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -694,41 +712,53 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
-                                <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto (Precio &ge; Umbral Caro)</span>
+                                <span id="p1PriceTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">Coste Alto</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p1KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-price-p1" oninput="recalcPrice()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-red-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-price-p1" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC:</span>
-                                        <span id="p1CostPriceText" class="text-red-800">0.00 € (0.0%)</span>
+                                        <span id="cost-price-p1" class="text-red-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
-                                <span id="p2PriceTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">Coste Medio (Precios Intermedios)</span>
+                                <span id="p2PriceTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">Coste Medio</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p2KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-price-p2" oninput="recalcPrice()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-amber-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-price-p2" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC:</span>
-                                        <span id="p2CostPriceText" class="text-amber-800">0.00 € (0.0%)</span>
+                                        <span id="cost-price-p2" class="text-amber-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
-                                <span id="p3PriceTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">Coste Bajo (Precio Umbral Barato)</span>
+                                <span id="p3PriceTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">Coste Bajo</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p3KwhPriceText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-price-p3" oninput="recalcPrice()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-emerald-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-price-p3" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC:</span>
-                                        <span id="p3CostPriceText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                        <span id="cost-price-p3" class="text-emerald-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -741,7 +771,7 @@
                                     </div>
                                     <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC:</span>
-                                        <span id="totalCostPriceText" class="text-blue-900">0.00 € (100.0%)</span>
+                                        <span id="totalCostPriceText" class="text-blue-900">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -750,44 +780,56 @@
 
                     <!-- 3. Clasificación por Tramos Horarios Oficiales 2.0TD -->
                     <div class="pt-4 border-t border-gray-100 mt-4">
-                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD para comprobar factura PVPC ya que agrupan los kWh por P1,P2 Y P3 igual que 2.0TD</h4>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">3. Desglose Estricto por Tramos de Acceso Oficiales 2.0TD para comprobar factura PVPC</h4>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="p-4 bg-red-100/80 rounded-xl border-2 border-red-200 flex flex-col justify-between shadow-sm">
-                                <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta (Horas Punta oficial @ PVPC)</span>
+                                <span id="p1IndexedTimeTitle" class="font-bold text-red-900 text-[10px] uppercase tracking-wide">P1 Punta (Oficial @ PVPC)</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p1KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-official-p1" oninput="recalcOfficial()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-red-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-official-p1" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-red-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC Real:</span>
-                                        <span id="p1CostIndexedTimeText" class="text-red-800">0.00 € (0.0%)</span>
+                                        <span id="cost-official-p1" class="text-red-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-4 bg-amber-100/80 rounded-xl border-2 border-amber-200 flex flex-col justify-between shadow-sm">
-                                <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano (Horas Llano oficial @ PVPC)</span>
+                                <span id="p2IndexedTimeTitle" class="font-bold text-amber-900 text-[10px] uppercase tracking-wide">P2 Llano (Oficial @ PVPC)</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p2KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-official-p2" oninput="recalcOfficial()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-amber-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-official-p2" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-amber-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC Real:</span>
-                                        <span id="p2CostIndexedTimeText" class="text-amber-800">0.00 € (0.0%)</span>
+                                        <span id="cost-official-p2" class="text-amber-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="p-4 bg-emerald-100/80 rounded-xl border-2 border-emerald-200 flex flex-col justify-between shadow-sm">
-                                <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle (Horas Valle oficial @ PVPC)</span>
+                                <span id="p3IndexedTimeTitle" class="font-bold text-emerald-900 text-[10px] uppercase tracking-wide">P3 Valle (Oficial @ PVPC)</span>
                                 <div class="mt-2 flex flex-col gap-1 text-xs">
-                                    <div class="flex justify-between font-medium">
+                                    <div class="flex justify-between font-medium items-center">
                                         <span class="text-gray-600">Consumo:</span>
-                                        <span id="p3KwhIndexedTimeText" class="font-bold text-gray-950">0.00 kWh (0.0%)</span>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="input-official-p3" oninput="recalcOfficial()" class="w-16 px-1 py-0.5 border rounded border-gray-300 text-right font-bold text-gray-950 text-xs focus:ring-1 focus:ring-emerald-500 outline-none bg-white" value="0.00" step="1" min="0">
+                                            <span class="text-[10px] text-gray-600">kWh</span>
+                                            <span id="pct-official-p3" class="text-gray-500 font-normal text-[10px]">(0.0%)</span>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between border-t border-emerald-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC Real:</span>
-                                        <span id="p3CostIndexedTimeText" class="text-emerald-800">0.00 € (0.0%)</span>
+                                        <span id="cost-official-p3" class="text-emerald-800">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -800,7 +842,7 @@
                                     </div>
                                     <div class="flex justify-between border-t border-blue-200/60 pt-1.5 font-semibold flex-col">
                                         <span class="text-gray-600">Coste PVPC Real:</span>
-                                        <span id="totalCostIndexedTimeText" class="text-blue-900">0.00 € (100.0%)</span>
+                                        <span id="totalCostIndexedTimeText" class="text-blue-900">0.00 €</span>
                                     </div>
                                 </div>
                             </div>
@@ -1334,7 +1376,8 @@
 </div>
 
 
-    <script>
+<script>
+
         window.todayPricesMap = {};
         window.queryPricesDb = {}; 
         window.todayChartInstance = null;
@@ -1955,7 +1998,7 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas repartidas en todos los días del mes.`;
+                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas del rango real seleccionado.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700 font-semibold';
                         exportBtn.classList.remove('hidden');
 
@@ -2055,6 +2098,9 @@ async function descargarDesdeDatadis() {
                 skipEmptyLines: true,
                 complete: function(results) {
                     window.rawCsvData = results.data;
+                    // Nuevo fichero: descartar filtros de fecha anteriores para cargar el rango real del CSV
+                    document.getElementById('filterStartDate').value = '';
+                    document.getElementById('filterEndDate').value = '';
                     saveConfig();
                     processData(window.rawCsvData);
                 },
@@ -2135,20 +2181,22 @@ async function descargarDesdeDatadis() {
                     return;
                 }
 
-            // Si el archivo viene con fechas congeladas, repartir las 24h día a día saltando de mes correctamente
-                const uniqueDatesInClean = new Set(cleanData.map(d => d.fechaStr));
-                const expectedDays = Math.floor(cleanData.length / 24);
+            // Fechas congeladas (Datadis a veces entrega todas las lecturas de un mes con fecha día 01).
+                // Solo se reparte si TODAS las fechas únicas son día 01 y hay más de 24 lecturas por fecha.
+                // El reparto se hace dentro de cada mes, nunca arrastrando el rango real a otro periodo.
+                const uniqueDatesInClean = Array.from(new Set(cleanData.map(d => d.fechaStr)));
+                const allFrozenOnDay1 = uniqueDatesInClean.length > 0 && uniqueDatesInClean.every(d => d.endsWith('-01'));
+                const rowsPerDateAvg = cleanData.length / uniqueDatesInClean.length;
 
-                if (cleanData.length > 24 && uniqueDatesInClean.size < expectedDays) {
-                    const [bY, bM, bD] = cleanData[0].fechaStr.split('-').map(Number);
-                    cleanData.forEach((item, idx) => {
-                        const dayOffset = Math.floor(idx / 24);
-                        // El objeto Date gestiona automáticamente los fines de mes (30, 31, bisiestos)
-                        const dObj = new Date(bY, bM - 1, bD + dayOffset);
-                        const yStr = dObj.getFullYear();
-                        const mStr = String(dObj.getMonth() + 1).padStart(2, '0');
-                        const dStr = String(dObj.getDate()).padStart(2, '0');
-                        item.fechaStr = `${yStr}-${mStr}-${dStr}`;
+                if (allFrozenOnDay1 && rowsPerDateAvg > 26) {
+                    const monthCounters = {};
+                    cleanData.forEach(item => {
+                        const [y, m] = item.fechaStr.split('-').map(Number);
+                        const key = `${y}-${String(m).padStart(2, '0')}`;
+                        const idxInMonth = monthCounters[key] || 0;
+                        monthCounters[key] = idxInMonth + 1;
+                        const dObj = new Date(y, m - 1, 1 + Math.floor(idxInMonth / 24));
+                        item.fechaStr = `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`;
                     });
                 }
 
@@ -2816,10 +2864,13 @@ async function descargarDesdeDatadis() {
                 dateRangeText = `${formatDmy(firstDate)} al ${formatDmy(lastDate)}`;
             }
 
-            totalDaysEl.innerHTML = `
-                ${numDays} días
-                ${dateRangeText ? `<p class="text-[10px] text-gray-500 mt-1.5 leading-relaxed font-normal">${dateRangeText}</p>` : ''}
-            `;
+            const manualDaysInput = document.getElementById('input-manual-days');
+            if (manualDaysInput) manualDaysInput.value = numDays;
+            
+            const totalDaysSubtitleEl = document.getElementById('totalDaysSubtitle');
+            if (totalDaysSubtitleEl) {
+                totalDaysSubtitleEl.textContent = dateRangeText || '';
+            }
 
             avgDailyKwhTextEl.textContent = `${avgDailyKwh.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kWh`;
             
@@ -2907,13 +2958,7 @@ async function descargarDesdeDatadis() {
 
             tableBody.innerHTML = tableRowsHtml || `<tr><td colspan="5" class="p-8 text-center text-gray-500">Ningún registro supera el umbral seleccionado.</td></tr>`;
 
-            const p1TimeTitleEl = document.getElementById('p1TimeTitle');
-            const p2TimeTitleEl = document.getElementById('p2TimeTitle');
-            const p3TimeTitleEl = document.getElementById('p3TimeTitle');
-            const p1PriceTitleEl = document.getElementById('p1PriceTitle');
-            const p2PriceTitleEl = document.getElementById('p2PriceTitle');
-            const p3PriceTitleEl = document.getElementById('p3PriceTitle');
-
+  // --- ACTUALIZACIÓN TÍTULOS (Horas de cada tramo) ---
             const totalHoursPeriod = data.length || 1;
             const p1TimeHoursPct = (p1TimeHours / totalHoursPeriod) * 100;
             const p2TimeHoursPct = (p2TimeHours / totalHoursPeriod) * 100;
@@ -2923,354 +2968,60 @@ async function descargarDesdeDatadis() {
             const p2PriceHoursPct = (p2PriceHours / totalHoursPeriod) * 100;
             const p3PriceHoursPct = (p3PriceHours / totalHoursPeriod) * 100;
 
-            if (p1TimeTitleEl) p1TimeTitleEl.textContent = `P1 (Horas Punta) [${p1TimeHours} h] (${p1TimeHoursPct.toFixed(1)}%)`;
-            if (p2TimeTitleEl) p2TimeTitleEl.textContent = `P2 (Horas Llano) [${p2TimeHours} h] (${p2TimeHoursPct.toFixed(1)}%)`;
-            if (p3TimeTitleEl) p3TimeTitleEl.textContent = `P3 (Horas Valle) [${p3TimeHours} h] (${p3TimeHoursPct.toFixed(1)}%)`;
-            
-            if (p1PriceTitleEl) p1PriceTitleEl.textContent = `Coste Alto (Umbral Caro) [${p1PriceHours} h] (${p1PriceHoursPct.toFixed(1)}%)`;
-            if (p2PriceTitleEl) p2PriceTitleEl.textContent = `Coste Medio (Intermedios) [${p2PriceHours} h] (${p2PriceHoursPct.toFixed(1)}%)`;
-            if (p3PriceTitleEl) p3PriceTitleEl.textContent = `Coste Bajo (Umbral Barato) [${p3PriceHours} h] (${p3PriceHoursPct.toFixed(1)}%)`;
-
-            const p1PctTimeKwh = totalKwh > 0 ? (p1KwhTime / totalKwh) * 100 : 0;
-            const p2PctTimeKwh = totalKwh > 0 ? (p2KwhTime / totalKwh) * 100 : 0;
-            const p3PctTimeKwh = totalKwh > 0 ? (p3KwhTime / totalKwh) * 100 : 0;
-
-            const p1PctTimeCost = totalCostManual > 0 ? (p1CostTime / totalCostManual) * 100 : 0;
-            const p2PctTimeCost = totalCostManual > 0 ? (p2CostTime / totalCostManual) * 100 : 0;
-            const p3PctTimeCost = totalCostManual > 0 ? (p3CostTime / totalCostManual) * 100 : 0;
-
-            const p1PriceLabel = ` [${pPunta.toFixed(5)} €/kWh]`;
-            const p2PriceLabel = ` [${pLlano.toFixed(5)} €/kWh]`;
-            const p3PriceLabel = ` [${pValle.toFixed(5)} €/kWh]`;
-
-            document.getElementById('p1KwhTimeText').innerHTML = `${p1KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostTimeText').innerHTML = `${p1CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-red-500 font-normal text-[10px]">(${p1PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1PriceLabel}</span>`;
-
-            document.getElementById('p2KwhTimeText').innerHTML = `${p2KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostTimeText').innerHTML = `${p2CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-yellow-600 font-normal text-[10px]">(${p2PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2PriceLabel}</span>`;
-
-            document.getElementById('p3KwhTimeText').innerHTML = `${p3KwhTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostTimeText').innerHTML = `${p3CostTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-green-600 font-normal text-[10px]">(${p3PctTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3PriceLabel}</span>`;
-
-            // 4ª Tarjeta Sección 1: Acumulados
-            const avgTimePriceTotal = totalKwh > 0 ? (totalCostManual / totalKwh) : 0;
-            const totalTimeTitleEl = document.getElementById('totalTimeTitle');
-            if (totalTimeTitleEl) totalTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhTimeEl = document.getElementById('totalKwhTimeText');
-            if (totalKwhTimeEl) totalKwhTimeEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostTimeEl = document.getElementById('totalCostTimeText');
-            if (totalCostTimeEl) totalCostTimeEl.innerHTML = `${totalCostManual.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med: ${avgTimePriceTotal.toFixed(5)} €/kWh]</span>`;
-
-            const p1PctPriceKwh = totalKwh > 0 ? (p1KwhPrice / totalKwh) * 100 : 0;
-            const p2PctPriceKwh = totalKwh > 0 ? (p2KwhPrice / totalKwh) * 100 : 0;
-            const p3PctPriceKwh = totalKwh > 0 ? (p3KwhPrice / totalKwh) * 100 : 0;
-
-            const p1PctPriceCost = totalCostPvpc > 0 ? (p1CostPrice / totalCostPvpc) * 100 : 0;
-            const p2PctPriceCost = totalCostPvpc > 0 ? (p2CostPrice / totalCostPvpc) * 100 : 0;
-            const p3PctPriceCost = totalCostPvpc > 0 ? (p3CostPrice / totalCostPvpc) * 100 : 0;
-
-            const p1CostPriceLabel = ` [Med PVPC: ${avgP1Price.toFixed(5)} €/kWh]`;
-            const p2CostPriceLabel = ` [Med PVPC: ${avgP2Price.toFixed(5)} €/kWh]`;
-            const p3CostPriceLabel = ` [Med PVPC: ${avgP3Price.toFixed(5)} €/kWh]`;
-
-            document.getElementById('p1KwhPriceText').innerHTML = `${p1KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostPriceText').innerHTML = `${p1CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p1CostPriceLabel}</span>`;
-
-            document.getElementById('p2KwhPriceText').innerHTML = `${p2KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostPriceText').innerHTML = `${p2CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p2CostPriceLabel}</span>`;
-
-            document.getElementById('p3KwhPriceText').innerHTML = `${p3KwhPrice.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctPriceKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostPriceText').innerHTML = `${p3CostPrice.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctPriceCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5">${p3CostPriceLabel}</span>`;
-
-            // 4ª Tarjeta Sección 2: Acumulados
-            const avgCostPriceTotal = totalKwh > 0 ? (totalCostPvpc / totalKwh) : 0;
-            const totalPriceTitleEl = document.getElementById('totalPriceTitle');
-            if (totalPriceTitleEl) totalPriceTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhPriceEl = document.getElementById('totalKwhPriceText');
-            if (totalKwhPriceEl) totalKwhPriceEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostPriceEl = document.getElementById('totalCostPriceText');
-            if (totalCostPriceEl) totalCostPriceEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgCostPriceTotal.toFixed(5)} €/kWh]</span>`;
-
-            const p1PctIndexedTimeKwh = totalKwh > 0 ? (p1KwhIndexedTime / totalKwh) * 100 : 0;
-            const p2PctIndexedTimeKwh = totalKwh > 0 ? (p2KwhIndexedTime / totalKwh) * 100 : 0;
-            const p3PctIndexedTimeKwh = totalKwh > 0 ? (p3KwhIndexedTime / totalKwh) * 100 : 0;
-
-            const p1PctIndexedTimeCost = totalCostPvpc > 0 ? (p1CostIndexedTime / totalCostPvpc) * 100 : 0;
-            const p2PctIndexedTimeCost = totalCostPvpc > 0 ? (p2CostIndexedTime / totalCostPvpc) * 100 : 0;
-            const p3PctIndexedTimeCost = totalCostPvpc > 0 ? (p3CostIndexedTime / totalCostPvpc) * 100 : 0;
-
-            const p1IndexedTimeTitleEl = document.getElementById('p1IndexedTimeTitle');
-            const p2IndexedTimeTitleEl = document.getElementById('p2IndexedTimeTitle');
-            const p3IndexedTimeTitleEl = document.getElementById('p3IndexedTimeTitle');
-
             const p1IndexedTimeHoursPct = (p1IndexedTimeHours / totalHoursPeriod) * 100;
             const p2IndexedTimeHoursPct = (p2IndexedTimeHours / totalHoursPeriod) * 100;
             const p3IndexedTimeHoursPct = (p3IndexedTimeHours / totalHoursPeriod) * 100;
 
-            if (p1IndexedTimeTitleEl) p1IndexedTimeTitleEl.textContent = `P1 Punta (Horas Punta =PVPC) [${p1IndexedTimeHours} h] (${p1IndexedTimeHoursPct.toFixed(1)}%)`;
-            if (p2IndexedTimeTitleEl) p2IndexedTimeTitleEl.textContent = `P2 Llano (Horas Llano =PVPC) [${p2IndexedTimeHours} h] (${p2IndexedTimeHoursPct.toFixed(1)}%)`;
-            if (p3IndexedTimeTitleEl) p3IndexedTimeTitleEl.textContent = `P3 Valle (Horas Valle =PVPC) [${p3IndexedTimeHours} h] (${p3IndexedTimeHoursPct.toFixed(1)}%)`;
-            document.getElementById('p1KwhIndexedTimeText').innerHTML = `${p1KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p1PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p1CostIndexedTimeText').innerHTML = `${p1CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-rose-500 font-normal text-[10px]">(${p1PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP1IndexedPrice.toFixed(5)} €/kWh]</span>`;
+            const safeEl = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
-            document.getElementById('p2KwhIndexedTimeText').innerHTML = `${p2KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p2PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p2CostIndexedTimeText').innerHTML = `${p2CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-amber-600 font-normal text-[10px]">(${p2PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP2IndexedPrice.toFixed(5)} €/kWh]</span>`;
+            safeEl('p1TimeTitle', `P1 (Horas Punta) [${p1TimeHours} h] (${p1TimeHoursPct.toFixed(1)}%)`);
+            safeEl('p2TimeTitle', `P2 (Horas Llano) [${p2TimeHours} h] (${p2TimeHoursPct.toFixed(1)}%)`);
+            safeEl('p3TimeTitle', `P3 (Horas Valle) [${p3TimeHours} h] (${p3TimeHoursPct.toFixed(1)}%)`);
 
-            document.getElementById('p3KwhIndexedTimeText').innerHTML = `${p3KwhIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(${p3PctIndexedTimeKwh.toFixed(1)}%)</span>`;
-            document.getElementById('p3CostIndexedTimeText').innerHTML = `${p3CostIndexedTime.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-emerald-600 font-normal text-[10px]">(${p3PctIndexedTimeCost.toFixed(1)}%)</span><span class="text-gray-400 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgP3IndexedPrice.toFixed(5)} €/kWh]</span>`;
+            safeEl('p1PriceTitle', `Coste Alto (Umbral Caro) [${p1PriceHours} h] (${p1PriceHoursPct.toFixed(1)}%)`);
+            safeEl('p2PriceTitle', `Coste Medio (Intermedios) [${p2PriceHours} h] (${p2PriceHoursPct.toFixed(1)}%)`);
+            safeEl('p3PriceTitle', `Coste Bajo (Umbral Barato) [${p3PriceHours} h] (${p3PriceHoursPct.toFixed(1)}%)`);
 
-            // 4ª Tarjeta Sección 3: Acumulados
-            const avgIndexedPriceTotal = totalKwh > 0 ? (totalCostPvpc / totalKwh) : 0;
-            const totalIndexedTimeTitleEl = document.getElementById('totalIndexedTimeTitle');
-            if (totalIndexedTimeTitleEl) totalIndexedTimeTitleEl.textContent = `ACUMULADOS [${totalHoursPeriod} h] (100.0%)`;
-            const totalKwhIndexedTimeEl = document.getElementById('totalKwhIndexedTimeText');
-            if (totalKwhIndexedTimeEl) totalKwhIndexedTimeEl.innerHTML = `${totalKwh.toLocaleString('es-ES', {minimumFractionDigits: 1, maximumFractionDigits: 1})} kWh <span class="text-gray-400 font-normal text-[10px]">(100.0%)</span>`;
-            const totalCostIndexedTimeEl = document.getElementById('totalCostIndexedTimeText');
-            if (totalCostIndexedTimeEl) totalCostIndexedTimeEl.innerHTML = `${totalCostPvpc.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € <span class="text-blue-800 font-normal text-[10px]">(100.0%)</span><span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgIndexedPriceTotal.toFixed(5)} €/kWh]</span>`;
+            safeEl('p1IndexedTimeTitle', `P1 Punta (Oficial @ PVPC) [${p1IndexedTimeHours} h] (${p1IndexedTimeHoursPct.toFixed(1)}%)`);
+            safeEl('p2IndexedTimeTitle', `P2 Llano (Oficial @ PVPC) [${p2IndexedTimeHours} h] (${p2IndexedTimeHoursPct.toFixed(1)}%)`);
+            safeEl('p3IndexedTimeTitle', `P3 Valle (Oficial @ PVPC) [${p3IndexedTimeHours} h] (${p3IndexedTimeHoursPct.toFixed(1)}%)`);
 
-            // 3. Comparación Global de Sistemas de Facturación
-            const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
-            const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
-            const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+            // --- ENVIAR DATOS A LOS INPUTS EDITABLES Y LLAMAR AL MOTOR DE RECÁLCULO MANUAL ---
+            window.analyzedDays = numDays;
 
-            const diffPower = totalPowerCostPvpcNeto - totalPowerCostManualNeto;
-            const diffPowerPct = totalPowerCostManualNeto > 0 ? (diffPower / totalPowerCostManualNeto) * 100 : 0;
-            const diffPowerClass = diffPower < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+            // Guardar precios medios en el almacén global
+            window.currentAvgPrices.price = { p1: avgP1Price, p2: avgP2Price, p3: avgP3Price };
+            window.currentAvgPrices.official = { p1: avgP1IndexedPrice, p2: avgP2IndexedPrice, p3: avgP3IndexedPrice };
 
-            const diffTotal = grandTotalPvpcSimulated - grandTotalManualSimulated;
-            const diffTotalPct = grandTotalManualSimulated > 0 ? (diffTotal / grandTotalManualSimulated) * 100 : 0;
-            const diffTotalClass = diffTotal < 0 ? 'text-emerald-700' : 'text-rose-700';
-            const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+            // Ojo: Si el modo de simulación porcentual está activo, machacamos los Kwh para la tarjeta manual
+            let fP1Kwh = p1KwhTime;
+            let fP2Kwh = p2KwhTime;
+            let fP3Kwh = p3KwhTime;
 
-            const isPvpcCheaper = diffTotal < 0;
-            const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
-            const bannerText = isPvpcCheaper 
-                ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
-                : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
+            if (window.assumeEquivalentTranches && mode === 'pvpc') {
+                fP1Kwh = totalKwh * (simPctP1 / 100);
+                fP2Kwh = totalKwh * (simPctP2 / 100);
+                fP3Kwh = totalKwh * (simPctP3 / 100);
+            }
 
-            const activeManualTariffName = document.getElementById('tariffProfileName').value || 'Tarifa Manual';
-            const sumPercents = parseFloat((simPctP1 + simPctP2 + simPctP3).toFixed(1));
-            const isSumOk = Math.abs(sumPercents - 100.0) <= 0.1;
-            const targetTariffTitle = (mode === 'pvpc') ? activeManualTariffName : 'PVPC';
+            // Poblamos los inputs de las Tarjetas
+            document.getElementById('input-time-p1').value = fP1Kwh.toFixed(2);
+            document.getElementById('input-time-p2').value = fP2Kwh.toFixed(2);
+            document.getElementById('input-time-p3').value = fP3Kwh.toFixed(2);
 
-            // Guardar perfil activo y calcular los 5 perfiles restantes
-            saveActiveProfileToMemory();
-            const otherProfiles = window.tariffProfiles
-                .map((prof, idx) => ({ prof, idx }))
-                .filter(item => item.idx !== window.activeProfileIndex)
-                .map(item => {
-                    const calc = calculateProfileInvoice(
-                        item.prof,
-                        data,
-                        numDays,
-                        totalKwh,
-                        p1Kw,
-                        p2Kw,
-                        window.assumeEquivalentTranches,
-                        simPctP1,
-                        simPctP2,
-                        simPctP3
-                    );
-                    return { ...calc, idx: item.idx };
-                });
+            document.getElementById('input-price-p1').value = p1KwhPrice.toFixed(2);
+            document.getElementById('input-price-p2').value = p2KwhPrice.toFixed(2);
+            document.getElementById('input-price-p3').value = p3KwhPrice.toFixed(2);
 
-            const fmtEur = (val) => val.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+            document.getElementById('input-official-p1').value = p1KwhIndexedTime.toFixed(2);
+            document.getElementById('input-official-p2').value = p2KwhIndexedTime.toFixed(2);
+            document.getElementById('input-official-p3').value = p3KwhIndexedTime.toFixed(2);
 
-            let comparisonHtml = `
-                <div class="w-full">
-                    <div class="border-b pb-3 mb-3 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
-                        <div>
-                            <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (${numDays} días analizados)</h5>
-                            <p class="text-[11px] text-gray-500">Desglose integral de conceptos. Desliza horizontalmente para ver las 5 tarifas restantes.</p>
-                            <div class="flex items-center gap-2 mt-2">
-                                <button type="button" id="btnAnalizarOfertasIA" onclick="ejecutarAnalisisOfertasIA()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
-                                    <span>✨ ANALIZAR OFERTAS CON iA</span>
-                                </button>
-                                <button type="button" onclick="abrirModalOpenRouter()" title="Configurar API Key y Modelo de OpenRouter" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold p-1.5 rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1">
-                                    <span>⚙️</span>
-                                    <span class="text-[10px] hidden sm:inline">Configurar API</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Panel de Simulación de Reparto por Porcentajes -->
-                        <div class="bg-blue-50/90 border border-blue-200 rounded-xl p-2.5 flex flex-col gap-2 w-full xl:w-auto shadow-xs">
-                            <div class="flex items-center justify-between gap-3">
-                                <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-blue-950">
-                                    <input type="checkbox" id="assumeEquivalentTranchesCheckbox" onchange="toggleAssumeEquivalentTranches(this.checked)" ${window.assumeEquivalentTranches ? 'checked' : ''} class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
-                                    <span>Simular % de consumo asignado a P1, P2 y P3 en la tarifa <strong>${targetTariffTitle}</strong></span>
-                                </label>
-                                ${window.assumeEquivalentTranches ? `
-                                    <button type="button" onclick="resetTranchePercents()" class="text-[10px] bg-blue-200/80 hover:bg-blue-300 text-blue-900 font-bold px-2 py-0.5 rounded transition-colors" title="Restaurar a los porcentajes reales de PVPC">
-                                        ↺ % Reales PVPC
-                                    </button>
-                                ` : ''}
-                            </div>
+            // Disparamos el recálculo
+            recalcTime();
+            recalcPrice();
+            recalcOfficial();
 
-                            ${window.assumeEquivalentTranches ? `
-                                <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-blue-200/60 text-xs">
-                                    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-red-200">
-                                        <span class="text-[10px] font-bold text-red-800 uppercase">% P1:</span>
-                                        <input type="number" step="0.5" min="0" max="100" value="${simPctP1}" onchange="updateTranchePercent('P1', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-red-500">
-                                        <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP1 / 100)).toFixed(1)} kWh)</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-amber-200">
-                                        <span class="text-[10px] font-bold text-amber-800 uppercase">% P2:</span>
-                                        <input type="number" step="0.5" min="0" max="100" value="${simPctP2}" onchange="updateTranchePercent('P2', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-amber-500">
-                                        <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP2 / 100)).toFixed(1)} kWh)</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-emerald-200">
-                                        <span class="text-[10px] font-bold text-emerald-800 uppercase">% P3:</span>
-                                        <input type="number" step="0.5" min="0" max="100" value="${simPctP3}" onchange="updateTranchePercent('P3', this.value)" class="w-14 text-center font-bold text-gray-900 border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                                        <span class="text-[9px] text-gray-400 font-mono">(${(totalKwh * (simPctP3 / 100)).toFixed(1)} kWh)</span>
-                                    </div>
-                                    <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg ${isSumOk ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900 animate-pulse'}">
-                                        Suma: ${sumPercents}% ${isSumOk ? '✓' : '⚠️'}
-                                    </span>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-
-                    <!-- Contenedor con Deslizador / Scroll Horizontal -->
-                    <div class="overflow-x-auto pb-3">
-                        <table class="w-full text-left text-xs border-separate border-spacing-0 min-w-[1250px]">
-                            <thead>
-                                <tr class="text-gray-400 uppercase text-[9px] tracking-wider font-semibold border-b">
-                                    <th class="py-2.5 px-3 whitespace-nowrap sticky left-0 z-20 bg-white border-b border-r border-gray-300 shadow-sm">Concepto Facturado</th>
-                                    <th class="py-2.5 px-2.5 text-right whitespace-nowrap border-b border-gray-200">Tarifa PVPC (Regulada)</th>
-                                    <th class="py-2.5 px-2.5 text-right whitespace-nowrap bg-blue-50/80 text-blue-900 font-bold border-b border-gray-200">${activeManualTariffName} (Activa)</th>
-                                    <th class="py-2.5 px-2.5 text-right whitespace-nowrap border-b border-r border-gray-300">Desviación / Diferencia</th>
-                                    ${otherProfiles.map(o => `
-                                        <th class="py-2.5 px-2.5 text-right whitespace-nowrap text-gray-600 bg-gray-50/70 font-semibold border-b border-gray-200">
-                                            <div class="truncate max-w-[150px] ml-auto" title="${o.name}">${o.name}</div>
-                                            <span class="text-[8px] text-gray-400 font-normal">Perfil ${o.idx + 1}</span>
-                                        </th>
-                                    `).join('')}
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-700">
-                                <tr class="${window.assumeEquivalentTranches ? 'bg-blue-50/30' : ''}">
-                                    <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 ${window.assumeEquivalentTranches ? 'bg-blue-50/90' : 'bg-white'} border-b border-r border-gray-300 shadow-sm">
-                                        Término de Energía (Base)
-                                        ${window.assumeEquivalentTranches ? '<span class="text-[9px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded ml-1.5 uppercase">⚡ Simulación %</span>' : ''}
-                                    </td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-500 whitespace-nowrap border-b border-gray-100">${fmtEur(compEnergyPvpc)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-500 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(compEnergyManual)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(o.energyBase)}</td>`).join('')}
-                                </tr>
-
-                                    <tr class="bg-gray-50/60">
-                                    <td class="py-2.5 px-3 font-semibold text-gray-800 whitespace-nowrap sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-300 shadow-sm">Término de Energía (Neto)</td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap border-b border-gray-100">${fmtEur(totalCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-blue-900 whitespace-nowrap bg-blue-50/60 border-b border-gray-100">${fmtEur(totalCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaManual}%)</span></td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold ${diffEnergyClass} border-b border-r border-gray-300 leading-tight whitespace-nowrap">${diffEnergyText}</td>
-                                    ${otherProfiles.map(o => `<td class="py-2.5 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap border-b border-gray-100">${fmtEur(o.energyNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descEnergia}%)</span></td>`).join('')}
-                                </tr>
-
-                                <tr>
-                                    <td class="py-2 px-3 font-medium text-gray-500 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Término de Potencia (Base)</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(totalPowerCostPvpc)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(totalPowerCostManual)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(o.powerBase)}</td>`).join('')}
-                                </tr>
-
-                                <tr class="bg-gray-50/60">
-                                    <td class="py-2.5 px-3 font-semibold text-gray-800 whitespace-nowrap sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-300 shadow-sm">Término de Potencia (Neto)</td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap border-b border-gray-100">${fmtEur(totalPowerCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap bg-blue-50/60 border-b border-gray-100">${fmtEur(totalPowerCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaManual}%)</span></td>
-                                    <td class="py-2.5 px-2.5 text-right font-mono font-semibold ${diffPowerClass} border-b border-r border-gray-300 leading-tight whitespace-nowrap">${diffPowerText}</td>
-                                    ${otherProfiles.map(o => `<td class="py-2.5 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap border-b border-gray-100">${fmtEur(o.powerNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descPotencia}%)</span></td>`).join('')}
-                                </tr>
-
-                                <tr>
-                                    <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Margen Comercialización y Bono</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(margenComTotalPvpc)} <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(margenComTotalManual)} <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioManual.toFixed(3)}/d)</span></td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.margenTotal)} <span class="text-[8px] text-gray-400 font-normal">(${o.margenDiario.toFixed(3)}/d)</span></td>`).join('')}
-                                </tr>
-
-                                <tr>
-                                    <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Ajustes manuales</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(ajustesPvpc)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(ajustesManual)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.ajustes)}</td>`).join('')}
-                                </tr>
-
-                                <tr>
-                                    <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Impuesto Eléctrico</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(impElecPvpcVal)} <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(impElecManualVal)} <span class="text-[8px] text-gray-400 font-normal">(${impElecManual}%)</span></td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.impElecVal)} <span class="text-[8px] text-gray-400 font-normal">(${o.impElec}%)</span></td>`).join('')}
-                                </tr>
-
-                                <tr>
-                                    <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Alquiler de Contador</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(alqContadorTotalPvpc)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(alqContadorTotalManual)}</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.alqContadorTotal)}</td>`).join('')}
-                                </tr>
-
-                                <tr>
-                                    <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">IVA Aplicado</td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(ivaPvpcVal)} <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(ivaManualVal)} <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaManual}%)</span></td>
-                                    <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
-                                    ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.ivaVal)} <span class="text-[8px] text-gray-400 font-normal">(${o.vatRate}%)</span></td>`).join('')}
-                                </tr>
-
-                                <tr class="bg-blue-50/50 font-bold border-t-2 border-b-2 border-blue-200">
-                                    <td class="py-3 px-3 text-gray-900 uppercase whitespace-nowrap sticky left-0 z-10 bg-blue-100 border-t-2 border-b-2 border-r border-blue-200 shadow-sm">Total Factura a Pagar</td>
-                                    <td class="py-3 px-2.5 text-right font-mono text-sm text-blue-900 leading-tight whitespace-nowrap border-t-2 border-b-2 border-blue-200">
-                                        <div>${fmtEur(grandTotalPvpcSimulated)}</div>
-                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${avgKwhPricePvpcSimulated.toFixed(5)} €/kWh</span>
-                                    </td>
-                                    <td class="py-3 px-2.5 text-right font-mono text-sm text-blue-950 bg-blue-100/60 leading-tight whitespace-nowrap border-t-2 border-b-2 border-blue-200">
-                                        <div>${fmtEur(grandTotalManualSimulated)}</div>
-                                        <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${avgKwhPriceManualSimulated.toFixed(5)} €/kWh</span>
-                                    </td>
-                                    <td class="py-3 px-2.5 text-right font-mono text-sm font-bold ${diffTotalClass} border-t-2 border-b-2 border-r border-gray-300 leading-tight whitespace-nowrap">
-                                        ${diffTotalText}
-                                    </td>
-                                    ${otherProfiles.map(o => `
-                                        <td class="py-3 px-2.5 text-right font-mono text-sm text-gray-800 leading-tight whitespace-nowrap bg-gray-50/90 border-t-2 border-b-2 border-blue-200">
-                                            <div>${fmtEur(o.grandTotal)}</div>
-                                            <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${o.avgKwhPrice.toFixed(5)} €/kWh</span>
-                                        </td>
-                                    `).join('')}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                 <div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
-                        ${bannerText}
-                    </div>
-
-                    <!-- CONTENEDOR DEL INFORME AUDITORÍA DE IA -->
-                    <div id="aiOfferAnalysisContainer" class="hidden mt-4 p-4 bg-gradient-to-br from-purple-50/90 via-indigo-50/80 to-blue-50/90 border-2 border-purple-300 rounded-xl shadow-sm text-xs space-y-3">
-                        <div class="flex justify-between items-center border-b border-purple-200/80 pb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="text-lg">🤖</span>
-                                <h5 class="font-black text-purple-950 uppercase tracking-wide text-xs">
-                                    Dictamen Energético Experto emitido por Inteligencia Artificial
-                                </h5>
-                            </div>
-                            <span id="aiModelBadge" class="text-[10px] font-mono font-bold bg-purple-200/70 text-purple-900 px-2 py-0.5 rounded-full border border-purple-300"></span>
-                        </div>
-                        <div id="aiOfferAnalysisBody" class="text-slate-800 leading-relaxed space-y-2"></div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('comparisonBox').innerHTML = comparisonHtml;
 
             const dailyEvThreshold = parseFloat(dailyEvThresholdInput.value) || 15.0;
             const startVal = filterStartDate.value;
@@ -7588,6 +7339,398 @@ Una conclusión de 2 o 3 líneas muy clara: Si el usuario debe quedarse en el me
         btn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
 }
+
+
+// --- MOTOR DE RECÁLCULO MANUAL PARA TARJETAS EDITABLES ---
+
+// Almacén global para precios medios calculados con los datos brutos (o fallbacks)
+window.currentAvgPrices = {
+    price: { p1: 0.15, p2: 0.10, p3: 0.05 },
+    official: { p1: 0.15, p2: 0.10, p3: 0.05 }
+};
+window.analyzedDays = 30; // Valor por defecto si no hay CSV
+
+window.recalcTime = function() {
+    const p1 = parseFloat(document.getElementById('input-time-p1').value) || 0;
+    const p2 = parseFloat(document.getElementById('input-time-p2').value) || 0;
+    const p3 = parseFloat(document.getElementById('input-time-p3').value) || 0;
+    const total = p1 + p2 + p3;
+
+    const pPunta = parseFloat(document.getElementById('pricePunta').value) || 0;
+    const pLlano = parseFloat(document.getElementById('priceLlano').value) || 0;
+    const pValle = parseFloat(document.getElementById('priceValle').value) || 0;
+
+    const c1 = p1 * pPunta;
+    const c2 = p2 * pLlano;
+    const c3 = p3 * pValle;
+    const cTotal = c1 + c2 + c3;
+
+    document.getElementById('pct-time-p1').textContent = `(${(total > 0 ? (p1/total)*100 : 0).toFixed(1)}%)`;
+    document.getElementById('pct-time-p2').textContent = `(${(total > 0 ? (p2/total)*100 : 0).toFixed(1)}%)`;
+    document.getElementById('pct-time-p3').textContent = `(${(total > 0 ? (p3/total)*100 : 0).toFixed(1)}%)`;
+    
+    document.getElementById('totalKwhTimeText').textContent = `${total.toFixed(2)} kWh (100.0%)`;
+
+    document.getElementById('cost-time-p1').innerHTML = `${c1.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[${pPunta.toFixed(5)} €/kWh]</span>`;
+    document.getElementById('cost-time-p2').innerHTML = `${c2.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[${pLlano.toFixed(5)} €/kWh]</span>`;
+    document.getElementById('cost-time-p3').innerHTML = `${c3.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[${pValle.toFixed(5)} €/kWh]</span>`;
+    
+    const avgTotal = total > 0 ? (cTotal / total) : 0;
+    document.getElementById('totalCostTimeText').innerHTML = `${cTotal.toFixed(2)} € <span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med: ${avgTotal.toFixed(5)} €/kWh]</span>`;
+
+    recalcInvoiceTable();
+};
+
+window.recalcPrice = function() {
+    const p1 = parseFloat(document.getElementById('input-price-p1').value) || 0;
+    const p2 = parseFloat(document.getElementById('input-price-p2').value) || 0;
+    const p3 = parseFloat(document.getElementById('input-price-p3').value) || 0;
+    const total = p1 + p2 + p3;
+
+    const pr1 = window.currentAvgPrices.price.p1;
+    const pr2 = window.currentAvgPrices.price.p2;
+    const pr3 = window.currentAvgPrices.price.p3;
+
+    const c1 = p1 * pr1;
+    const c2 = p2 * pr2;
+    const c3 = p3 * pr3;
+    const cTotal = c1 + c2 + c3;
+
+    document.getElementById('pct-price-p1').textContent = `(${(total > 0 ? (p1/total)*100 : 0).toFixed(1)}%)`;
+    document.getElementById('pct-price-p2').textContent = `(${(total > 0 ? (p2/total)*100 : 0).toFixed(1)}%)`;
+    document.getElementById('pct-price-p3').textContent = `(${(total > 0 ? (p3/total)*100 : 0).toFixed(1)}%)`;
+    
+    document.getElementById('totalKwhPriceText').textContent = `${total.toFixed(2)} kWh (100.0%)`;
+
+    document.getElementById('cost-price-p1').innerHTML = `${c1.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[Med PVPC: ${pr1.toFixed(5)} €/kWh]</span>`;
+    document.getElementById('cost-price-p2').innerHTML = `${c2.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[Med PVPC: ${pr2.toFixed(5)} €/kWh]</span>`;
+    document.getElementById('cost-price-p3').innerHTML = `${c3.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[Med PVPC: ${pr3.toFixed(5)} €/kWh]</span>`;
+    
+    const avgTotal = total > 0 ? (cTotal / total) : 0;
+    document.getElementById('totalCostPriceText').innerHTML = `${cTotal.toFixed(2)} € <span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgTotal.toFixed(5)} €/kWh]</span>`;
+};
+
+window.recalcOfficial = function() {
+    const p1 = parseFloat(document.getElementById('input-official-p1').value) || 0;
+    const p2 = parseFloat(document.getElementById('input-official-p2').value) || 0;
+    const p3 = parseFloat(document.getElementById('input-official-p3').value) || 0;
+    const total = p1 + p2 + p3;
+
+    const pr1 = window.currentAvgPrices.official.p1;
+    const pr2 = window.currentAvgPrices.official.p2;
+    const pr3 = window.currentAvgPrices.official.p3;
+
+    const c1 = p1 * pr1;
+    const c2 = p2 * pr2;
+    const c3 = p3 * pr3;
+    const cTotal = c1 + c2 + c3;
+
+    document.getElementById('pct-official-p1').textContent = `(${(total > 0 ? (p1/total)*100 : 0).toFixed(1)}%)`;
+    document.getElementById('pct-official-p2').textContent = `(${(total > 0 ? (p2/total)*100 : 0).toFixed(1)}%)`;
+    document.getElementById('pct-official-p3').textContent = `(${(total > 0 ? (p3/total)*100 : 0).toFixed(1)}%)`;
+    
+    document.getElementById('totalKwhIndexedTimeText').textContent = `${total.toFixed(2)} kWh (100.0%)`;
+
+    document.getElementById('cost-official-p1').innerHTML = `${c1.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[Med PVPC: ${pr1.toFixed(5)} €/kWh]</span>`;
+    document.getElementById('cost-official-p2').innerHTML = `${c2.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[Med PVPC: ${pr2.toFixed(5)} €/kWh]</span>`;
+    document.getElementById('cost-official-p3').innerHTML = `${c3.toFixed(2)} € <span class="text-gray-400 font-mono text-[10px] block mt-0.5">[Med PVPC: ${pr3.toFixed(5)} €/kWh]</span>`;
+    
+    const avgTotal = total > 0 ? (cTotal / total) : 0;
+    document.getElementById('totalCostIndexedTimeText').innerHTML = `${cTotal.toFixed(2)} € <span class="text-gray-500 font-mono text-[10px] block mt-0.5"> [Med PVPC: ${avgTotal.toFixed(5)} €/kWh]</span>`;
+
+    recalcInvoiceTable();
+};
+
+function calculateProfileAggregated(prof, kwhP1, kwhP2, kwhP3, numDays, p1Kw, p2Kw) {
+    const totalKwh = kwhP1 + kwhP2 + kwhP3;
+    const pPunta = parseFloat(prof.pricePunta) || 0;
+    const pLlano = parseFloat(prof.priceLlano) || 0;
+    const pValle = parseFloat(prof.priceValle) || 0;
+
+    const energyBase = (kwhP1 * pPunta) + (kwhP2 * pLlano) + (kwhP3 * pValle);
+    
+    const descEnergia = prof.discountEnergyManual !== undefined ? (parseFloat(prof.discountEnergyManual) || 0) : 0;
+    const descPotencia = prof.discountPowerManual !== undefined ? (parseFloat(prof.discountPowerManual) || 0) : 0;
+    const ajustes = prof.invoiceAdjustmentsManual !== undefined ? (parseFloat(prof.invoiceAdjustmentsManual) || 0) : 0;
+    const margenDiario = prof.retailerMarginManual !== undefined ? (parseFloat(prof.retailerMarginManual) || 0) : 0.142;
+    const impElec = prof.electricityTaxManual !== undefined ? (parseFloat(prof.electricityTaxManual) || 0) : 5.11;
+    const alqContador = prof.meterRentalManual !== undefined ? (parseFloat(prof.meterRentalManual) || 0) : 0.80;
+    const vatRate = prof.vatRateManual !== undefined ? (parseFloat(prof.vatRateManual) || 0) : 21;
+    const powerP1 = prof.powerPriceP1Manual !== undefined ? (parseFloat(prof.powerPriceP1Manual) || 0) : 33.95;
+    const powerP2 = prof.powerPriceP2Manual !== undefined ? (parseFloat(prof.powerPriceP2Manual) || 0) : 33.95;
+
+    const powerBase = (((p1Kw * powerP1) + (p2Kw * powerP2)) / 365) * numDays;
+    const energyNet = energyBase * (1 - descEnergia / 100);
+    const powerNet = powerBase * (1 - descPotencia / 100);
+    const margenTotal = margenDiario * numDays;
+    const baseImp = energyNet + powerNet + margenTotal + ajustes;
+    const impElecVal = baseImp * (impElec / 100);
+    const alqContadorTotal = (alqContador / 30) * numDays;
+    const baseIva = baseImp + impElecVal + alqContadorTotal;
+    const ivaVal = baseIva * (vatRate / 100);
+    const grandTotal = baseIva + ivaVal;
+    const avgKwhPrice = totalKwh > 0 ? (grandTotal / totalKwh) : 0;
+
+    return {
+        name: prof.name || 'Tarifa Manual',
+        energyBase, energyNet, descEnergia,
+        powerBase, powerNet, descPotencia,
+        margenTotal, margenDiario, ajustes,
+        impElecVal, impElec, alqContadorTotal, alqContador,
+        ivaVal, vatRate, grandTotal, avgKwhPrice
+    };
+}
+
+    window.recalcInvoiceTable = function() {
+    // Leemos los días editables desde la interfaz
+    const numDays = parseInt(document.getElementById('input-manual-days').value, 10) || 30;
+    window.analyzedDays = numDays; // Sincronizamos
+
+    const p1Kw = parseFloat(document.getElementById('powerP1').value) || 0;
+    const p2Kw = parseFloat(document.getElementById('powerP2').value) || 0;
+    const mode = document.getElementById('rateMode').value;
+
+    // Obtener los kWh TECLADOS en pantalla como fuente de la verdad
+    // Mercado Libre usa la Sección 1
+    const manualP1 = parseFloat(document.getElementById('input-time-p1').value) || 0;
+    const manualP2 = parseFloat(document.getElementById('input-time-p2').value) || 0;
+    const manualP3 = parseFloat(document.getElementById('input-time-p3').value) || 0;
+    const totalManualKwh = manualP1 + manualP2 + manualP3;
+
+    // PVPC usa la Sección 3
+    const officialP1 = parseFloat(document.getElementById('input-official-p1').value) || 0;
+    const officialP2 = parseFloat(document.getElementById('input-official-p2').value) || 0;
+    const officialP3 = parseFloat(document.getElementById('input-official-p3').value) || 0;
+    const totalOfficialKwh = officialP1 + officialP2 + officialP3;
+    
+    // Cálculo Energía PVPC
+    const compEnergyPvpc = (officialP1 * window.currentAvgPrices.official.p1) + 
+                           (officialP2 * window.currentAvgPrices.official.p2) + 
+                           (officialP3 * window.currentAvgPrices.official.p3);
+
+    // Cálculo Energía Manual (Perfil Activo)
+    const activeProf = window.tariffProfiles[window.activeProfileIndex];
+    const compEnergyManual = (manualP1 * (parseFloat(activeProf.pricePunta)||0)) + 
+                             (manualP2 * (parseFloat(activeProf.priceLlano)||0)) + 
+                             (manualP3 * (parseFloat(activeProf.priceValle)||0));
+
+    // Descuentos y atributos PVPC
+    const descEnergiaPvpc = parseFloat(document.getElementById('discountEnergyPvpc').value) || 0;
+    const descPotenciaPvpc = parseFloat(document.getElementById('discountPowerPvpc').value) || 0;
+    const p1PricePvpc = parseFloat(document.getElementById('powerPriceP1Pvpc').value) || 0;
+    const p2PricePvpc = parseFloat(document.getElementById('powerPriceP2Pvpc').value) || 0;
+    const totalPowerCostPvpc = (((p1Kw * p1PricePvpc) + (p2Kw * p2PricePvpc)) / 365) * numDays;
+    
+    const ajustesPvpc = parseFloat(document.getElementById('invoiceAdjustmentsPvpc').value) || 0;
+    const margenComDiarioPvpc = parseFloat(document.getElementById('retailerMarginPvpc').value) || 0;
+    const impElecPvpc = parseFloat(document.getElementById('electricityTaxPvpc').value) || 0;
+    const alqContadorPvpc = parseFloat(document.getElementById('meterRentalPvpc').value) || 0;
+    const tipoIvaPvpc = parseFloat(document.getElementById('vatRatePvpc').value) || 0;
+
+    const margenComTotalPvpc = margenComDiarioPvpc * numDays;
+    const totalCostPvpcNeto = compEnergyPvpc * (1 - descEnergiaPvpc / 100);
+    const totalPowerCostPvpcNeto = totalPowerCostPvpc * (1 - descPotenciaPvpc / 100);
+    const baseImpElecPvpc = totalCostPvpcNeto + totalPowerCostPvpcNeto + margenComTotalPvpc + ajustesPvpc;
+    const impElecPvpcVal = baseImpElecPvpc * (impElecPvpc / 100);
+    const alqContadorTotalPvpc = (alqContadorPvpc / 30) * numDays;
+    const baseIvaPvpc = baseImpElecPvpc + impElecPvpcVal + alqContadorTotalPvpc;
+    const ivaPvpcVal = baseIvaPvpc * (tipoIvaPvpc / 100);
+    const grandTotalPvpcSimulated = baseIvaPvpc + ivaPvpcVal;
+    const avgKwhPricePvpcSimulated = totalOfficialKwh > 0 ? (grandTotalPvpcSimulated / totalOfficialKwh) : 0;
+
+    // Descuentos y atributos Manual Activa
+    const actCalc = calculateProfileAggregated(activeProf, manualP1, manualP2, manualP3, numDays, p1Kw, p2Kw);
+    const totalCostManualNeto = actCalc.energyNet;
+    const totalPowerCostManual = actCalc.powerBase;
+    const totalPowerCostManualNeto = actCalc.powerNet;
+    const margenComTotalManual = actCalc.margenTotal;
+    const ajustesManual = actCalc.ajustes;
+    const impElecManualVal = actCalc.impElecVal;
+    const alqContadorTotalManual = actCalc.alqContadorTotal;
+    const ivaManualVal = actCalc.ivaVal;
+    const grandTotalManualSimulated = actCalc.grandTotal;
+    const avgKwhPriceManualSimulated = actCalc.avgKwhPrice;
+
+    // Diferencias
+    const diffEnergy = totalCostPvpcNeto - totalCostManualNeto;
+    const diffEnergyPct = totalCostManualNeto > 0 ? (diffEnergy / totalCostManualNeto) * 100 : 0;
+    const diffEnergyClass = diffEnergy < 0 ? 'text-emerald-700' : 'text-rose-700';
+    const diffEnergyText = `${Math.abs(diffEnergy).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffEnergyPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffEnergy < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+    const diffPower = totalPowerCostPvpcNeto - totalPowerCostManualNeto;
+    const diffPowerPct = totalPowerCostManualNeto > 0 ? (diffPower / totalPowerCostManualNeto) * 100 : 0;
+    const diffPowerClass = diffPower < 0 ? 'text-emerald-700' : 'text-rose-700';
+    const diffPowerText = `${Math.abs(diffPower).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffPowerPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffPower < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+    const diffTotal = grandTotalPvpcSimulated - grandTotalManualSimulated;
+    const diffTotalPct = grandTotalManualSimulated > 0 ? (diffTotal / grandTotalManualSimulated) * 100 : 0;
+    const diffTotalClass = diffTotal < 0 ? 'text-emerald-700' : 'text-rose-700';
+    const diffTotalText = `${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${Math.abs(diffTotalPct).toFixed(1)}%)<br><span class="text-[8px] font-bold uppercase">${diffTotal < 0 ? 'Ahorro PVPC' : 'Ahorro Manual'}</span>`;
+
+    const isPvpcCheaper = diffTotal < 0;
+    const bannerClass = isPvpcCheaper ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-rose-100 border border-rose-300 text-rose-800';
+    const bannerText = isPvpcCheaper 
+        ? `💡 El PVPC resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barato (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`
+        : `⚠️ La Tarifa Manual resulta un total global de ${Math.abs(diffTotalPct).toFixed(1)}% más barata (Ahorro neto de ${Math.abs(diffTotal).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en este período).`;
+
+    // Otros perfiles
+    const otherProfiles = window.tariffProfiles
+        .map((prof, idx) => ({ prof, idx }))
+        .filter(item => item.idx !== window.activeProfileIndex)
+        .map(item => {
+            const calc = calculateProfileAggregated(item.prof, manualP1, manualP2, manualP3, numDays, p1Kw, p2Kw);
+            return { ...calc, idx: item.idx };
+        });
+
+    const fmtEur = (val) => val.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    const activeManualTariffName = activeProf.name || 'Tarifa Manual';
+
+    let comparisonHtml = `
+        <div class="w-full">
+            <div class="border-b pb-3 mb-3 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
+                <div>
+                    <h5 class="font-bold text-gray-800 text-sm">Comparativa Económica de Sistemas (Periodo Base de ${numDays} días)</h5>
+                    <p class="text-[11px] text-gray-500">Recalculado con los valores editados. Desliza horizontalmente para ver las 5 tarifas restantes.</p>
+                </div>
+            </div>
+
+            <!-- Contenedor con Deslizador / Scroll Horizontal -->
+            <div class="overflow-x-auto pb-3">
+                <table class="w-full text-left text-xs border-separate border-spacing-0 min-w-[1250px]">
+                    <thead>
+                        <tr class="text-gray-400 uppercase text-[9px] tracking-wider font-semibold border-b">
+                            <th class="py-2.5 px-3 whitespace-nowrap sticky left-0 z-20 bg-white border-b border-r border-gray-300 shadow-sm">Concepto Facturado</th>
+                            <th class="py-2.5 px-2.5 text-right whitespace-nowrap border-b border-gray-200">Tarifa PVPC (Regulada)</th>
+                            <th class="py-2.5 px-2.5 text-right whitespace-nowrap bg-blue-50/80 text-blue-900 font-bold border-b border-gray-200">${activeManualTariffName} (Activa)</th>
+                            <th class="py-2.5 px-2.5 text-right whitespace-nowrap border-b border-r border-gray-300">Desviación / Diferencia</th>
+                            ${otherProfiles.map(o => `
+                                <th class="py-2.5 px-2.5 text-right whitespace-nowrap text-gray-600 bg-gray-50/70 font-semibold border-b border-gray-200">
+                                    <div class="truncate max-w-[150px] ml-auto" title="${o.name}">${o.name}</div>
+                                    <span class="text-[8px] text-gray-400 font-normal">Perfil ${o.idx + 1}</span>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">
+                                Término de Energía (Base)
+                            </td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-500 whitespace-nowrap border-b border-gray-100">${fmtEur(compEnergyPvpc)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-500 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(compEnergyManual)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(o.energyBase)}</td>`).join('')}
+                        </tr>
+                        <tr class="bg-gray-50/60">
+                            <td class="py-2.5 px-3 font-semibold text-gray-800 whitespace-nowrap sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-300 shadow-sm">Término de Energía (Neto)</td>
+                            <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap border-b border-gray-100">${fmtEur(totalCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descEnergiaPvpc}%)</span></td>
+                            <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-blue-900 whitespace-nowrap bg-blue-50/60 border-b border-gray-100">${fmtEur(totalCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${activeProf.discountEnergyManual || 0}%)</span></td>
+                            <td class="py-2.5 px-2.5 text-right font-mono font-semibold ${diffEnergyClass} border-b border-r border-gray-300 leading-tight whitespace-nowrap">${diffEnergyText}</td>
+                            ${otherProfiles.map(o => `<td class="py-2.5 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap border-b border-gray-100">${fmtEur(o.energyNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descEnergia}%)</span></td>`).join('')}
+                        </tr>
+
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-500 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Término de Potencia (Base)</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(totalPowerCostPvpc)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(totalPowerCostManual)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-400 whitespace-nowrap border-b border-gray-100">${fmtEur(o.powerBase)}</td>`).join('')}
+                        </tr>
+
+                        <tr class="bg-gray-50/60">
+                            <td class="py-2.5 px-3 font-semibold text-gray-800 whitespace-nowrap sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-300 shadow-sm">Término de Potencia (Neto)</td>
+                            <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap border-b border-gray-100">${fmtEur(totalPowerCostPvpcNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${descPotenciaPvpc}%)</span></td>
+                            <td class="py-2.5 px-2.5 text-right font-mono font-semibold text-gray-900 whitespace-nowrap bg-blue-50/60 border-b border-gray-100">${fmtEur(totalPowerCostManualNeto)} <span class="text-[8px] text-gray-400 font-normal">(-${activeProf.discountPowerManual || 0}%)</span></td>
+                            <td class="py-2.5 px-2.5 text-right font-mono font-semibold ${diffPowerClass} border-b border-r border-gray-300 leading-tight whitespace-nowrap">${diffPowerText}</td>
+                            ${otherProfiles.map(o => `<td class="py-2.5 px-2.5 text-right font-mono text-gray-700 font-medium whitespace-nowrap border-b border-gray-100">${fmtEur(o.powerNet)} <span class="text-[8px] text-gray-400 font-normal">(-${o.descPotencia}%)</span></td>`).join('')}
+                        </tr>
+
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Margen Comercialización y Bono</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(margenComTotalPvpc)} <span class="text-[8px] text-gray-400 font-normal">(${margenComDiarioPvpc.toFixed(3)}/d)</span></td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(margenComTotalManual)} <span class="text-[8px] text-gray-400 font-normal">(${(activeProf.retailerMarginManual || 0).toFixed(3)}/d)</span></td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.margenTotal)} <span class="text-[8px] text-gray-400 font-normal">(${o.margenDiario.toFixed(3)}/d)</span></td>`).join('')}
+                        </tr>
+
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Ajustes manuales</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(ajustesPvpc)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(ajustesManual)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.ajustes)}</td>`).join('')}
+                        </tr>
+
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Impuesto Eléctrico</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(impElecPvpcVal)} <span class="text-[8px] text-gray-400 font-normal">(${impElecPvpc}%)</span></td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(impElecManualVal)} <span class="text-[8px] text-gray-400 font-normal">(${activeProf.electricityTaxManual || 0}%)</span></td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.impElecVal)} <span class="text-[8px] text-gray-400 font-normal">(${o.impElec}%)</span></td>`).join('')}
+                        </tr>
+
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">Alquiler de Contador</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(alqContadorTotalPvpc)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(alqContadorTotalManual)}</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.alqContadorTotal)}</td>`).join('')}
+                        </tr>
+
+                        <tr>
+                            <td class="py-2 px-3 font-medium text-gray-700 whitespace-nowrap sticky left-0 z-10 bg-white border-b border-r border-gray-300 shadow-sm">IVA Aplicado</td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap border-b border-gray-100">${fmtEur(ivaPvpcVal)} <span class="text-[8px] text-gray-400 font-normal">(${tipoIvaPvpc}%)</span></td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-800 whitespace-nowrap bg-blue-50/40 border-b border-gray-100">${fmtEur(ivaManualVal)} <span class="text-[8px] text-gray-400 font-normal">(${activeProf.vatRateManual || 0}%)</span></td>
+                            <td class="py-2 px-2.5 text-right font-mono text-gray-300 border-b border-r border-gray-300 whitespace-nowrap">-</td>
+                            ${otherProfiles.map(o => `<td class="py-2 px-2.5 text-right font-mono text-gray-600 whitespace-nowrap border-b border-gray-100">${fmtEur(o.ivaVal)} <span class="text-[8px] text-gray-400 font-normal">(${o.vatRate}%)</span></td>`).join('')}
+                        </tr>
+
+                        <tr class="bg-blue-50/50 font-bold border-t-2 border-b-2 border-blue-200">
+                            <td class="py-3 px-3 text-gray-900 uppercase whitespace-nowrap sticky left-0 z-10 bg-blue-100 border-t-2 border-b-2 border-r border-blue-200 shadow-sm">Total Factura a Pagar</td>
+                            <td class="py-3 px-2.5 text-right font-mono text-sm text-blue-900 leading-tight whitespace-nowrap border-t-2 border-b-2 border-blue-200">
+                                <div>${fmtEur(grandTotalPvpcSimulated)}</div>
+                                <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${avgKwhPricePvpcSimulated.toFixed(5)} €/kWh</span>
+                            </td>
+                            <td class="py-3 px-2.5 text-right font-mono text-sm text-blue-950 bg-blue-100/60 leading-tight whitespace-nowrap border-t-2 border-b-2 border-blue-200">
+                                <div>${fmtEur(grandTotalManualSimulated)}</div>
+                                <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${avgKwhPriceManualSimulated.toFixed(5)} €/kWh</span>
+                            </td>
+                            <td class="py-3 px-2.5 text-right font-mono text-sm font-bold ${diffTotalClass} border-t-2 border-b-2 border-r border-gray-300 leading-tight whitespace-nowrap">
+                                ${diffTotalText}
+                            </td>
+                            ${otherProfiles.map(o => `
+                                <td class="py-3 px-2.5 text-right font-mono text-sm text-gray-800 leading-tight whitespace-nowrap bg-gray-50/90 border-t-2 border-b-2 border-blue-200">
+                                    <div>${fmtEur(o.grandTotal)}</div>
+                                    <span class="text-[10px] font-normal text-gray-500 normal-case">Med: ${o.avgKwhPrice.toFixed(5)} €/kWh</span>
+                                </td>
+                            `).join('')}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+<div class="mt-4 p-3 rounded-xl text-center font-bold text-xs ${bannerClass}">
+                ${bannerText}
+            </div>
+
+            <!-- CONTENEDOR DEL INFORME AUDITORÍA DE IA -->
+            <div id="aiOfferAnalysisContainer" class="hidden mt-4 p-4 bg-gradient-to-br from-purple-50/90 via-indigo-50/80 to-blue-50/90 border-2 border-purple-300 rounded-xl shadow-sm text-xs space-y-3">
+                <div class="flex justify-between items-center border-b border-purple-200/80 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">🤖</span>
+                        <h5 class="font-black text-purple-950 uppercase tracking-wide text-xs">
+                            Dictamen Energético Experto emitido por Inteligencia Artificial
+                        </h5>
+                    </div>
+                    <span id="aiModelBadge" class="text-[10px] font-mono font-bold bg-purple-200/70 text-purple-900 px-2 py-0.5 rounded-full border border-purple-300"></span>
+                </div>
+                <div id="aiOfferAnalysisBody" class="text-slate-800 leading-relaxed space-y-2"></div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('comparisonBox').innerHTML = comparisonHtml;
+};
 
 
     </script>
