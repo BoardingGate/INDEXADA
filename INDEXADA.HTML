@@ -508,10 +508,16 @@
                                         Abre una oferta en la web de la CNMC, selecciona el texto de la pestaña <strong>Características</strong> con <kbd class="px-1 py-0.5 bg-white border rounded font-mono text-[10px]">Ctrl+A y Ctrl+C</kbd>, y luego pégalo aquí (Ctrl+V)  y pulsa "Procesar".
                                     </p>
                                 </div>
-                                <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3.5 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-xs">
-                                    <span>Abrir Comparador CNMC</span>
-                                    <span>↗</span>
-                                </a>
+                                div class="flex flex-wrap items-center gap-2 shrink-0">
+                                    <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-xs">
+                                        <span>Abrir CNMC</span>
+                                        <span>↗</span>
+                                    </a>
+                                    <a href="https://www.ocu.org/vivienda-y-energia/gas-luz/simulador" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-colors flex items-center gap-1 shadow-xs">
+                                        <span>Comparador OCU</span>
+                                        <span>↗</span>
+                                    </a>
+                                </div>
                             </div>
 
                             <div class="space-y-3">
@@ -1161,6 +1167,9 @@
                 </a>
                 <a href="https://comparador.cnmc.gob.es/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
                     <span>📋 BUSCAR TARIFAS CNMC</span>
+                </a>
+                <a href="https://www.ocu.org/vivienda-y-energia/gas-luz/simulador" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                    <span>📋 COMPARADOR / SIMULADOR OCU</span>
                 </a>
                 <a href="https://www.comercializadoraregulada.es/regulada/luz/pvpc" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
                     <span>📋 PVPC Comercializadora Regulada-Grupo Naturgy</span>
@@ -6868,145 +6877,144 @@ function renderDayConsumHourlyChart(dateStr) {
         window.parsedCnmcData = null;
 
 function parseCnmcOfferText(text) {
-            if (!text || typeof text !== 'string') return null;
+    if (!text || typeof text !== 'string') return null;
 
-            const cleanText = text.replace(/\r/g, '\n');
-            const result = {
-                name: "",
-                powerP1: null,
-                powerP2: null,
-                energyPunta: null,
-                energyLlano: null,
-                energyValle: null,
-                bonoSocialDaily: null
-            };
+    const cleanText = text.replace(/\r/g, '\n');
+    const result = {
+        name: "",
+        powerP1: null,
+        powerP2: null,
+        energyPunta: null,
+        energyLlano: null,
+        energyValle: null,
+        bonoSocialDaily: null
+    };
 
-            const parseNum = (str) => {
-                if (!str) return null;
-                const clean = str.trim().replace(/\.+$/, '').replace(',', '.');
-                const val = parseFloat(clean);
-                return isNaN(val) ? null : val;
-            };
+    const parseNum = (str) => {
+        if (!str) return null;
+        const clean = str.trim().replace(/\.+$/, '').replace(',', '.');
+        const val = parseFloat(clean);
+        return isNaN(val) ? null : val;
+    };
 
-            // DIVIDIMOS EL TEXTO EN DOS ZONAS USANDO "Descripción oferta" COMO FRONTERA
-            const splitMatch = cleanText.match(/Descripción\s+oferta/i);
-            let headerText = cleanText;
-            let offerBody = cleanText;
-
-            if (splitMatch && splitMatch.index !== undefined) {
-                headerText = cleanText.substring(0, splitMatch.index);
-                offerBody = cleanText.substring(splitMatch.index);
+    // 1. DETECCIÓN DEL NOMBRE DE LA OFERTA
+    const nameMatch = cleanText.match(/logoComercializadora\s*\n*([^\n\r]+)/i);
+    if (nameMatch && nameMatch[1]) {
+        result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
+    } else {
+        const descMatch = cleanText.match(/Descripción\s+oferta\s*\n*([^\n\r]+)/i);
+        if (descMatch && descMatch[1]) {
+            result.name = descMatch[1].substring(0, 45).trim();
+        } else {
+            // Si es copiado de la OCU o texto libre, toma la primera línea que no sea de números o etiquetas
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
+            const firstLine = lines.find(l => !/^(?:potencia|energ[ií]a|precio|p1|p2|p3)/i.test(l));
+            if (firstLine) {
+                result.name = firstLine.substring(0, 45).trim();
             }
-
-            // ==============================================================
-            // ZONA 1: CABECERA (Solo buscamos el nombre de la oferta/compañía)
-            // ==============================================================
-            const nameMatch = headerText.match(/logoComercializadora\s*\n*([^\n\r]+)/i);
-            if (nameMatch && nameMatch[1]) {
-                result.name = nameMatch[1].replace(/Características.*$/i, '').trim();
-            } else {
-                // Fallback por si no viene logoComercializadora
-                const altMatch = offerBody.match(/Descripción\s+oferta\s*\n*([^\n\r]+)/i);
-                if (altMatch && altMatch[1]) {
-                    result.name = altMatch[1].substring(0, 45).trim();
-                }
-            }
-
-            // ==============================================================
-            // ZONA 2: CUERPO DE LA OFERTA (Precios de Potencia, Energía y Bono)
-            // Aquí ya es IMPOSIBLE que se cuelen los kW/kWh del usuario
-            // ==============================================================
-
-            // 1. PRECIOS DE POTENCIA (P1 Punta y P2 Valle)
-            // Exigimos siempre el símbolo € para asegurar que es un precio monetario
-            const p1Regexes = [
-                /(?:Punta|P1|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
-                /Potencia[^\n]*?(?:P1|Punta|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
-                /P1\s*=\s*([\d.,]+)\s*€/i
-            ];
-            for (let rx of p1Regexes) {
-                const m = offerBody.match(rx);
-                if (m && m[1]) { result.powerP1 = parseNum(m[1]); break; }
-            }
-
-            const p2Regexes = [
-                /(?:Valle|P2|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
-                /Potencia[^\n]*?(?:P2|Valle|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€/i,
-                /P2\s*=\s*([\d.,]+)\s*€/i
-            ];
-            for (let rx of p2Regexes) {
-                const m = offerBody.match(rx);
-                if (m && m[1]) { result.powerP2 = parseNum(m[1]); break; }
-            }
-
-            // Si la compañía cobra la misma potencia en ambos tramos (potencia única)
-            if (result.powerP1 !== null && result.powerP2 === null) result.powerP2 = result.powerP1;
-            if (result.powerP2 !== null && result.powerP1 === null) result.powerP1 = result.powerP2;
-
-
-            // 2. PRECIOS DE ENERGÍA (Punta, Llano, Valle o Tarifa Plana)
-            // A) Detección de tramos múltiples (3 precios)
-            const ePuntaMatch = offerBody.match(/(?:Energ[ií]a\s*Punta|Punta|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
-            const eLlanoMatch = offerBody.match(/(?:Energ[ií]a\s*Llano|Llano|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
-            const eValleMatch = offerBody.match(/(?:Energ[ií]a\s*Valle|Valle|Periodo\s*3)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i);
-
-            if (ePuntaMatch) result.energyPunta = parseNum(ePuntaMatch[1]);
-            if (eLlanoMatch) result.energyLlano = parseNum(eLlanoMatch[1]);
-            if (eValleMatch) result.energyValle = parseNum(eValleMatch[1]);
-
-            // B) Detección de Tarifa Plana / Precio Único 24h
-            if (result.energyPunta === null && result.energyLlano === null && result.energyValle === null) {
-                let singlePrice = null;
-
-                // Prioridad 1: Precio con FNEE incluido si viene especificado
-                const fneeMatch = offerBody.match(/con\s+importe[^\n=:]*[=:\s]+([\d.,]+)\s*€\/kwh/i);
-                if (fneeMatch && fneeMatch[1]) {
-                    singlePrice = parseNum(fneeMatch[1]);
-                }
-
-                // Prioridad 2: Buscar "Término variable", "Término de energía", "Precio único", etc.
-                if (singlePrice === null) {
-                    const singlePatterns = [
-                        /(?:T[eé]rmino\s*variable|T[eé]rmino\s*de\s*energ[ií]a|Precio\s*[^\n]*?)[^\d\n]*?[:=\s]+([\d.,]+)\s*€\/kwh/i,
-                        /([\d.,]+)\s*€\/kwh/i
-                    ];
-                    for (let rx of singlePatterns) {
-                        const m = offerBody.match(rx);
-                        if (m && m[1]) { singlePrice = parseNum(m[1]); break; }
-                    }
-                }
-
-                if (singlePrice !== null) {
-                    result.energyPunta = singlePrice;
-                    result.energyLlano = singlePrice;
-                    result.energyValle = singlePrice;
-                }
-            }
-
-
-            // 3. BONO SOCIAL (Márgenes fijos)
-            if (/No\s+se\s+facturar[aá][^\n]*Bono\s*Social/i.test(offerBody) ||
-                /Bono\s*Social[^\n]*incluido/i.test(offerBody)) {
-                result.bonoSocialDaily = 0.00;
-            } else {
-                const bonoDayMatch = offerBody.match(/bono\s*social[^\n\d]*?([\d.,]+)\s*€\/d[ií]a/i)
-                                  || offerBody.match(/([\d.,]+)\s*€\/d[ií]a/i);
-                const bonoCupsMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*?([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
-                const bonoMonthMatch = offerBody.match(/bono\s*social[^\n\d]*[a-z\s]*?([\d.,]+)\s*€\/mes/i);
-
-                if (bonoDayMatch && bonoDayMatch[1]) {
-                    result.bonoSocialDaily = parseNum(bonoDayMatch[1]);
-                } else if (bonoCupsMatch && bonoCupsMatch[1]) {
-                    const bYear = parseNum(bonoCupsMatch[1]);
-                    if (bYear !== null) result.bonoSocialDaily = parseFloat((bYear / 365).toFixed(4));
-                } else if (bonoMonthMatch && bonoMonthMatch[1]) {
-                    const bMonth = parseNum(bonoMonthMatch[1]);
-                    if (bMonth !== null) result.bonoSocialDaily = parseFloat((bMonth / 30).toFixed(4));
-                }
-            }
-
-            return result;
         }
+    }
+
+    // 2. DETECCIÓN DE POTENCIA (FORMATO OCU + CNMC)
+    // Formato OCU típico: "Potencia: P1/P2: 48.55. P3: 21.9 (€/kW/año)"
+    const ocuPowerP1P2 = cleanText.match(/P1\/P2[^\d\n]*[:=\s]+([\d.,]+)/i);
+    const ocuPowerP3 = cleanText.match(/(?:Potencia[^\n]*?)?P3[^\d\n]*[:=\s]+([\d.,]+)/i);
+
+    if (ocuPowerP1P2 && ocuPowerP1P2[1]) {
+        result.powerP1 = parseNum(ocuPowerP1P2[1]);
+        if (ocuPowerP3 && ocuPowerP3[1]) {
+            // En 2.0TD la potencia Valle es P2 (la OCU a menudo la etiqueta como P3)
+            result.powerP2 = parseNum(ocuPowerP3[1]);
+        } else {
+            result.powerP2 = result.powerP1;
+        }
+    }
+
+    // Si no es el formato P1/P2 de la OCU, buscar formatos convencionales (Punta/Valle o P1/P2)
+    if (result.powerP1 === null) {
+        const p1Regexes = [
+            /(?:Potencia[^\n]*?)?(?:Punta|P1|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)(?:\s*€)?/i,
+            /P1\s*=\s*([\d.,]+)/i
+        ];
+        for (let rx of p1Regexes) {
+            const m = cleanText.match(rx);
+            if (m && m[1]) { result.powerP1 = parseNum(m[1]); break; }
+        }
+    }
+
+    if (result.powerP2 === null) {
+        const p2Regexes = [
+            /(?:Potencia[^\n]*?)?(?:Valle|P2|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)(?:\s*€)?/i,
+            /P2\s*=\s*([\d.,]+)/i
+        ];
+        for (let rx of p2Regexes) {
+            const m = cleanText.match(rx);
+            if (m && m[1]) { result.powerP2 = parseNum(m[1]); break; }
+        }
+    }
+
+    // Potencia única si solo se especificó un tramo
+    if (result.powerP1 !== null && result.powerP2 === null) result.powerP2 = result.powerP1;
+    if (result.powerP2 !== null && result.powerP1 === null) result.powerP1 = result.powerP2;
+
+
+    // 3. DETECCIÓN DE ENERGÍA (FORMATO OCU + CNMC)
+    // OCU: "Energía: P1: 0.179 €/kWh, P2: 0.109 €/kWh, P3: 0.079 €/kWh"
+    const ePuntaMatch = cleanText.match(/(?:Energ[ií]a[^\n]*?)?(?:P1|Punta|Periodo\s*1)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i)
+                     || cleanText.match(/(?:Energ[ií]a[^\n]*?)?(?:P1|Punta)[^\d\n]*[:=\s]+([\d.,]+)/i);
+
+    const eLlanoMatch = cleanText.match(/(?:Energ[ií]a[^\n]*?)?(?:P2|Llano|Periodo\s*2)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i)
+                     || cleanText.match(/(?:Energ[ií]a[^\n]*?)?(?:P2|Llano)[^\d\n]*[:=\s]+([\d.,]+)/i);
+
+    const eValleMatch = cleanText.match(/(?:Energ[ií]a[^\n]*?)?(?:P3|Valle|Periodo\s*3)[^\d\n]*[:=\s]+([\d.,]+)\s*€\/kwh/i)
+                     || cleanText.match(/(?:Energ[ií]a[^\n]*?)?(?:P3|Valle)[^\d\n]*[:=\s]+([\d.,]+)/i);
+
+    if (ePuntaMatch && ePuntaMatch[1]) result.energyPunta = parseNum(ePuntaMatch[1]);
+    if (eLlanoMatch && eLlanoMatch[1]) result.energyLlano = parseNum(eLlanoMatch[1]);
+    if (eValleMatch && eValleMatch[1]) result.energyValle = parseNum(eValleMatch[1]);
+
+    // Caso de Tarifa Plana (precio único 24h)
+    if (result.energyPunta === null && result.energyLlano === null && result.energyValle === null) {
+        let singlePrice = null;
+        const singlePatterns = [
+            /(?:T[eé]rmino\s*variable|T[eé]rmino\s*de\s*energ[ií]a|Energ[ií]a|Precio\s*único)[^\d\n]*?[:=\s]+([\d.,]+)\s*€\/kwh/i,
+            /([\d.,]+)\s*€\/kwh/i
+        ];
+        for (let rx of singlePatterns) {
+            const m = cleanText.match(rx);
+            if (m && m[1]) { singlePrice = parseNum(m[1]); break; }
+        }
+
+        if (singlePrice !== null) {
+            result.energyPunta = singlePrice;
+            result.energyLlano = singlePrice;
+            result.energyValle = singlePrice;
+        }
+    }
+
+    // 4. BONO SOCIAL Y MÁRGENES
+    if (/No\s+se\s+facturar[aá][^\n]*Bono\s*Social/i.test(cleanText) ||
+        /Bono\s*Social[^\n]*incluido/i.test(cleanText)) {
+        result.bonoSocialDaily = 0.00;
+    } else {
+        const bonoDayMatch = cleanText.match(/bono\s*social[^\n\d]*?([\d.,]+)\s*€\/d[ií]a/i)
+                          || cleanText.match(/([\d.,]+)\s*€\/d[ií]a/i);
+        const bonoCupsMatch = cleanText.match(/bono\s*social[^\n\d]*[a-z\s]*?([\d.,]+)\s*€\/(?:CUPS|a[ñn]o)/i);
+        const bonoMonthMatch = cleanText.match(/bono\s*social[^\n\d]*[a-z\s]*?([\d.,]+)\s*€\/mes/i);
+
+        if (bonoDayMatch && bonoDayMatch[1]) {
+            result.bonoSocialDaily = parseNum(bonoDayMatch[1]);
+        } else if (bonoCupsMatch && bonoCupsMatch[1]) {
+            const bYear = parseNum(bonoCupsMatch[1]);
+            if (bYear !== null) result.bonoSocialDaily = parseFloat((bYear / 365).toFixed(4));
+        } else if (bonoMonthMatch && bonoMonthMatch[1]) {
+            const bMonth = parseNum(bonoMonthMatch[1]);
+            if (bMonth !== null) result.bonoSocialDaily = parseFloat((bMonth / 30).toFixed(4));
+        }
+    }
+
+    return result;
+}
 
         // Listeners del panel importador CNMC
         document.getElementById('cnmcClearBtn')?.addEventListener('click', () => {
