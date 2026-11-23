@@ -1998,7 +1998,7 @@ async function descargarDesdeDatadis() {
 
                         processData(window.rawCsvData);
 
-                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas repartidas en todos los días del mes.`;
+                        statusEl.textContent = `✅ Cargadas ${allCsvRows.length} lecturas del rango real seleccionado.`;
                         statusEl.className = 'text-xs mt-2 text-emerald-700 font-semibold';
                         exportBtn.classList.remove('hidden');
 
@@ -2098,6 +2098,9 @@ async function descargarDesdeDatadis() {
                 skipEmptyLines: true,
                 complete: function(results) {
                     window.rawCsvData = results.data;
+                    // Nuevo fichero: descartar filtros de fecha anteriores para cargar el rango real del CSV
+                    document.getElementById('filterStartDate').value = '';
+                    document.getElementById('filterEndDate').value = '';
                     saveConfig();
                     processData(window.rawCsvData);
                 },
@@ -2178,20 +2181,22 @@ async function descargarDesdeDatadis() {
                     return;
                 }
 
-            // Si el archivo viene con fechas congeladas, repartir las 24h día a día saltando de mes correctamente
-                const uniqueDatesInClean = new Set(cleanData.map(d => d.fechaStr));
-                const expectedDays = Math.floor(cleanData.length / 24);
+            // Fechas congeladas (Datadis a veces entrega todas las lecturas de un mes con fecha día 01).
+                // Solo se reparte si TODAS las fechas únicas son día 01 y hay más de 24 lecturas por fecha.
+                // El reparto se hace dentro de cada mes, nunca arrastrando el rango real a otro periodo.
+                const uniqueDatesInClean = Array.from(new Set(cleanData.map(d => d.fechaStr)));
+                const allFrozenOnDay1 = uniqueDatesInClean.length > 0 && uniqueDatesInClean.every(d => d.endsWith('-01'));
+                const rowsPerDateAvg = cleanData.length / uniqueDatesInClean.length;
 
-                if (cleanData.length > 24 && uniqueDatesInClean.size < expectedDays) {
-                    const [bY, bM, bD] = cleanData[0].fechaStr.split('-').map(Number);
-                    cleanData.forEach((item, idx) => {
-                        const dayOffset = Math.floor(idx / 24);
-                        // El objeto Date gestiona automáticamente los fines de mes (30, 31, bisiestos)
-                        const dObj = new Date(bY, bM - 1, bD + dayOffset);
-                        const yStr = dObj.getFullYear();
-                        const mStr = String(dObj.getMonth() + 1).padStart(2, '0');
-                        const dStr = String(dObj.getDate()).padStart(2, '0');
-                        item.fechaStr = `${yStr}-${mStr}-${dStr}`;
+                if (allFrozenOnDay1 && rowsPerDateAvg > 26) {
+                    const monthCounters = {};
+                    cleanData.forEach(item => {
+                        const [y, m] = item.fechaStr.split('-').map(Number);
+                        const key = `${y}-${String(m).padStart(2, '0')}`;
+                        const idxInMonth = monthCounters[key] || 0;
+                        monthCounters[key] = idxInMonth + 1;
+                        const dObj = new Date(y, m - 1, 1 + Math.floor(idxInMonth / 24));
+                        item.fechaStr = `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`;
                     });
                 }
 
