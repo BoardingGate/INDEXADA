@@ -308,7 +308,8 @@
                     <!-- Solapa 3: Tarifa Manual y Potencias -->
                     <div id="tab-manual" class="tab-pane hidden">
                         <!-- 1. CONFIGURACIÓN DEL PERFIL ACTIVO -->
-                        <div class="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b pb-4">
+                  <!-- 1. CONFIGURACIÓN DEL PERFIL ACTIVO -->
+                        <div class="mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 border-b pb-4 items-end">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Perfil de Tarifa ACTIVA (1 de 6)</label>
                                 <select id="tariffProfileSelector" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 text-sm">
@@ -323,6 +324,13 @@
                             <div class="lg:col-span-3">
                                 <label class="block text-xs font-bold text-gray-700 mb-1">Nombre de la Tarifa de la Energía</label>
                                 <input type="text" id="tariffProfileName" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-medium text-gray-800 text-sm" placeholder="Ej. Octopus 3 Precios, Tarifa Plana, etc.">
+                            </div>
+                            <div class="flex items-center h-[38px] bg-gray-50 border border-gray-200 rounded-md px-3">
+                                <label class="relative inline-flex items-center cursor-pointer select-none w-full">
+                                    <input type="checkbox" id="tariffProfileEnabled" checked class="sr-only peer">
+                                    <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    <span id="tariffProfileEnabledLabel" class="ml-2 text-xs font-bold text-emerald-800">Tarifa Activa</span>
+                                </label>
                             </div>
                         </div>
 
@@ -1551,6 +1559,7 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
         window.activeProfileIndex = 0;
         window.tariffProfiles = [
             {
+                enabled: true,
                 name: "Tarifa Manual 1",
                 pricePunta: 0.15000,
                 hoursPunta: "10,11,12,13,18,19,20,21",
@@ -1571,7 +1580,7 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
                 vatRateManual: 21
             },
             {
-                name: "Tarifa Manual 2",
+                 enabled: true,name: "Tarifa Manual 2",
                 pricePunta: 0.16000,
                 hoursPunta: "10,11,12,13,18,19,20,21",
                 priceLlano: 0.11000,
@@ -1591,7 +1600,7 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
                 vatRateManual: 21
             },
             {
-                name: "Tarifa Manual 3",
+                 enabled: true,name: "Tarifa Manual 3",
                 pricePunta: 0.17000,
                 hoursPunta: "10,11,12,13,18,19,20,21",
                 priceLlano: 0.12000,
@@ -1611,7 +1620,7 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
                 vatRateManual: 21
             },
             {
-                name: "Tarifa Manual 4",
+                 enabled: true,name: "Tarifa Manual 4",
                 pricePunta: 0.18000,
                 hoursPunta: "10,11,12,13,18,19,20,21",
                 priceLlano: 0.13000,
@@ -1631,7 +1640,7 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
                 vatRateManual: 21
             },
             {
-                name: "Tarifa Manual 5",
+                 enabled: true,name: "Tarifa Manual 5",
                 pricePunta: 0.19000,
                 hoursPunta: "10,11,12,13,18,19,20,21",
                 priceLlano: 0.14000,
@@ -1651,7 +1660,7 @@ window.switchTab = function(clusterId, tabPaneId, save = true) {
                 vatRateManual: 21
             },
             {
-                name: "Tarifa Manual 6",
+                 enabled: true,name: "Tarifa Manual 6",
                 pricePunta: 0.20000,
                 hoursPunta: "10,11,12,13,18,19,20,21",
                 priceLlano: 0.15000,
@@ -3872,11 +3881,22 @@ function saveActiveProfileToMemory() {
                 retailerMarginManual: getVal('retailerMarginManual', 0.142),
                 electricityTaxManual: getVal('electricityTaxManual', 5.11),
                 meterRentalManual: getVal('meterRentalManual', 0.80),
-                vatRateManual: getVal('vatRateManual', 21)
+                vatRateManual: getVal('vatRateManual', 21),
+                enabled: document.getElementById('tariffProfileEnabled') ? document.getElementById('tariffProfileEnabled').checked : true,
             };
         }
 
         function loadProfileFromMemory(index) {
+
+            const isEnabled = profile.enabled !== false;
+            const enabledCheckbox = document.getElementById('tariffProfileEnabled');
+            const enabledLabel = document.getElementById('tariffProfileEnabledLabel');
+            if (enabledCheckbox) enabledCheckbox.checked = isEnabled;
+            if (enabledLabel) {
+                enabledLabel.textContent = isEnabled ? 'Tarifa Activa' : 'Desactivada';
+                enabledLabel.className = isEnabled ? 'ml-2 text-xs font-bold text-emerald-800' : 'ml-2 text-xs font-bold text-gray-400';
+            }
+
             if (index < 0 || index >= 6) return;
             window.activeProfileIndex = index;
             const profile = window.tariffProfiles[index];
@@ -3919,16 +3939,20 @@ function saveActiveProfileToMemory() {
             if (!selector) return;
             for (let i = 0; i < 6; i++) {
                 const profile = window.tariffProfiles[i];
+                const isEn = profile.enabled !== false;
                 const name = profile.name || `Tarifa Manual ${i + 1}`;
-                selector.options[i].text = `Perfil ${i + 1}: ${name}`;
+                selector.options[i].text = `${isEn ? '✓' : '✗'} Perfil ${i + 1}: ${name} ${isEn ? '' : '(Desactivada)'}`;
             }
 
             const cnmcSel = document.getElementById('cnmcTargetProfile');
             if (cnmcSel) {
-                cnmcSel.options[0].text = `Perfil activo actual (${window.activeProfileIndex + 1}: ${window.tariffProfiles[window.activeProfileIndex]?.name || 'Manual'})`;
+                const actProf = window.tariffProfiles[window.activeProfileIndex];
+                const actEn = actProf?.enabled !== false;
+                cnmcSel.options[0].text = `Perfil actual (${actEn ? '✓' : '✗'} ${window.activeProfileIndex + 1}: ${actProf?.name || 'Manual'})`;
                 for (let i = 0; i < 6; i++) {
                     const prof = window.tariffProfiles[i];
-                    cnmcSel.options[i + 1].text = `Perfil ${i + 1}: ${prof.name || 'Manual ' + (i+1)}`;
+                    const isEn = prof.enabled !== false;
+                    cnmcSel.options[i + 1].text = `${isEn ? '✓' : '✗'} Perfil ${i + 1}: ${prof.name || 'Manual ' + (i+1)}`;
                 }
             }
         }
@@ -3951,6 +3975,20 @@ function saveActiveProfileToMemory() {
             saveActiveProfileToMemory();
             saveConfig();
         });
+
+        document.getElementById('tariffProfileEnabled')?.addEventListener('change', (e) => {
+            const isEnabled = e.target.checked;
+            const enabledLabel = document.getElementById('tariffProfileEnabledLabel');
+            if (enabledLabel) {
+                enabledLabel.textContent = isEnabled ? 'Tarifa Activa' : 'Desactivada';
+                enabledLabel.className = isEnabled ? 'ml-2 text-xs font-bold text-emerald-800' : 'ml-2 text-xs font-bold text-gray-400';
+            }
+            saveActiveProfileToMemory();
+            updateProfileDropdownNames();
+            saveConfig();
+            recalcInvoiceTable();
+        });
+        
 
         function saveConfig() {
             saveActiveProfileToMemory();
@@ -7203,7 +7241,8 @@ async function ejecutarAnalisisOfertasIA() {
     // 3. CÁLCULO DE LAS TARIFAS DEL MERCADO LIBRE VÁLIDAS
     const tarifasMercadoLibre = window.tariffProfiles
         .map((prof, idx) => ({ prof, idx }))
-        .filter(({ prof }) => {
+         .filter(({ prof }) => {
+            if (prof.enabled === false) return false;
             const tieneEnergia = (parseFloat(prof.pricePunta) > 0) || 
                                  (parseFloat(prof.priceLlano) > 0) || 
                                  (parseFloat(prof.priceValle) > 0);
@@ -7576,7 +7615,7 @@ function calculateProfileAggregated(prof, kwhP1, kwhP2, kwhP3, numDays, p1Kw, p2
     // Otros perfiles
     const otherProfiles = window.tariffProfiles
         .map((prof, idx) => ({ prof, idx }))
-        .filter(item => item.idx !== window.activeProfileIndex)
+        .filter(item => item.idx !== window.activeProfileIndex && item.prof.enabled !== false)
         .map(item => {
             const calc = calculateProfileAggregated(item.prof, manualP1, manualP2, manualP3, numDays, p1Kw, p2Kw);
             return { ...calc, idx: item.idx };
@@ -7717,7 +7756,7 @@ function calculateProfileAggregated(prof, kwhP1, kwhP2, kwhP3, numDays, p1Kw, p2
             <!-- SUBPANELES: RANKINGS RÁPIDOS DE OFERTAS (GLOBAL, ENERGÍA Y POTENCIA) -->
             <!-- ======================================================== -->
             ${(() => {
-                const allTariffs = [
+               const allTariffs = [
                     {
                         name: 'PVPC Regulada',
                         fullName: 'Tarifa PVPC (Regulada)',
@@ -7725,23 +7764,29 @@ function calculateProfileAggregated(prof, kwhP1, kwhP2, kwhP3, numDays, p1Kw, p2
                         energy: totalCostPvpcNeto,
                         power: totalPowerCostPvpcNeto,
                         isPvpc: true
-                    },
-                    {
+                    }
+                ];
+
+                if (activeProf.enabled !== false) {
+                    allTariffs.push({
                         name: `${activeManualTariffName} (P${window.activeProfileIndex + 1})`,
                         fullName: `${activeManualTariffName} (Perfil ${window.activeProfileIndex + 1} - Activa)`,
                         total: grandTotalManualSimulated,
                         energy: totalCostManualNeto,
                         power: totalPowerCostManualNeto,
                         isActive: true
-                    },
-                    ...otherProfiles.map(o => ({
+                    });
+                }
+
+                otherProfiles.forEach(o => {
+                    allTariffs.push({
                         name: `${o.name} (P${o.idx + 1})`,
                         fullName: `${o.name} (Perfil ${o.idx + 1})`,
                         total: o.grandTotal,
                         energy: o.energyNet,
                         power: o.powerNet
-                    }))
-                ];
+                    });
+                });
 
                 const renderRankingCard = (title, icon, keyProp, borderClass, headerBgClass, badgeColor) => {
                     const sorted = [...allTariffs].sort((a, b) => a[keyProp] - b[keyProp]);
