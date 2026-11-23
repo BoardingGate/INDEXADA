@@ -7713,6 +7713,126 @@ function calculateProfileAggregated(prof, kwhP1, kwhP2, kwhP3, numDays, p1Kw, p2
                 ${bannerText}
             </div>
 
+            <!-- ======================================================== -->
+            <!-- SUBPANELES: RANKINGS RÁPIDOS DE OFERTAS (GLOBAL, ENERGÍA Y POTENCIA) -->
+            <!-- ======================================================== -->
+            ${(() => {
+                const allTariffs = [
+                    {
+                        name: 'PVPC Regulada',
+                        fullName: 'Tarifa PVPC (Regulada)',
+                        total: grandTotalPvpcSimulated,
+                        energy: totalCostPvpcNeto,
+                        power: totalPowerCostPvpcNeto,
+                        isPvpc: true
+                    },
+                    {
+                        name: `${activeManualTariffName} (P${window.activeProfileIndex + 1})`,
+                        fullName: `${activeManualTariffName} (Perfil ${window.activeProfileIndex + 1} - Activa)`,
+                        total: grandTotalManualSimulated,
+                        energy: totalCostManualNeto,
+                        power: totalPowerCostManualNeto,
+                        isActive: true
+                    },
+                    ...otherProfiles.map(o => ({
+                        name: `${o.name} (P${o.idx + 1})`,
+                        fullName: `${o.name} (Perfil ${o.idx + 1})`,
+                        total: o.grandTotal,
+                        energy: o.energyNet,
+                        power: o.powerNet
+                    }))
+                ];
+
+                const renderRankingCard = (title, icon, keyProp, borderClass, headerBgClass, badgeColor) => {
+                    const sorted = [...allTariffs].sort((a, b) => a[keyProp] - b[keyProp]);
+                    
+                    const rowsHtml = sorted.map((t, idx) => {
+                        const isFirst = idx === 0;
+                        const isLast = idx === sorted.length - 1;
+                        const nextItem = sorted[idx + 1];
+
+                        let diffVsNextText = '';
+                        if (!isLast && nextItem && nextItem[keyProp] > 0) {
+                            const diff = nextItem[keyProp] - t[keyProp];
+                            const pct = (diff / nextItem[keyProp]) * 100;
+                            diffVsNextText = `<span class="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">
+                                -${pct.toFixed(1)}% vs sig.
+                            </span>`;
+                        } else if (isLast) {
+                            diffVsNextText = `<span class="text-[9px] font-semibold text-gray-400 bg-gray-100 px-1 py-0.5 rounded">
+                                Mayor coste
+                            </span>`;
+                        }
+
+                        const rankBadge = isFirst
+                            ? `<span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-xs">1º</span>`
+                            : `<span class="w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-[10px] font-bold flex items-center justify-center shrink-0">${idx + 1}º</span>`;
+
+                        return `
+                            <div class="p-2.5 rounded-lg border ${isFirst ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-400 shadow-xs' : 'bg-white border-gray-200 hover:border-gray-300'} transition-all flex flex-col gap-1.5">
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        ${rankBadge}
+                                        <span class="font-black text-xs text-gray-900 truncate" title="${t.fullName}">${t.name}</span>
+                                    </div>
+                                    ${diffVsNextText}
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-1 pt-1.5 border-t border-gray-100 text-[10px] font-mono leading-tight">
+                                    <div class="${keyProp === 'total' ? 'font-black text-blue-900 bg-blue-50/80 p-0.5 rounded text-center' : 'text-gray-600 text-center'}">
+                                        <span class="text-[8px] font-bold block uppercase font-sans text-gray-400">Total</span>
+                                        ${t.total.toFixed(2)} €
+                                    </div>
+                                    <div class="${keyProp === 'energy' ? 'font-black text-amber-900 bg-amber-50/80 p-0.5 rounded text-center' : 'text-gray-600 text-center'}">
+                                        <span class="text-[8px] font-bold block uppercase font-sans text-gray-400">Energía</span>
+                                        ${t.energy.toFixed(2)} €
+                                    </div>
+                                    <div class="${keyProp === 'power' ? 'font-black text-indigo-900 bg-indigo-50/80 p-0.5 rounded text-center' : 'text-gray-600 text-center'}">
+                                        <span class="text-[8px] font-bold block uppercase font-sans text-gray-400">Potencia</span>
+                                        ${t.power.toFixed(2)} €
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="bg-gray-50/70 rounded-xl border ${borderClass} p-3.5 flex flex-col shadow-xs">
+                            <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-gray-200">
+                                <h6 class="text-xs font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
+                                    <span>${icon}</span>
+                                    <span>${title}</span>
+                                </h6>
+                                <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full ${headerBgClass} ${badgeColor}">
+                                    Menor a Mayor
+                                </span>
+                            </div>
+                            <div class="space-y-2 flex-1">
+                                ${rowsHtml}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                return `
+                    <div class="mt-4 pt-3 border-t border-gray-200">
+                        <div class="mb-3">
+                            <h5 class="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
+                                <span>🏅 Clasificación Rápida de Opciones</span>
+                                <span class="text-[9px] font-bold text-gray-500 normal-case">(PVPC + 6 Tarifas Manuales)</span>
+                            </h5>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                            ${renderRankingCard('1. Factura Global', '🏆', 'total', 'border-blue-200', 'bg-blue-100', 'text-blue-900')}
+                            ${renderRankingCard('2. Coste Energía', '⚡', 'energy', 'border-amber-200', 'bg-amber-100', 'text-amber-900')}
+                            ${renderRankingCard('3. Coste Potencia', '🔌', 'power', 'border-indigo-200', 'bg-indigo-100', 'text-indigo-900')}
+                        </div>
+                    </div>
+                `;
+            })()}
+
+            <!-- CONTENEDOR DEL INFORME AUDITORÍA DE IA -->
+
             <!-- CONTENEDOR DEL INFORME AUDITORÍA DE IA -->
             <div id="aiOfferAnalysisContainer" class="hidden mt-4 p-4 bg-gradient-to-br from-purple-50/90 via-indigo-50/80 to-blue-50/90 border-2 border-purple-300 rounded-xl shadow-sm text-xs space-y-3">
                 <div class="flex justify-between items-center border-b border-purple-200/80 pb-2">
